@@ -6,4 +6,11 @@ type HeliumType = {
 
 const { Helium } = NativeModules;
 
-export default Helium as HeliumType;
+const helium = Helium as HeliumType;
+
+export default {
+  ...helium,
+  multiplyJS(a: number, b: number) {
+    return Promise.resolve(a * b);
+  },
+};
