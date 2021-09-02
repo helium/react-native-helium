@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Alert,
   Button,
@@ -7,27 +7,27 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Device, useHotspotBle } from 'react-native-helium';
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Device, useHotspotBle } from 'react-native-helium'
 import {
   request,
   check,
   PERMISSIONS,
   RESULTS,
   PermissionStatus,
-} from 'react-native-permissions';
+} from 'react-native-permissions'
 
 const ScanHotspots = () => {
-  const { startScan, stopScan } = useHotspotBle();
-  const [devices, setDevices] = useState<Record<string, Device>>({});
-  const [scanning, setScanning] = useState(false);
-  const [canScan, setCanScan] = useState<boolean | undefined>(undefined);
+  const { startScan, stopScan } = useHotspotBle()
+  const [devices, setDevices] = useState<Record<string, Device>>({})
+  const [scanning, setScanning] = useState(false)
+  const [canScan, setCanScan] = useState<boolean | undefined>(undefined)
 
   const showError = (error: any) => {
-    console.log(error);
-    Alert.alert(error.toString());
-  };
+    console.log(error)
+    Alert.alert(error.toString())
+  }
 
   const updateCanScan = useCallback((result: PermissionStatus) => {
     switch (result) {
@@ -35,66 +35,66 @@ const ScanHotspots = () => {
       case RESULTS.BLOCKED:
       case RESULTS.DENIED:
       case RESULTS.LIMITED:
-        setCanScan(false);
-        break;
+        setCanScan(false)
+        break
       case RESULTS.GRANTED:
-        setCanScan(true);
-        break;
+        setCanScan(true)
+        break
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
     if (Platform.OS === 'ios') {
-      setCanScan(true);
-      return;
+      setCanScan(true)
+      return
     }
 
     check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION)
       .then(updateCanScan)
-      .catch(showError);
-  }, [updateCanScan]);
+      .catch(showError)
+  }, [updateCanScan])
 
   useEffect(() => {
-    if (canScan !== false) return;
+    if (canScan !== false) return
 
     request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION)
       .then(updateCanScan)
-      .catch(showError);
-  }, [canScan, updateCanScan]);
+      .catch(showError)
+  }, [canScan, updateCanScan])
 
   const handleScanPress = useCallback(() => {
-    const shouldScan = !scanning;
-    setScanning(shouldScan);
+    const shouldScan = !scanning
+    setScanning(shouldScan)
 
     if (shouldScan) {
       startScan((error, device) => {
         if (error) {
-          showError(error);
+          showError(error)
         }
-        if (error || !device) return;
+        if (error || !device) return
 
-        setDevices((prevDevices) => ({ ...prevDevices, [device.id]: device }));
-      });
+        setDevices((prevDevices) => ({ ...prevDevices, [device.id]: device }))
+      })
     } else {
-      stopScan();
+      stopScan()
     }
-  }, [scanning, startScan, stopScan]);
+  }, [scanning, startScan, stopScan])
 
   const renderItem = React.useCallback(
     ({ item: id }: { index: number; item: string }) => {
-      const { name } = devices[id];
+      const { name } = devices[id]
       return (
         <TouchableOpacity onPress={() => {}} style={styles.listItemContainer}>
           <Text>{name}</Text>
         </TouchableOpacity>
-      );
+      )
     },
     [devices]
-  );
+  )
 
-  const keyExtractor = React.useCallback((id: string) => id, []);
+  const keyExtractor = React.useCallback((id: string) => id, [])
 
-  const data = useMemo(() => Object.keys(devices), [devices]);
+  const data = useMemo(() => Object.keys(devices), [devices])
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -111,8 +111,8 @@ const ScanHotspots = () => {
         />
       )}
     </SafeAreaView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -124,6 +124,6 @@ const styles = StyleSheet.create({
     borderBottomColor: 'lightgray',
     borderBottomWidth: 1,
   },
-});
+})
 
-export default ScanHotspots;
+export default ScanHotspots

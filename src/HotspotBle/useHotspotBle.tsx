@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { BleManager, Device, LogLevel, BleError } from 'react-native-ble-plx';
+import { useEffect, useRef } from 'react'
+import { BleManager, Device, LogLevel, BleError } from 'react-native-ble-plx'
 
 enum Service {
   FIRMWARESERVICE_UUID = '0000180a-0000-1000-8000-00805f9b34fb',
@@ -7,34 +7,34 @@ enum Service {
 }
 
 const useHotspotBle = () => {
-  const instanceRef = useRef<BleManager | null>(null);
+  const instanceRef = useRef<BleManager | null>(null)
 
   const getBleManager = () => {
-    const instance = instanceRef.current;
+    const instance = instanceRef.current
     if (instance !== null) {
-      return instance;
+      return instance
     }
 
-    console.log('create ble manager');
-    const newInstance = new BleManager();
-    instanceRef.current = newInstance;
+    console.log('create ble manager')
+    const newInstance = new BleManager()
+    instanceRef.current = newInstance
 
     if (__DEV__) {
-      console.log('setting ble log level to verbose');
-      instanceRef.current.setLogLevel(LogLevel.Verbose);
+      console.log('setting ble log level to verbose')
+      instanceRef.current.setLogLevel(LogLevel.Verbose)
     }
 
-    return newInstance;
-  };
+    return newInstance
+  }
 
   useEffect(() => {
-    const manager = getBleManager();
+    const manager = getBleManager()
 
     return () => {
-      console.log('destroy ble manager');
-      manager.destroy();
-    };
-  }, []);
+      console.log('destroy ble manager')
+      manager.destroy()
+    }
+  }, [])
 
   const startScan = async (
     callback: (error: BleError | null, device: Device | null) => void
@@ -43,12 +43,12 @@ const useHotspotBle = () => {
       [Service.MAIN_UUID],
       { allowDuplicates: false },
       callback
-    );
-  };
+    )
+  }
 
-  const stopScan = () => getBleManager().stopDeviceScan();
+  const stopScan = () => getBleManager().stopDeviceScan()
 
-  return { startScan, stopScan };
-};
+  return { startScan, stopScan }
+}
 
-export default useHotspotBle;
+export default useHotspotBle
