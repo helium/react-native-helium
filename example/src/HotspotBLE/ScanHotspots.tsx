@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   Alert,
   Button,
@@ -17,12 +17,14 @@ import {
   RESULTS,
   PermissionStatus,
 } from 'react-native-permissions'
+import { useNavigation } from '@react-navigation/native'
+import type { HotspotBleNavProp } from './HotspotBLENav'
 
 const ScanHotspots = () => {
-  const { startScan, stopScan } = useHotspotBle()
-  const [devices, setDevices] = useState<Record<string, Device>>({})
+  const { startScan, stopScan, connect, scannedDevices } = useHotspotBle()
   const [scanning, setScanning] = useState(false)
   const [canScan, setCanScan] = useState<boolean | undefined>(undefined)
+  const navigation = useNavigation<HotspotBleNavProp>()
 
   const showError = (error: any) => {
     console.log(error)
@@ -67,40 +69,58 @@ const ScanHotspots = () => {
     setScanning(shouldScan)
 
     if (shouldScan) {
-      startScan((error, device) => {
+      startScan((error) => {
         if (error) {
           showError(error)
         }
-        if (error || !device) return
-
-        setDevices((prevDevices) => ({ ...prevDevices, [device.id]: device }))
       })
     } else {
       stopScan()
     }
   }, [scanning, startScan, stopScan])
 
+  const navNext = useCallback(
+    () => navigation.push('HotspotSettings'),
+    [navigation]
+  )
+
+  const connectDevice = useCallback(
+    (d: Device) => async () => {
+      try {
+        await connect(d)
+        if (scanning) {
+          stopScan()
+          setScanning(false)
+        }
+        navNext()
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    [connect, navNext, scanning, stopScan]
+  )
+
   const renderItem = React.useCallback(
-    ({ item: id }: { index: number; item: string }) => {
-      const { name } = devices[id]
+    ({ item: device }: { index: number; item: Device }) => {
       return (
-        <TouchableOpacity onPress={() => {}} style={styles.listItemContainer}>
-          <Text>{name}</Text>
+        <TouchableOpacity
+          onPress={connectDevice(device)}
+          style={styles.listItemContainer}
+        >
+          <Text>{device.name}</Text>
         </TouchableOpacity>
       )
     },
-    [devices]
+    [connectDevice]
   )
 
-  const keyExtractor = React.useCallback((id: string) => id, [])
-
-  const data = useMemo(() => Object.keys(devices), [devices])
+  const keyExtractor = React.useCallback(({ id }: Device) => id, [])
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <FlatList
         contentContainerStyle={styles.container}
-        data={data}
+        data={scannedDevices}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
       />

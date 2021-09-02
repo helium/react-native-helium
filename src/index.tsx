@@ -1,6 +1,8 @@
 import { NativeModules } from 'react-native'
-import useHotspotBle from './HotspotBle/useHotspotBle'
 export { Device, BleError } from 'react-native-ble-plx'
+import HotspotBleProvider, {
+  useHotspotBleContext as useHotspotBle,
+} from './HotspotBle/HotspotBleProvider'
 
 type HeliumNativeType = {
   multiply(a: number, b: number): Promise<number>
@@ -16,4 +18,4 @@ const multiplyJS = (a: number, b: number) => {
 
 const { multiply } = heliumNativeModules
 
-export { useHotspotBle, multiplyJS, multiply }
+export { multiplyJS, multiply, HotspotBleProvider, useHotspotBle }
