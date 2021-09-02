@@ -9,8 +9,14 @@
     "start": "react-native start"
   },
   "dependencies": {
+    "@react-navigation/native": "^6.0.2",
+    "@react-navigation/native-stack": "^6.1.0",
     "react": "16.13.1",
-    "react-native": "0.63.4"
+    "react-native": "0.63.4",
+    "react-native-ble-plx": "^2.0.2",
+    "react-native-permissions": "^3.0.5",
+    "react-native-safe-area-context": "^3.3.2",
+    "react-native-screens": "^3.6.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",

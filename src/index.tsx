@@ -1,16 +1,19 @@
 import { NativeModules } from 'react-native';
+import useHotspotBle from './HotspotBle/useHotspotBle';
+export { Device, BleError } from 'react-native-ble-plx';
 
-type HeliumType = {
+type HeliumNativeType = {
   multiply(a: number, b: number): Promise<number>;
 };
 
 const { Helium } = NativeModules;
 
-const helium = Helium as HeliumType;
+const heliumNativeModules = Helium as HeliumNativeType;
 
-export default {
-  ...helium,
-  multiplyJS(a: number, b: number) {
-    return Promise.resolve(a * b);
-  },
+const multiplyJS = (a: number, b: number) => {
+  return Promise.resolve(a * b);
 };
+
+const { multiply } = heliumNativeModules;
+
+export { useHotspotBle, multiplyJS, multiply };

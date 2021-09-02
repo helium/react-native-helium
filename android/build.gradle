@@ -29,13 +29,14 @@ android {
   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
   buildToolsVersion getExtOrDefault('buildToolsVersion')
   defaultConfig {
-    minSdkVersion 16
+    minSdkVersion 21
+    multiDexEnabled true
     targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
     versionCode 1
     versionName "1.0"
-    
+
   }
-  
+
   buildTypes {
     release {
       minifyEnabled false
@@ -54,6 +55,7 @@ repositories {
   mavenCentral()
   jcenter()
   google()
+  maven { url 'https://www.jitpack.io' }
 
   def found = false
   def defaultDir = null
