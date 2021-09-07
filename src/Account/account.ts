@@ -1,4 +1,5 @@
 import { Address, Keypair, Mnemonic } from '@helium/crypto-react-native'
+import wordlist from './Wordlists/english.json'
 
 interface SodiumKeyPair {
   sk: string
@@ -28,3 +29,6 @@ export const getMnemonic = async (words: string[]) => new Mnemonic(words)
 
 export const getKeypair = async (keypairRaw: SodiumKeyPair) =>
   new Keypair(keypairRaw)
+
+export const getMatchingWords = (text: string) =>
+  wordlist.filter((word) => word.indexOf(text.toLocaleLowerCase()) === 0)
