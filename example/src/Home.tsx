@@ -1,12 +1,11 @@
+import React, { useMemo, useCallback } from 'react'
 import { useNavigation } from '@react-navigation/native'
-import * as React from 'react'
-
 import { StyleSheet, Text, FlatList, TouchableOpacity } from 'react-native'
 import type { RootNavigationProp } from './App'
 
 const Home = () => {
   const navigation = useNavigation<RootNavigationProp>()
-  const data = React.useMemo(
+  const data = useMemo(
     () => [
       { title: 'Multiply', handler: () => navigation.push('Multiply') },
       { title: 'HotspotBLE', handler: () => navigation.push('HotspotBLE') },
@@ -15,7 +14,7 @@ const Home = () => {
     [navigation]
   )
 
-  const renderItem = React.useCallback(
+  const renderItem = useCallback(
     ({
       item,
     }: {
@@ -31,7 +30,7 @@ const Home = () => {
     []
   )
 
-  const keyExtractor = React.useCallback((item) => item.title, [])
+  const keyExtractor = useCallback((item) => item.title, [])
 
   return (
     <FlatList data={data} renderItem={renderItem} keyExtractor={keyExtractor} />

@@ -1,4 +1,5 @@
-import * as React from 'react'
+import React from 'react'
+import { LogBox } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import {
   createNativeStackNavigator,
@@ -9,6 +10,7 @@ import Mulitply from './Multiply'
 import HotspotBLENav from './HotspotBLE/HotspotBLENav'
 import { HotspotBleProvider } from 'react-native-helium'
 import AccountNav from './Account/AccountNav'
+import '../appDataClient'
 
 const Stack = createNativeStackNavigator()
 
@@ -22,6 +24,10 @@ export type RootStackParamList = {
 export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>
 
 export default function App() {
+  LogBox.ignoreLogs([
+    'Require cycle', // ignore HeliumJS require cycles
+  ])
+
   return (
     <HotspotBleProvider>
       <NavigationContainer>

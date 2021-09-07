@@ -16,6 +16,8 @@ const initialState = {
   scannedDevices: [] as Device[],
   setWifi: async () => 'not_found' as WifiStatusType,
   removeConfiguredWifi: async () => undefined,
+  createGatewayTxn: async () => undefined,
+  ethernetOnline: async () => false,
 }
 
 const HotspotBleContext =

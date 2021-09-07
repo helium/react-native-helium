@@ -1,7 +1,8 @@
 import { Address, Keypair, Mnemonic } from '@helium/crypto-react-native'
 import wordlist from './Wordlists/english.json'
+import 'react-native-get-random-values'
 
-interface SodiumKeyPair {
+export interface SodiumKeyPair {
   sk: string
   pk: string
 }
@@ -28,8 +29,7 @@ export const getAddress = async (
 
 export const getMnemonic = async (words: string[]) => new Mnemonic(words)
 
-export const getKeypair = async (keypairRaw: SodiumKeyPair) =>
-  new Keypair(keypairRaw)
+export const getKeypair = (keypairRaw: SodiumKeyPair) => new Keypair(keypairRaw)
 
 export const getMatchingWords = (text: string) =>
   wordlist.filter((word) => word.indexOf(text.toLocaleLowerCase()) === 0)
