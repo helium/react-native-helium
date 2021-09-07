@@ -17,7 +17,8 @@ export const createKeypair = async (
   } else {
     mnemonic = new Mnemonic(givenMnemonic)
   }
-  const { keypair: keypairRaw, address } = await Keypair.fromMnemonic(mnemonic)
+  const { keypair, address } = await Keypair.fromMnemonic(mnemonic)
+  const keypairRaw = keypair as SodiumKeyPair
   return { keypairRaw, address, mnemonic }
 }
 
