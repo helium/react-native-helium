@@ -1,5 +1,6 @@
 package com.example.reactnativehelium;
 
+import com.example.reactnativehelium.generated.BasePackageList;
 import android.app.Application;
 import android.content.Context;
 import com.facebook.react.PackageList;
@@ -11,31 +12,40 @@ import com.facebook.soloader.SoLoader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import com.reactnativehelium.HeliumPackage;
+import java.util.Arrays;
+
+import org.unimodules.adapters.react.ModuleRegistryAdapter;
+import org.unimodules.adapters.react.ReactModuleRegistryProvider;
 
 public class MainApplication extends Application implements ReactApplication {
+  private final ReactModuleRegistryProvider mModuleRegistryProvider = new ReactModuleRegistryProvider(
+      new BasePackageList().getPackageList(), null);
 
-  private final ReactNativeHost mReactNativeHost =
-      new ReactNativeHost(this) {
-        @Override
-        public boolean getUseDeveloperSupport() {
-          return BuildConfig.DEBUG;
-        }
+  private final ReactNativeHost mReactNativeHost = new ReactNativeHost(this) {
+    @Override
+    public boolean getUseDeveloperSupport() {
+      return BuildConfig.DEBUG;
+    }
 
-        @Override
-        protected List<ReactPackage> getPackages() {
-          @SuppressWarnings("UnnecessaryLocalVariable")
-          List<ReactPackage> packages = new PackageList(this).getPackages();
-          // Packages that cannot be autolinked yet can be added manually here, for HeliumExample:
-          // packages.add(new MyReactNativePackage());
-          packages.add(new HeliumPackage());
-          return packages;
-        }
+    @Override
+    protected List<ReactPackage> getPackages() {
+      @SuppressWarnings("UnnecessaryLocalVariable")
+      List<ReactPackage> packages = new PackageList(this).getPackages();
+      // Packages that cannot be autolinked yet can be added manually here, for
+      // HeliumExample:
+      // packages.add(new MyReactNativePackage());
+      packages.add(new HeliumPackage());
+      // Add unimodules
+      List<ReactPackage> unimodules = Arrays.<ReactPackage>asList(new ModuleRegistryAdapter(mModuleRegistryProvider));
+      packages.addAll(unimodules);
+      return packages;
+    }
 
-        @Override
-        protected String getJSMainModuleName() {
-          return "index";
-        }
-      };
+    @Override
+    protected String getJSMainModuleName() {
+      return "index";
+    }
+  };
 
   @Override
   public ReactNativeHost getReactNativeHost() {
@@ -46,7 +56,8 @@ public class MainApplication extends Application implements ReactApplication {
   public void onCreate() {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
-    initializeFlipper(this, getReactNativeHost().getReactInstanceManager()); // Remove this line if you don't want Flipper enabled
+    initializeFlipper(this, getReactNativeHost().getReactInstanceManager()); // Remove this line if you don't want
+                                                                             // Flipper enabled
   }
 
   /**
@@ -58,13 +69,12 @@ public class MainApplication extends Application implements ReactApplication {
     if (BuildConfig.DEBUG) {
       try {
         /*
-         We use reflection here to pick up the class that initializes Flipper,
-        since Flipper library is not available in release mode
-        */
+         * We use reflection here to pick up the class that initializes Flipper, since
+         * Flipper library is not available in release mode
+         */
         Class<?> aClass = Class.forName("com.reactnativeheliumExample.ReactNativeFlipper");
-        aClass
-            .getMethod("initializeFlipper", Context.class, ReactInstanceManager.class)
-            .invoke(null, context, reactInstanceManager);
+        aClass.getMethod("initializeFlipper", Context.class, ReactInstanceManager.class).invoke(null, context,
+            reactInstanceManager);
       } catch (ClassNotFoundException e) {
         e.printStackTrace();
       } catch (NoSuchMethodException e) {
