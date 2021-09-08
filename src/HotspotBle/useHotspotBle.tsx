@@ -8,12 +8,29 @@ import {
   Subscription,
   Base64,
 } from 'react-native-ble-plx'
-import { encodeWifiConnect, encodeWifiRemove, parseChar } from './bleParse'
+import { getOnboardingRecord } from '../Staking/stakingClient'
+import {
+  encodeAddGateway,
+  encodeWifiConnect,
+  encodeWifiRemove,
+  parseChar,
+} from './bleParse'
 import {
   FirmwareCharacteristic,
   HotspotCharacteristic,
   Service,
 } from './bleTypes'
+import { signGatewayTxn, calculateAddGatewayFee } from '../utils/addGateway'
+import { decode } from 'base-64'
+import type { SodiumKeyPair } from '../Account/account'
+
+export enum HotspotErrorCode {
+  WAIT = 'wait',
+  UNKNOWN = 'unknown',
+  BAD_ARGS = 'badargs',
+  ERROR = 'error',
+  GATEWAY_NOT_FOUND = 'gw_not_found', // This may no longer be relevant, but it's not hurting anything check for it
+}
 
 const WifiStatusKeys = ['connected', 'invalid', 'not_found'] as const
 export type WifiStatusType = typeof WifiStatusKeys[number]
@@ -157,36 +174,39 @@ const useHotspotBle = () => {
     return writeCharacteristic(characteristic, payload)
   }
 
-  // const readString = async (
-  //   characteristic:
-  //     | HotspotCharacteristic.WIFI_SSID_UUID
-  //     | HotspotCharacteristic.PUBKEY_UUID
-  //     | HotspotCharacteristic.ONBOARDING_KEY_UUID
-  // ) => {
-  //   await checkDevice()
+  const readString = async (
+    characteristic:
+      | HotspotCharacteristic.WIFI_SSID_UUID
+      | HotspotCharacteristic.PUBKEY_UUID
+      | HotspotCharacteristic.ONBOARDING_KEY_UUID
+  ) => {
+    await checkDevice()
 
-  //   const charVal = await findAndReadCharacteristic(characteristic)
+    const charVal = await findAndReadCharacteristic(characteristic)
 
-  //   let parsedStr = ''
-  //   if (charVal) {
-  //     parsedStr = parseChar(charVal, characteristic)
-  //   }
-  //   return parsedStr
-  // }
+    let parsedStr = ''
+    if (charVal) {
+      parsedStr = parseChar(charVal, characteristic)
+    }
+    return parsedStr
+  }
 
-  // const readBool = async (
-  //   characteristic: HotspotCharacteristic.ETHERNET_ONLINE_UUID
-  // ) => {
-  //   await checkDevice()
+  const readBool = async (
+    characteristic: HotspotCharacteristic.ETHERNET_ONLINE_UUID
+  ) => {
+    await checkDevice()
 
-  //   const charVal = await findAndReadCharacteristic(characteristic)
+    const charVal = await findAndReadCharacteristic(characteristic)
 
-  //   let parsedStr = false
-  //   if (charVal) {
-  //     parsedStr = parseChar(charVal, characteristic)
-  //   }
-  //   return parsedStr
-  // }
+    let parsedStr = false
+    if (charVal) {
+      parsedStr = parseChar(charVal, characteristic)
+    }
+    return parsedStr
+  }
+
+  const ethernetOnline = () =>
+    readBool(HotspotCharacteristic.ETHERNET_ONLINE_UUID)
 
   const getState = async () => getBleManager().state()
 
@@ -262,6 +282,51 @@ const useHotspotBle = () => {
     return response
   }
 
+  const createGatewayTxn = async (
+    ownerAddress: string,
+    ownerKeypairRaw: SodiumKeyPair
+  ) => {
+    checkDevice()
+
+    const onboardingAddress = await readString(
+      HotspotCharacteristic.ONBOARDING_KEY_UUID
+    )
+    const onboardingRecord = await getOnboardingRecord(onboardingAddress)
+
+    const payer = onboardingRecord.maker.address
+    const { fee, stakingFee } = calculateAddGatewayFee(ownerAddress, payer)
+
+    const encodedPayload = encodeAddGateway(
+      ownerAddress,
+      stakingFee,
+      fee,
+      payer
+    )
+    const addGatewayUuid = HotspotCharacteristic.ADD_GATEWAY_UUID
+    const characteristic = await findCharacteristic(addGatewayUuid)
+
+    if (!characteristic) {
+      throw new Error(
+        `Could not find characteristic ${HotspotCharacteristic.ADD_GATEWAY_UUID}`
+      )
+    }
+
+    await writeCharacteristic(characteristic, encodedPayload)
+    const { value } = await readCharacteristic(characteristic)
+    if (!value) {
+      throw new Error(
+        `Could not read characteristic ${HotspotCharacteristic.ADD_GATEWAY_UUID}`
+      )
+    }
+
+    const parsedValue = decode(value)
+    if (parsedValue in HotspotErrorCode || parsedValue.length < 20) {
+      throw new Error(parsedValue)
+    }
+
+    return signGatewayTxn(value, ownerKeypairRaw)
+  }
+
   return {
     startScan,
     stopScan,
@@ -275,6 +340,8 @@ const useHotspotBle = () => {
     readWifiNetworks,
     setWifi,
     removeConfiguredWifi,
+    createGatewayTxn,
+    ethernetOnline,
   }
 }
 

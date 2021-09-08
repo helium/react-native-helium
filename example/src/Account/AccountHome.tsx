@@ -32,7 +32,10 @@ const AccountHome = () => {
   return (
     <View>
       <View style={styles.info}>
-        <Text style={styles.address}>{`Address:\n${address || 'none'}`}</Text>
+        <Text style={styles.address}>Address:</Text>
+        <Text style={styles.address} selectable>
+          {address || 'none'}
+        </Text>
       </View>
       {!!address && <Button title="Sign Out" onPress={handleSignout} />}
       {!address && <Button title="Create Account" onPress={handleCreate} />}

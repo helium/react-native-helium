@@ -1,4 +1,5 @@
-import * as React from 'react'
+import React from 'react'
+import { LogBox } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import {
   createNativeStackNavigator,
@@ -6,9 +7,11 @@ import {
 } from '@react-navigation/native-stack'
 import Home from './Home'
 import Mulitply from './Multiply'
+import AddGatewayTxn from './AddGatewayTxn/AddGatewayTxn'
 import HotspotBLENav from './HotspotBLE/HotspotBLENav'
 import { HotspotBleProvider } from 'react-native-helium'
 import AccountNav from './Account/AccountNav'
+import '../appDataClient'
 
 const Stack = createNativeStackNavigator()
 
@@ -17,11 +20,16 @@ export type RootStackParamList = {
   Multiply: undefined
   HotspotBLE: undefined
   Account: undefined
+  AddGatewayTxn: undefined
 }
 
 export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>
 
 export default function App() {
+  LogBox.ignoreLogs([
+    'Require cycle', // ignore HeliumJS require cycles
+  ])
+
   return (
     <HotspotBleProvider>
       <NavigationContainer>
@@ -35,6 +43,7 @@ export default function App() {
           <Stack.Screen name="Multiply" component={Mulitply} />
           <Stack.Screen name="HotspotBLE" component={HotspotBLENav} />
           <Stack.Screen name="Account" component={AccountNav} />
+          <Stack.Screen name="AddGatewayTxn" component={AddGatewayTxn} />
         </Stack.Navigator>
       </NavigationContainer>
     </HotspotBleProvider>

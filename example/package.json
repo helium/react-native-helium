@@ -9,16 +9,21 @@
     "start": "react-native start"
   },
   "dependencies": {
+    "@helium/crypto-react-native": "^3.9.0",
+    "@helium/http": "^3.43.0",
+    "@helium/proto-ble": "^3.37.0",
+    "@helium/transactions": "^3.38.0",
     "@react-navigation/native": "^6.0.2",
     "@react-navigation/native-stack": "^6.1.0",
     "expo-secure-store": "^10.2.0",
     "react": "16.13.1",
     "react-native": "0.63.4",
     "react-native-ble-plx": "^2.0.2",
-    "react-native-sodium": "^0.3.9",
+    "react-native-get-random-values": "^1.7.0",
     "react-native-permissions": "^3.0.5",
     "react-native-safe-area-context": "^3.3.2",
     "react-native-screens": "^3.6.0",
+    "react-native-sodium": "^0.3.9",
     "react-native-unimodules": "^0.14.6"
   },
   "devDependencies": {

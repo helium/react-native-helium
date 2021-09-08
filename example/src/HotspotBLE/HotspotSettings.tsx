@@ -7,7 +7,6 @@ import type { HotspotBleNavProp } from './HotspotBLENav'
 
 const HotspotSettings = () => {
   const navigation = useNavigation<HotspotBleNavProp>()
-
   const { isConnected, discoverAllServicesAndCharacteristics } = useHotspotBle()
 
   useEffect(() => {
@@ -42,6 +41,10 @@ const HotspotSettings = () => {
       {
         title: 'Wi-Fi Settings',
         handler: () => navigation.push('WifiSettings'),
+      },
+      {
+        title: 'Add Gateway',
+        handler: () => navigation.push('AddGatewayBle'),
       },
     ],
     [navigation]
