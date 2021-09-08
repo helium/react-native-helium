@@ -9,6 +9,17 @@ const modules = Object.keys({
   ...pak.peerDependencies,
 })
 
+const extraNodeModules = () => {
+  const mods = {
+    ...modules.reduce((acc, name) => {
+      acc[name] = path.join(__dirname, 'node_modules', name)
+      return acc
+    }, {}),
+    stream: path.join(__dirname, 'node_modules', 'readable-stream'),
+  }
+  return mods
+}
+
 module.exports = {
   projectRoot: __dirname,
   watchFolders: [root],
@@ -23,10 +34,7 @@ module.exports = {
       )
     ),
 
-    extraNodeModules: modules.reduce((acc, name) => {
-      acc[name] = path.join(__dirname, 'node_modules', name)
-      return acc
-    }, {}),
+    extraNodeModules: extraNodeModules(),
   },
 
   transformer: {

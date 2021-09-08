@@ -35,6 +35,15 @@ export const getAddress = async () => {
   return Account.getAddress(addressB58)
 }
 
+export const getKeypair = async () => {
+  const keypairStr = await getSecureItem('keypair')
+  if (!keypairStr) return
+
+  if (keypairStr) {
+    return JSON.parse(keypairStr)
+  }
+}
+
 export const getAddressStr = async () => {
   const addy = await getAddress()
   return addy?.b58

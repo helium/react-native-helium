@@ -2,6 +2,19 @@ import { NativeModules } from 'react-native'
 export { Device, BleError } from 'react-native-ble-plx'
 export { Mnemonic, Address } from '@helium/crypto-react-native'
 import * as Account from './Account/account'
+import * as Staking from './Staking/stakingClient'
+import * as Gateway from './utils/addGateway'
+import './polyfill'
+import HeliumHttpClient from '@helium/http'
+import { Transaction } from '@helium/transactions'
+
+const client = new HeliumHttpClient()
+const configChainVars = async () => {
+  const vars = await client.vars.get()
+  Transaction.config(vars)
+}
+configChainVars()
+
 import HotspotBleProvider, {
   useHotspotBleContext as useHotspotBle,
   BleManager,
@@ -25,7 +38,10 @@ export {
   multiplyJS,
   multiply,
   HotspotBleProvider,
+  BleManager,
   useHotspotBle,
   Account,
-  BleManager,
+  Staking,
+  Gateway,
+  client,
 }

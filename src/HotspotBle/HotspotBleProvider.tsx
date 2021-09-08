@@ -1,6 +1,7 @@
 import React, { createContext, ReactNode, useContext } from 'react'
 import { BleError, Device, State } from 'react-native-ble-plx'
 import useHotspotBle, { WifiStatusType } from './useHotspotBle'
+import type { SodiumKeyPair } from '../Account/account'
 
 /**
  * Use this interface to connect to and interact with a Hotspot over bluetooth.
@@ -25,6 +26,10 @@ export type BleManager = {
   setWifi: (ssid: string, password: string) => Promise<WifiStatusType>
   removeConfiguredWifi: (name: string) => Promise<string | undefined>
   scannedDevices: Device[]
+  createGatewayTxn: (
+    ownerAddress: string,
+    ownerKeypairRaw: SodiumKeyPair
+  ) => Promise<string>
 }
 
 const initialState = {
@@ -41,6 +46,8 @@ const initialState = {
   scannedDevices: [] as Device[],
   setWifi: async () => 'not_found' as WifiStatusType,
   removeConfiguredWifi: async () => undefined,
+  createGatewayTxn: async () => '',
+  ethernetOnline: async () => false,
 }
 
 const HotspotBleContext =

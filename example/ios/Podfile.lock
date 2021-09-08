@@ -272,6 +272,8 @@ PODS:
   - react-native-ble-plx (2.0.2):
     - MultiplatformBleAdapter (= 0.1.7)
     - React
+  - react-native-get-random-values (1.7.0):
+    - React-Core
   - react-native-helium (0.1.0):
     - React-Core
   - react-native-safe-area-context (3.3.2):
@@ -399,6 +401,7 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - react-native-ble-plx (from `../node_modules/react-native-ble-plx`)
+  - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
   - react-native-helium (from `../..`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-sodium (from `../node_modules/react-native-sodium`)
@@ -481,6 +484,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   react-native-ble-plx:
     :path: "../node_modules/react-native-ble-plx"
+  react-native-get-random-values:
+    :path: "../node_modules/react-native-get-random-values"
   react-native-helium:
     :path: "../.."
   react-native-safe-area-context:
@@ -557,6 +562,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 93bd528844ad21dc07aab1c67cb10abae6df6949
   React-jsinspector: 58aef7155bc9a9683f5b60b35eccea8722a4f53a
   react-native-ble-plx: caac53ee98151ec81198239d591c203809a1ed6e
+  react-native-get-random-values: 237bffb1c7e05fb142092681531810a29ba53015
   react-native-helium: 5065936068ae1616ef207ba40ae798ca76108d2e
   react-native-safe-area-context: 584dc04881deb49474363f3be89e4ca0e854c057
   react-native-sodium: be31e3fd97b1e9abd0853d7623fbec4b390b6615
