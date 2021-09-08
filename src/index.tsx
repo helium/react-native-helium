@@ -5,6 +5,15 @@ import * as Account from './Account/account'
 import * as Staking from './Staking/stakingClient'
 import * as Gateway from './utils/addGateway'
 import './polyfill'
+import HeliumHttpClient from '@helium/http'
+import { Transaction } from '@helium/transactions'
+
+const client = new HeliumHttpClient()
+const configChainVars = async () => {
+  const vars = await client.vars.get()
+  Transaction.config(vars)
+}
+configChainVars()
 
 import HotspotBleProvider, {
   useHotspotBleContext as useHotspotBle,
@@ -32,4 +41,5 @@ export {
   Account,
   Staking,
   Gateway,
+  client,
 }

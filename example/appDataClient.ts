@@ -1,12 +1,4 @@
-import Client from '@helium/http'
-import { Transaction } from '@helium/transactions'
-
-const client = new Client()
-const configChainVars = async () => {
-  const vars = await client.vars.get()
-  Transaction.config(vars)
-}
-configChainVars()
+import { client } from 'react-native-helium'
 
 export const submitPendingTxn = (txn: string) => client.transactions.submit(txn)
 
