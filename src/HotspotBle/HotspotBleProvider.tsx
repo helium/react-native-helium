@@ -16,7 +16,7 @@ const initialState = {
   scannedDevices: [] as Device[],
   setWifi: async () => 'not_found' as WifiStatusType,
   removeConfiguredWifi: async () => undefined,
-  createGatewayTxn: async () => undefined,
+  createGatewayTxn: async () => '',
   ethernetOnline: async () => false,
 }
 

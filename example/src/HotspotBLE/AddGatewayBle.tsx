@@ -4,7 +4,7 @@ import { useHotspotBle } from '../../../src'
 import { getPendingTxn, submitPendingTxn } from '../../appDataClient'
 import { getKeypair, getSecureItem } from '../Account/secureAccount'
 
-const AddGateway = () => {
+const AddGatewayBle = () => {
   const { createGatewayTxn } = useHotspotBle()
   const [hash, setHash] = useState('')
   const [status, setStatus] = useState('')
@@ -64,4 +64,4 @@ const styles = StyleSheet.create({
   topMargin: { marginTop: 16 },
 })
 
-export default AddGateway
+export default AddGatewayBle

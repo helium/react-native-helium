@@ -44,7 +44,7 @@ const HotspotSettings = () => {
       },
       {
         title: 'Add Gateway',
-        handler: () => navigation.push('AddGateway'),
+        handler: () => navigation.push('AddGatewayBle'),
       },
     ],
     [navigation]

@@ -7,6 +7,7 @@ import {
 } from '@react-navigation/native-stack'
 import Home from './Home'
 import Mulitply from './Multiply'
+import AddGatewayTxn from './AddGatewayTxn/AddGatewayTxn'
 import HotspotBLENav from './HotspotBLE/HotspotBLENav'
 import { HotspotBleProvider } from 'react-native-helium'
 import AccountNav from './Account/AccountNav'
@@ -19,6 +20,7 @@ export type RootStackParamList = {
   Multiply: undefined
   HotspotBLE: undefined
   Account: undefined
+  AddGatewayTxn: undefined
 }
 
 export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>
@@ -41,6 +43,7 @@ export default function App() {
           <Stack.Screen name="Multiply" component={Mulitply} />
           <Stack.Screen name="HotspotBLE" component={HotspotBLENav} />
           <Stack.Screen name="Account" component={AccountNav} />
+          <Stack.Screen name="AddGatewayTxn" component={AddGatewayTxn} />
         </Stack.Navigator>
       </NavigationContainer>
     </HotspotBleProvider>

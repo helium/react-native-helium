@@ -8,12 +8,7 @@ import {
   Subscription,
   Base64,
 } from 'react-native-ble-plx'
-import { calculateAddGatewayFee } from '../fees'
-import { getKeypair, SodiumKeyPair } from '../Account/account'
-import {
-  getOnboardingRecord,
-  getStakingSignedTransaction,
-} from '../Staking/stakingClient'
+import { getOnboardingRecord } from '../Staking/stakingClient'
 import {
   encodeAddGateway,
   encodeWifiConnect,
@@ -25,8 +20,9 @@ import {
   HotspotCharacteristic,
   Service,
 } from './bleTypes'
-import { makeAddGatewayTxn } from '../transactions'
+import { signGatewayTxn, calculateAddGatewayFee } from '../utils/addGateway'
 import { decode } from 'base-64'
+import type { SodiumKeyPair } from '../Account/account'
 
 export enum HotspotErrorCode {
   WAIT = 'wait',
@@ -307,8 +303,8 @@ const useHotspotBle = () => {
       payer
     )
     const addGatewayUuid = HotspotCharacteristic.ADD_GATEWAY_UUID
-
     const characteristic = await findCharacteristic(addGatewayUuid)
+
     if (!characteristic) {
       throw new Error(
         `Could not find characteristic ${HotspotCharacteristic.ADD_GATEWAY_UUID}`
@@ -328,12 +324,7 @@ const useHotspotBle = () => {
       throw new Error(parsedValue)
     }
 
-    const ownerKeypair = getKeypair(ownerKeypairRaw)
-
-    const txn = await makeAddGatewayTxn(value, ownerKeypair)
-    if (!txn) return
-
-    return getStakingSignedTransaction(onboardingAddress, txn.toString())
+    return signGatewayTxn(value, ownerKeypairRaw)
   }
 
   return {

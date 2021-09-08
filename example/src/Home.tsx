@@ -10,6 +10,10 @@ const Home = () => {
       { title: 'Multiply', handler: () => navigation.push('Multiply') },
       { title: 'HotspotBLE', handler: () => navigation.push('HotspotBLE') },
       { title: 'Account', handler: () => navigation.push('Account') },
+      {
+        title: 'Add Gateway from Transaction String',
+        handler: () => navigation.push('AddGatewayTxn'),
+      },
     ],
     [navigation]
   )
