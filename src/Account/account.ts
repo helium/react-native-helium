@@ -1,6 +1,5 @@
 import { Address, Keypair, Mnemonic } from '@helium/crypto-react-native'
 import wordlist from './Wordlists/english.json'
-import 'react-native-get-random-values'
 
 export interface SodiumKeyPair {
   sk: string
