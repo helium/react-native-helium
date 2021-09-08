@@ -57,6 +57,11 @@ const useHotspotBle = () => {
     }
   }, [])
 
+  /**
+   * Start a Bluetooth scan
+   *
+   * @param callback
+   */
   const startScan = async (callback: (error: BleError | null) => void) => {
     getBleManager().startDeviceScan(
       [Service.MAIN_UUID],
