@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext } from 'react'
-import { BleError, Device, State } from 'react-native-ble-plx';
+import { BleError, Device, State } from 'react-native-ble-plx'
 import useHotspotBle, { WifiStatusType } from './useHotspotBle'
 
 /**
