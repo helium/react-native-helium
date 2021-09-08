@@ -1,9 +1,10 @@
-import { client } from 'react-native-helium'
+import { heliumHttpClient } from 'react-native-helium'
 
-export const submitPendingTxn = (txn: string) => client.transactions.submit(txn)
+export const submitPendingTxn = (txn: string) =>
+  heliumHttpClient.transactions.submit(txn)
 
 export const getPendingTxn = (hash: string) =>
-  client.pendingTransactions.get(hash)
+  heliumHttpClient.pendingTransactions.get(hash)
 
 export const getHotspotDetails = async (address: string) =>
-  client.hotspots.get(address)
+  heliumHttpClient.hotspots.get(address)

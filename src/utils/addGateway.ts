@@ -16,9 +16,7 @@ export const calculateAddGatewayFee = (ownerB58: string, payerB58: string) => {
     payer,
   })
 
-  const data = { fee: txn.fee || 0, stakingFee: txn.stakingFee || 0 }
-  console.log({ data })
-  return data
+  return { fee: txn.fee || 0, stakingFee: txn.stakingFee || 0 }
 }
 export const txnFromString = (txnStr: string) => AddGatewayV1.fromString(txnStr)
 
