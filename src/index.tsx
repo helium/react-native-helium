@@ -3,14 +3,15 @@ export { Device, BleError } from 'react-native-ble-plx'
 export { Mnemonic, Address } from '@helium/crypto-react-native'
 import * as Account from './Account/account'
 import * as Staking from './Staking/stakingClient'
-import * as Gateway from './utils/addGateway'
+import * as AddGateway from './utils/addGateway'
+import * as Location from './utils/assertLocation'
 import './polyfill'
-import HeliumHttpClient from '@helium/http'
+import Client from '@helium/http'
 import { Transaction } from '@helium/transactions'
 
-const client = new HeliumHttpClient()
+const heliumHttpClient = new Client()
 const configChainVars = async () => {
-  const vars = await client.vars.get()
+  const vars = await heliumHttpClient.vars.get()
   Transaction.config(vars)
 }
 configChainVars()
@@ -40,6 +41,7 @@ export {
   useHotspotBle,
   Account,
   Staking,
-  Gateway,
-  client,
+  AddGateway,
+  Location,
+  heliumHttpClient,
 }
