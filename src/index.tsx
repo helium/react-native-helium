@@ -3,7 +3,8 @@ export { Device, BleError } from 'react-native-ble-plx'
 export { Mnemonic, Address } from '@helium/crypto-react-native'
 import * as Account from './Account/account'
 import * as Staking from './Staking/stakingClient'
-import * as Gateway from './utils/addGateway'
+import * as AddGateway from './utils/addGateway'
+import * as AssertLocation from './utils/assertLocation'
 import './polyfill'
 import Client from '@helium/http'
 import { Transaction } from '@helium/transactions'
@@ -40,6 +41,7 @@ export {
   useHotspotBle,
   Account,
   Staking,
-  Gateway,
+  AddGateway,
+  AssertLocation,
   heliumHttpClient,
 }

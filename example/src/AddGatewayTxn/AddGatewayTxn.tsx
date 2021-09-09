@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { View, TextInput, StyleSheet, Text, Button } from 'react-native'
-import { Staking, Gateway } from 'react-native-helium'
+import { Staking, AddGateway } from 'react-native-helium'
 import {
   getHotspotDetails,
   getPendingTxn,
@@ -35,7 +35,7 @@ const AddGatewayTxn = () => {
     if (!txnStr) return
 
     try {
-      const txn = Gateway.txnFromString(txnStr)
+      const txn = AddGateway.txnFromString(txnStr)
 
       setPublicKey(txn.gateway?.b58 || '')
       setOwnerAddress(txn.owner?.b58 || '')
@@ -68,7 +68,7 @@ const AddGatewayTxn = () => {
 
     // construct and publish add gateway
     const keypair = await getKeypair()
-    const txn = await Gateway.signGatewayTxn(txnStr, keypair)
+    const txn = await AddGateway.signGatewayTxn(txnStr, keypair)
     const pendingTxn = await submitPendingTxn(txn)
     setHash(pendingTxn.hash)
     setStatus(pendingTxn.status)
