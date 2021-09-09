@@ -1,4 +1,5 @@
 import type { BleError, Device, State } from 'react-native-ble-plx'
+import { DiagnosticInfo } from '..'
 import type { SodiumKeyPair } from '../Account/account'
 import type { WifiStatusType } from './useHotspotBle'
 
@@ -117,4 +118,9 @@ export interface HotspotBleManager {
     ownerAddress: string,
     ownerKeypairRaw: SodiumKeyPair
   ) => Promise<string>
+
+  /**
+   * Returns the diagnostic info for the connected Hotspot.
+   */
+  getDiagnosticInfo: () => Promise<DiagnosticInfo>
 }

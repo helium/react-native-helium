@@ -8,6 +8,7 @@ import HotspotSettings from './HotspotSettings'
 import WifiSettings from './WifiSettings'
 import AddGatewayBle from './AddGatewayBle'
 import WifiSetup from './WifiSetup'
+import Diagnostics from './Diagnostics'
 
 const Stack = createNativeStackNavigator()
 
@@ -17,6 +18,7 @@ export type HotspotBLEStackParamList = {
   WifiSettings: undefined
   WifiSetup: { network: string }
   AddGatewayBle: undefined
+  Diagnostics: undefined
 }
 
 export type HotspotBleNavProp =
@@ -30,6 +32,7 @@ export default function HotspotBLENav() {
       <Stack.Screen name="WifiSettings" component={WifiSettings} />
       <Stack.Screen name="WifiSetup" component={WifiSetup} />
       <Stack.Screen name="AddGatewayBle" component={AddGatewayBle} />
+      <Stack.Screen name="Diagnostics" component={Diagnostics} />
     </Stack.Navigator>
   )
 }

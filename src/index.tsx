@@ -24,6 +24,7 @@ import Balance, {
   SecurityTokens,
   USDollars,
 } from '@helium/currency'
+export { DiagnosticInfo } from './HotspotBle/bleParse'
 
 const heliumHttpClient = new Client()
 const configChainVars = async () => {
