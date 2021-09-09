@@ -14,6 +14,10 @@ const Home = () => {
         title: 'Add Gateway from Transaction String',
         handler: () => navigation.push('AddGatewayTxn'),
       },
+      {
+        title: 'Assert Location',
+        handler: () => navigation.push('AssertLocation'),
+      },
     ],
     [navigation]
   )
