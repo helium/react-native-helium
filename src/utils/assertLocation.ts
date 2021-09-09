@@ -59,7 +59,7 @@ export const makeAssertLocTxn = async ({
   elevation: number
   stakingFee: number
   ownerKeypairRaw: SodiumKeyPair
-}) => {
+}): Promise<AssertLocationV2> => {
   const keypair = await getKeypair(ownerKeypairRaw)
   const owner = Address.fromB58(ownerB58)
   const gateway = Address.fromB58(gatewayB58)

@@ -6,7 +6,11 @@ import * as Onboarding from './Onboarding/onboardingClient'
 import * as AddGateway from './utils/addGateway'
 import * as Location from './utils/assertLocation'
 import './polyfill'
-import { AddGatewayV1, Transaction } from '@helium/transactions'
+import {
+  AddGatewayV1,
+  Transaction,
+  AssertLocationV2,
+} from '@helium/transactions'
 import HotspotBleProvider, {
   useHotspotBleContext as useHotspotBle,
 } from './HotspotBle/HotspotBleProvider'
@@ -14,6 +18,12 @@ import { Keypair } from '@helium/crypto-react-native'
 import { HotspotBleManager } from './HotspotBle/bleTypes'
 import { State } from 'react-native-ble-plx'
 import Client from '@helium/http'
+import Balance, {
+  NetworkTokens,
+  DataCredits,
+  SecurityTokens,
+  USDollars,
+} from '@helium/currency'
 
 const heliumHttpClient = new Client()
 const configChainVars = async () => {
@@ -51,4 +61,10 @@ export {
   AddGateway,
   Location,
   heliumHttpClient,
+  AssertLocationV2,
+  Balance,
+  NetworkTokens,
+  DataCredits,
+  SecurityTokens,
+  USDollars,
 }
