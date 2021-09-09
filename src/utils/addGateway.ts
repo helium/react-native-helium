@@ -1,11 +1,16 @@
 import { AddGatewayV1 } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
-import { getStakingSignedTransaction } from '../Staking/stakingClient'
+import { getOnboardingSignedTransaction } from '../Onboarding/onboardingClient'
 import { Address } from '@helium/crypto-react-native'
 
 const emptyB58Address = () =>
   Address.fromB58('13PuqyWXzPYeXcF1B9ZRx7RLkEygeL374ZABiQdwRSNzASdA1sn')
 
+/**
+ * Calculate the transaction fee and staking fee for an AddGatewayV1 transaction.
+ * @param ownerB58
+ * @param payerB58
+ */
 export const calculateAddGatewayFee = (ownerB58: string, payerB58: string) => {
   const owner = Address.fromB58(ownerB58)
   const payer = Address.fromB58(payerB58)
@@ -18,8 +23,19 @@ export const calculateAddGatewayFee = (ownerB58: string, payerB58: string) => {
 
   return { fee: txn.fee || 0, stakingFee: txn.stakingFee || 0 }
 }
-export const txnFromString = (txnStr: string) => AddGatewayV1.fromString(txnStr)
 
+/**
+ * Convert an encoded blockchain txn string into an {@link AddGatewayV1} transaction.
+ * @param txnStr the encoded blockchain transaction as a String
+ */
+export const txnFromString = (txnStr: string): AddGatewayV1 =>
+  AddGatewayV1.fromString(txnStr)
+
+/**
+ * Sign an {@link AddGatewayV1} transaction with the provided owner {@link SodiumKeyPair}
+ * @param txnStr the encoded blockchain transaction as a String
+ * @param ownerKeypairRaw
+ */
 export const signGatewayTxn = async (
   txnStr: string,
   ownerKeypairRaw: SodiumKeyPair
@@ -33,7 +49,7 @@ export const signGatewayTxn = async (
   if (!txnOwnerSigned.gateway?.b58) {
     throw new Error('Failed to sign gateway txn')
   }
-  return getStakingSignedTransaction(
+  return getOnboardingSignedTransaction(
     txnOwnerSigned.gateway.b58,
     txnOwnerSigned.toString()
   )

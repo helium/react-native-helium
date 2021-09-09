@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { View, TextInput, StyleSheet, Text, Button } from 'react-native'
-import { Staking, AddGateway } from 'react-native-helium'
+import { Onboarding, AddGateway } from 'react-native-helium'
 import {
   getHotspotDetails,
   getPendingTxn,
@@ -14,7 +14,7 @@ const AddGatewayTxn = () => {
   const [macAddress, setMacAddress] = useState('')
   const [ownerAddress, setOwnerAddress] = useState('')
   const [onboardingRecord, setOnboardingRecord] =
-    useState<Staking.OnboardingRecord>()
+    useState<Onboarding.OnboardingRecord>()
   const [submitted, setSubmitted] = useState(false)
   const [hash, setHash] = useState('')
   const [status, setStatus] = useState('')
@@ -24,7 +24,7 @@ const AddGatewayTxn = () => {
     if (!publicKey) return
 
     const getRecord = async () => {
-      const record = await Staking.getOnboardingRecord(publicKey)
+      const record = await Onboarding.getOnboardingRecord(publicKey)
       setMacAddress(record.macEth0 || 'unknown')
       setOnboardingRecord(record)
     }

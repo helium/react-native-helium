@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
-import { Location, Staking } from 'react-native-helium'
+import { Location, Onboarding } from 'react-native-helium'
 import { Address } from '@helium/crypto-react-native'
 import {
   getAccount,
@@ -34,7 +34,7 @@ const AssertLocation = () => {
   const [ownerAddress, setOwnerAddress] = useState<string | null>(null)
   const [hotspot, setHotspot] = useState<Hotspot>()
   const [onboardingRecord, setOnboardingRecord] =
-    useState<Staking.OnboardingRecord>()
+    useState<Onboarding.OnboardingRecord>()
   const [feeData, setFeeData] = useState<{
     isFree: boolean
     hasSufficientBalance: boolean
@@ -67,7 +67,7 @@ const AssertLocation = () => {
     getHotspotDetails(gatewayAddress)
       .then(setHotspot)
       .catch((e) => console.log(e))
-    Staking.getOnboardingRecord(gatewayAddress)
+    Onboarding.getOnboardingRecord(gatewayAddress)
       .then(setOnboardingRecord)
       .catch((e) => console.log(e))
   }, [gatewayAddress])
