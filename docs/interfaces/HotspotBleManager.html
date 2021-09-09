@@ -71,11 +71,11 @@
 						<p>Use this interface to connect to and interact with a Hotspot over bluetooth.</p>
 					</div>
 					<p>For example if you wanted to scan for hotspots in one of your components you
-						would first need to wrap your App component with <a href="../modules.html#HotspotBleProvider">HotspotBleProvider</a>
+						would first need to wrap your apps root component with <a href="../modules.html#HotspotBleProvider">HotspotBleProvider</a>
 					(see <code>/example/src/App.tsx</code>).</p>
 					<p>Next in the component you want to scan for hotspots, you would add the
 					following code to import the functions from the BleManager:</p>
-					<pre><code><span style="color: #0000FF">const</span><span style="color: #000000"> { </span><span style="color: #0070C1">startScan</span><span style="color: #000000">, </span><span style="color: #0070C1">stopScan</span><span style="color: #000000">, </span><span style="color: #0070C1">connect</span><span style="color: #000000">, </span><span style="color: #0070C1">scannedDevices</span><span style="color: #000000"> } = </span><span style="color: #795E26">useHotspotBle</span><span style="color: #000000">()</span>
+					<pre><code class="language-typescript"><span style="color: #0000FF">const</span><span style="color: #000000"> { </span><span style="color: #0070C1">startScan</span><span style="color: #000000">, </span><span style="color: #0070C1">stopScan</span><span style="color: #000000">, </span><span style="color: #0070C1">connect</span><span style="color: #000000">, </span><span style="color: #0070C1">scannedDevices</span><span style="color: #000000"> } = </span><span style="color: #795E26">useHotspotBle</span><span style="color: #000000">()</span>
 </code></pre>
 					<p>See <code>/example/src/HotspotBLE/ScanHotspots.tsx</code> for an example of scanning for
 					Hotspots.</p>
@@ -127,7 +127,7 @@
 					<div class="tsd-signature tsd-kind-icon">scanned<wbr>Devices<span class="tsd-signature-symbol">:</span> <a href="../classes/Device.html" class="tsd-signature-type" data-tsd-kind="Class">Device</a><span class="tsd-signature-symbol">[]</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/2bbcaa3/example/src/HotspotBLE/HotspotBLETypes.ts#L87">example/src/HotspotBLE/HotspotBLETypes.ts:87</a></li>
+							<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/bleTypes.ts#L109">src/HotspotBle/bleTypes.ts:109</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -149,7 +149,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/2bbcaa3/example/src/HotspotBLE/HotspotBLETypes.ts#L48">example/src/HotspotBLE/HotspotBLETypes.ts:48</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/bleTypes.ts#L70">src/HotspotBle/bleTypes.ts:70</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -179,7 +179,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/2bbcaa3/example/src/HotspotBLE/HotspotBLETypes.ts#L94">example/src/HotspotBLE/HotspotBLETypes.ts:94</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/bleTypes.ts#L116">src/HotspotBle/bleTypes.ts:116</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -212,7 +212,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/2bbcaa3/example/src/HotspotBLE/HotspotBLETypes.ts#L53">example/src/HotspotBLE/HotspotBLETypes.ts:53</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/bleTypes.ts#L75">src/HotspotBle/bleTypes.ts:75</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -234,7 +234,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/2bbcaa3/example/src/HotspotBLE/HotspotBLETypes.ts#L58">example/src/HotspotBLE/HotspotBLETypes.ts:58</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/bleTypes.ts#L80">src/HotspotBle/bleTypes.ts:80</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -256,7 +256,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/2bbcaa3/example/src/HotspotBLE/HotspotBLETypes.ts#L31">example/src/HotspotBLE/HotspotBLETypes.ts:31</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/bleTypes.ts#L53">src/HotspotBle/bleTypes.ts:53</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -273,13 +273,13 @@
 					<a name="getState" class="tsd-anchor"></a>
 					<h3>get<wbr>State</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>State<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">State</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>State<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../enums/State.html" class="tsd-signature-type" data-tsd-kind="Enumeration">State</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/2bbcaa3/example/src/HotspotBLE/HotspotBLETypes.ts#L25">example/src/HotspotBLE/HotspotBLETypes.ts:25</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/bleTypes.ts#L47">src/HotspotBle/bleTypes.ts:47</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -287,7 +287,7 @@
 									<p>Query the bluetooth connection state.</p>
 								</div>
 							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">State</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../enums/State.html" class="tsd-signature-type" data-tsd-kind="Enumeration">State</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -301,7 +301,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/2bbcaa3/example/src/HotspotBLE/HotspotBLETypes.ts#L63">example/src/HotspotBLE/HotspotBLETypes.ts:63</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/bleTypes.ts#L85">src/HotspotBle/bleTypes.ts:85</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -323,7 +323,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/2bbcaa3/example/src/HotspotBLE/HotspotBLETypes.ts#L69">example/src/HotspotBLE/HotspotBLETypes.ts:69</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/bleTypes.ts#L91">src/HotspotBle/bleTypes.ts:91</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -353,7 +353,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/2bbcaa3/example/src/HotspotBLE/HotspotBLETypes.ts#L82">example/src/HotspotBLE/HotspotBLETypes.ts:82</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/bleTypes.ts#L104">src/HotspotBle/bleTypes.ts:104</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -383,7 +383,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/2bbcaa3/example/src/HotspotBLE/HotspotBLETypes.ts#L76">example/src/HotspotBLE/HotspotBLETypes.ts:76</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/bleTypes.ts#L98">src/HotspotBle/bleTypes.ts:98</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -416,7 +416,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/2bbcaa3/example/src/HotspotBLE/HotspotBLETypes.ts#L37">example/src/HotspotBLE/HotspotBLETypes.ts:37</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/bleTypes.ts#L59">src/HotspotBle/bleTypes.ts:59</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -464,7 +464,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/2bbcaa3/example/src/HotspotBLE/HotspotBLETypes.ts#L42">example/src/HotspotBLE/HotspotBLETypes.ts:42</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/bleTypes.ts#L64">src/HotspotBle/bleTypes.ts:64</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -488,6 +488,12 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-enum tsd-is-external">
+						<a href="../enums/State.html" class="tsd-kind-icon">State</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="../classes/AddGatewayV1.html" class="tsd-kind-icon">Add<wbr>Gateway<wbr>V1</a>
+					</li>
 					<li class=" tsd-kind-class tsd-is-external">
 						<a href="../classes/Address.html" class="tsd-kind-icon">Address</a>
 					</li>
@@ -496,6 +502,9 @@
 					</li>
 					<li class=" tsd-kind-class tsd-is-external">
 						<a href="../classes/Device.html" class="tsd-kind-icon">Device</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="../classes/Keypair.html" class="tsd-kind-icon">Keypair</a>
 					</li>
 					<li class=" tsd-kind-class tsd-is-external">
 						<a href="../classes/Mnemonic.html" class="tsd-kind-icon">Mnemonic</a>

@@ -1,4 +1,4 @@
-export type OnboardingRecord = {
+export interface OnboardingRecord {
   id: number
   onboardingKey: string
   macWlan0: string
@@ -22,7 +22,7 @@ export type OnboardingRecord = {
   errorMessage: string
 }
 
-export type Maker = {
+export interface Maker {
   id: number
   name: string
   address: string
@@ -53,8 +53,17 @@ const makeRequest = async (url: string, opts: RequestInit = {}) => {
   }
 }
 
+/**
+ * Make a GET request to the Onboarding Server.
+ * @param url
+ */
 export const getStaking = async (url: string) => makeRequest(url)
 
+/**
+ * Make a POST request to the Onboarding Server.
+ * @param url
+ * @param data
+ */
 export const postStaking = async (url: string, data: unknown) =>
   makeRequest(url, { method: 'POST', body: data ? JSON.stringify(data) : null })
 
@@ -70,6 +79,11 @@ export const getOnboardingRecord = async (
   return onboardingRecord as OnboardingRecord
 }
 
+/**
+ * Make a POST request to the Onboarding Server to sign a gateway transaction.
+ * @param gateway
+ * @param txn
+ */
 export const getStakingSignedTransaction = async (
   gateway: string,
   txn: string
@@ -80,10 +94,18 @@ export const getStakingSignedTransaction = async (
   return transaction as string
 }
 
+/**
+ * Get the list of approved Hotspot makers from the Onboarding Server.
+ */
 export const getMakers = async (): Promise<Maker[]> => {
   return makeRequest('makers')
 }
 
+/**
+ * Get the string name for an approved Maker from their b58 account address
+ * @param accountAddress the b58 string address of the {@link Maker}
+ * @param makers list of Makers from {@link getMakers}
+ */
 export const getMakerName = (accountAddress: string, makers?: Maker[]) => {
   if (!makers) return ''
   const makerMatchIndex = makers.findIndex(
