@@ -13,6 +13,7 @@ import HotspotBleProvider, {
 import type { Keypair } from '@helium/crypto-react-native'
 import type { HotspotBleManager } from './HotspotBle/bleTypes'
 import type { State } from 'react-native-ble-plx'
+import type Client from '@helium/http'
 
 const client = new HeliumHttpClient()
 const configChainVars = async () => {
@@ -47,5 +48,6 @@ export {
   Staking,
   Gateway,
   client,
+  Client,
   AddGatewayV1,
 }

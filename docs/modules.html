@@ -81,6 +81,7 @@
 								<li class="tsd-kind-class tsd-is-external"><a href="classes/AddGatewayV1.html" class="tsd-kind-icon">Add<wbr>Gateway<wbr>V1</a></li>
 								<li class="tsd-kind-class tsd-is-external"><a href="classes/Address.html" class="tsd-kind-icon">Address</a></li>
 								<li class="tsd-kind-class tsd-is-external"><a href="classes/BleError.html" class="tsd-kind-icon">Ble<wbr>Error</a></li>
+								<li class="tsd-kind-class tsd-is-external"><a href="classes/Client.html" class="tsd-kind-icon">Client</a></li>
 								<li class="tsd-kind-class tsd-is-external"><a href="classes/Device.html" class="tsd-kind-icon">Device</a></li>
 								<li class="tsd-kind-class tsd-is-external"><a href="classes/Keypair.html" class="tsd-kind-icon">Keypair</a></li>
 								<li class="tsd-kind-class tsd-is-external"><a href="classes/Mnemonic.html" class="tsd-kind-icon">Mnemonic</a></li>
@@ -115,10 +116,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-variable">
 					<a name="client" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagConst">Const</span> client</h3>
-					<div class="tsd-signature tsd-kind-icon">client<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">default</span><span class="tsd-signature-symbol"> = ...</span></div>
+					<div class="tsd-signature tsd-kind-icon">client<span class="tsd-signature-symbol">:</span> <a href="classes/Client.html" class="tsd-signature-type" data-tsd-kind="Class">Client</a><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/index.tsx#L17">src/index.tsx:17</a></li>
+							<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/54853db/src/index.tsx#L18">src/index.tsx:18</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -135,9 +136,20 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/HotspotBleProvider.tsx#L28">src/HotspotBle/HotspotBleProvider.tsx:28</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/54853db/src/HotspotBle/HotspotBleProvider.tsx#L39">src/HotspotBle/HotspotBleProvider.tsx:39</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>This is a react component that is required to use the <a href="interfaces/HotspotBleManager.html">HotspotBleManager</a>.
+									It must wrap your apps root component.</p>
+								</div>
+								<p>For example:</p>
+								<pre><code class="language-jsx"><span style="color: #800000">&lt;</span><span style="color: #267F99">HotspotBleProvider</span><span style="color: #800000">&gt;</span>
+<span style="color: #000000">    </span><span style="color: #800000">&lt;</span><span style="color: #267F99">YourRootAppComponent</span><span style="color: #000000"> </span><span style="color: #800000">/&gt;</span>
+<span style="color: #800000">&lt;</span><span style="color: #267F99">HotspotBleProvider</span><span style="color: #000000"> </span><span style="color: #800000">/&gt;</span>
+</code></pre>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
@@ -163,7 +175,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/index.tsx#L25">src/index.tsx:25</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/54853db/src/index.tsx#L26">src/index.tsx:26</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -189,7 +201,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/index.tsx#L32">src/index.tsx:32</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/54853db/src/index.tsx#L33">src/index.tsx:33</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -215,9 +227,18 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/e72c41c/src/HotspotBle/HotspotBleProvider.tsx#L32">src/HotspotBle/HotspotBleProvider.tsx:32</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/54853db/src/HotspotBle/HotspotBleProvider.tsx#L52">src/HotspotBle/HotspotBleProvider.tsx:52</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Provides the <a href="interfaces/HotspotBleManager.html">HotspotBleManager</a> instance. You must wrap your root app
+									component in a <a href="modules.html#HotspotBleProvider">HotspotBleProvider</a> to use this.</p>
+								</div>
+								<p>For example:</p>
+								<pre><code class="language-typescript"><span style="color: #0000FF">const</span><span style="color: #000000"> { </span><span style="color: #0070C1">startScan</span><span style="color: #000000">, </span><span style="color: #0070C1">stopScan</span><span style="color: #000000">, </span><span style="color: #0070C1">connect</span><span style="color: #000000">, </span><span style="color: #0070C1">scannedDevices</span><span style="color: #000000"> } = </span><span style="color: #795E26">useHotspotBle</span><span style="color: #000000">()</span>
+</code></pre>
+							</div>
 							<h4 class="tsd-returns-title">Returns <a href="interfaces/HotspotBleManager.html" class="tsd-signature-type" data-tsd-kind="Interface">HotspotBleManager</a></h4>
 						</li>
 					</ul>
@@ -254,6 +275,9 @@
 					</li>
 					<li class=" tsd-kind-class tsd-is-external">
 						<a href="classes/BleError.html" class="tsd-kind-icon">Ble<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/Client.html" class="tsd-kind-icon">Client</a>
 					</li>
 					<li class=" tsd-kind-class tsd-is-external">
 						<a href="classes/Device.html" class="tsd-kind-icon">Device</a>
