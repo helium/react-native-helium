@@ -8,3 +8,6 @@ export const getPendingTxn = (hash: string) =>
 
 export const getHotspotDetails = async (address: string) =>
   heliumHttpClient.hotspots.get(address)
+
+export const getAccount = async (address: string) =>
+  heliumHttpClient.accounts.get(address)

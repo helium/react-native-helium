@@ -2,33 +2,19 @@ import { Address } from '@helium/crypto-react-native'
 import { AssertLocationV2, Transaction } from '@helium/transactions'
 import { heliumHttpClient } from '..'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
-import {
-  getStakingSignedTransaction,
-  OnboardingRecord,
-} from '../Staking/stakingClient'
+import { getStakingSignedTransaction } from '../Staking/stakingClient'
 import { geoToH3 } from 'h3-js'
 import { Balance, CurrencyType } from '@helium/currency'
 
 const DEFAULT_H3_RES = 12
 
-export const getH3Location = (
-  lat: number,
-  lng: number,
-  res = DEFAULT_H3_RES
-): string => {
-  return geoToH3(lat, lng, res)
-}
+export const getH3Location = (lat: number, lng: number, res = DEFAULT_H3_RES) =>
+  geoToH3(lat, lng, res)
 
 export const hasFreeLocationAssert = (
   nonce: number,
-  onboardingRecord?: OnboardingRecord
-): boolean => {
-  if (!onboardingRecord || !onboardingRecord.maker) {
-    return false
-  }
-  const locationNonceLimit = onboardingRecord?.maker.locationNonceLimit || 0
-  return nonce < locationNonceLimit
-}
+  locationNonceLimit: number
+) => nonce < locationNonceLimit
 
 const emptyB58Address = () =>
   Address.fromB58('13PuqyWXzPYeXcF1B9ZRx7RLkEygeL374ZABiQdwRSNzASdA1sn')
@@ -104,10 +90,11 @@ export const assertLocationTxn = async ({
   lng,
   decimalGain = 1.2,
   elevation = 0,
-  onboardingRecord,
-  updatingLocation,
-  dataOnly,
+  currentLocation: previousLocation,
+  dataOnly = false,
   ownerKeypairRaw,
+  makerAddress,
+  locationNonceLimit,
 }: {
   gateway: string
   owner: string
@@ -115,24 +102,29 @@ export const assertLocationTxn = async ({
   lng: number
   decimalGain?: number
   elevation?: number
-  onboardingRecord: OnboardingRecord
-  updatingLocation: boolean
-  dataOnly: boolean
+  currentLocation?: string
+  dataOnly?: boolean
   ownerKeypairRaw: SodiumKeyPair
+  makerAddress: string
+  locationNonceLimit: number
 }) => {
+  if (!lat || !lng) {
+    throw new Error('Lat Lng invalid')
+  }
+
+  const nextLocation = getH3Location(lat, lng)
+  const updatingLocation =
+    !previousLocation || previousLocation !== nextLocation
+
   let speculativeNonce = 0
   const response = await heliumHttpClient.hotspots.get(gateway)
   speculativeNonce = response.speculativeNonce || 0
   const newNonce = speculativeNonce + 1
   let isFree = false
   if (!dataOnly) {
-    isFree = hasFreeLocationAssert(speculativeNonce, onboardingRecord)
+    isFree = hasFreeLocationAssert(speculativeNonce, locationNonceLimit)
   }
-  const payer = isFree ? onboardingRecord?.maker?.address : owner
-
-  if (!owner || !payer || !lat || !lng) {
-    return undefined
-  }
+  const payer = isFree ? makerAddress : owner
 
   const antennaGain = decimalGain * 10
   let stakingFee = 0
@@ -145,13 +137,12 @@ export const assertLocationTxn = async ({
       stakingFee = Transaction.stakingFeeTxnAssertLocationV1
     }
   }
-  const location = getH3Location(lat, lng)
 
   const txn = await makeAssertLocTxn({
     ownerB58: owner,
     gatewayB58: gateway,
     payerB58: payer,
-    location,
+    location: nextLocation,
     nonce: newNonce,
     gain: antennaGain,
     elevation,
@@ -169,27 +160,29 @@ export const assertLocationTxn = async ({
     finalTxn = AssertLocationV2.fromString(stakingServerSignedTxn)
   }
 
-  return finalTxn
+  return finalTxn.toString()
 }
 
 export const loadLocationFeeData = async ({
   nonce = 0,
-  accountIntegerBalance = 0,
-  onboardingRecord,
+  accountIntegerBalance,
+  locationNonceLimit,
+  makerAddress,
   dataOnly = false,
   owner,
 }: {
   nonce?: number
-  accountIntegerBalance?: number
-  onboardingRecord?: OnboardingRecord
+  accountIntegerBalance: number
+  locationNonceLimit: number
+  makerAddress: string
   dataOnly?: boolean
   owner: string
 }) => {
   let isFree = false
   if (!dataOnly) {
-    isFree = hasFreeLocationAssert(nonce, onboardingRecord)
+    isFree = hasFreeLocationAssert(nonce, locationNonceLimit)
   }
-  const payer = isFree ? onboardingRecord?.maker?.address : owner
+  const payer = isFree ? makerAddress : owner
 
   if (!owner || !payer) {
     throw new Error('Missing payer or owner')
@@ -215,10 +208,9 @@ export const loadLocationFeeData = async ({
   const totalStakingAmount = totalStakingAmountDC.toNetworkTokens(oraclePrice)
   const totalStakingAmountUsd = totalStakingAmountDC.toUsd(oraclePrice)
 
-  const balance = accountIntegerBalance || 0
-  const hasSufficientBalance = balance >= totalStakingAmount.integerBalance
-  const remainingFreeAsserts =
-    (onboardingRecord?.maker?.locationNonceLimit || 0) - nonce
+  const hasSufficientBalance =
+    accountIntegerBalance >= totalStakingAmount.integerBalance
+  const remainingFreeAsserts = locationNonceLimit - nonce
 
   return {
     isFree,

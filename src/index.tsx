@@ -4,7 +4,7 @@ export { Mnemonic, Address } from '@helium/crypto-react-native'
 import * as Account from './Account/account'
 import * as Staking from './Staking/stakingClient'
 import * as AddGateway from './utils/addGateway'
-import * as AssertLocation from './utils/assertLocation'
+import * as Location from './utils/assertLocation'
 import './polyfill'
 import Client from '@helium/http'
 import { Transaction } from '@helium/transactions'
@@ -42,6 +42,6 @@ export {
   Account,
   Staking,
   AddGateway,
-  AssertLocation,
+  Location,
   heliumHttpClient,
 }

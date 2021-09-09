@@ -12,6 +12,7 @@ import HotspotBLENav from './HotspotBLE/HotspotBLENav'
 import { HotspotBleProvider } from 'react-native-helium'
 import AccountNav from './Account/AccountNav'
 import '../appDataClient'
+import AssertLocation from './AssertLocation/AssertLocation'
 
 const Stack = createNativeStackNavigator()
 
@@ -21,6 +22,7 @@ export type RootStackParamList = {
   HotspotBLE: undefined
   Account: undefined
   AddGatewayTxn: undefined
+  AssertLocation: undefined
 }
 
 export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>
@@ -44,6 +46,7 @@ export default function App() {
           <Stack.Screen name="HotspotBLE" component={HotspotBLENav} />
           <Stack.Screen name="Account" component={AccountNav} />
           <Stack.Screen name="AddGatewayTxn" component={AddGatewayTxn} />
+          <Stack.Screen name="AssertLocation" component={AssertLocation} />
         </Stack.Navigator>
       </NavigationContainer>
     </HotspotBleProvider>
