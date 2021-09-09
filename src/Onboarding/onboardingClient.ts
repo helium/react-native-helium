@@ -57,14 +57,14 @@ const makeRequest = async (url: string, opts: RequestInit = {}) => {
  * Make a GET request to the Onboarding Server.
  * @param url
  */
-export const getStaking = async (url: string) => makeRequest(url)
+export const getOnboarding = async (url: string) => makeRequest(url)
 
 /**
  * Make a POST request to the Onboarding Server.
  * @param url
  * @param data
  */
-export const postStaking = async (url: string, data: unknown) =>
+export const postOnboarding = async (url: string, data: unknown) =>
   makeRequest(url, { method: 'POST', body: data ? JSON.stringify(data) : null })
 
 /**
@@ -75,7 +75,7 @@ export const postStaking = async (url: string, data: unknown) =>
 export const getOnboardingRecord = async (
   address: string
 ): Promise<OnboardingRecord> => {
-  const onboardingRecord = await getStaking(`hotspots/${address}`)
+  const onboardingRecord = await getOnboarding(`hotspots/${address}`)
   return onboardingRecord as OnboardingRecord
 }
 
@@ -84,11 +84,11 @@ export const getOnboardingRecord = async (
  * @param gateway
  * @param txn
  */
-export const getStakingSignedTransaction = async (
+export const getOnboardingSignedTransaction = async (
   gateway: string,
   txn: string
 ) => {
-  const { transaction } = await postStaking(`transactions/pay/${gateway}`, {
+  const { transaction } = await postOnboarding(`transactions/pay/${gateway}`, {
     transaction: txn,
   })
   return transaction as string

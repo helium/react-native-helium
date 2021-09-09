@@ -2,7 +2,7 @@ import { Address } from '@helium/crypto-react-native'
 import { AssertLocationV2, Transaction } from '@helium/transactions'
 import { heliumHttpClient } from '..'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
-import { getStakingSignedTransaction } from '../Staking/stakingClient'
+import { getOnboardingSignedTransaction } from '../Onboarding/onboardingClient'
 import { geoToH3 } from 'h3-js'
 import { Balance, CurrencyType } from '@helium/currency'
 
@@ -153,7 +153,7 @@ export const assertLocationTxn = async ({
   let finalTxn = txn
 
   if (isFree) {
-    const stakingServerSignedTxn = await getStakingSignedTransaction(
+    const stakingServerSignedTxn = await getOnboardingSignedTransaction(
       gateway,
       txn.toString()
     )

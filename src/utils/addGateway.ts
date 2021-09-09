@@ -1,6 +1,6 @@
 import { AddGatewayV1 } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
-import { getStakingSignedTransaction } from '../Staking/stakingClient'
+import { getOnboardingSignedTransaction } from '../Onboarding/onboardingClient'
 import { Address } from '@helium/crypto-react-native'
 
 const emptyB58Address = () =>
@@ -49,7 +49,7 @@ export const signGatewayTxn = async (
   if (!txnOwnerSigned.gateway?.b58) {
     throw new Error('Failed to sign gateway txn')
   }
-  return getStakingSignedTransaction(
+  return getOnboardingSignedTransaction(
     txnOwnerSigned.gateway.b58,
     txnOwnerSigned.toString()
   )

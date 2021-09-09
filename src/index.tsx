@@ -2,7 +2,7 @@ import { NativeModules } from 'react-native'
 export { Device, BleError } from 'react-native-ble-plx'
 export { Mnemonic, Address } from '@helium/crypto-react-native'
 import * as Account from './Account/account'
-import * as Staking from './Staking/stakingClient'
+import * as Onboarding from './Onboarding/onboardingClient'
 import * as AddGateway from './utils/addGateway'
 import * as Location from './utils/assertLocation'
 import './polyfill'
@@ -45,7 +45,7 @@ export {
   Account,
   Keypair,
   State,
-  Staking,
+  Onboarding,
   Client,
   AddGatewayV1,
   AddGateway,

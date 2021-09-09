@@ -8,7 +8,7 @@ import {
   Subscription,
   Base64,
 } from 'react-native-ble-plx'
-import { getOnboardingRecord } from '../Staking/stakingClient'
+import { getOnboardingRecord } from '../Onboarding/onboardingClient'
 import {
   encodeAddGateway,
   encodeWifiConnect,
