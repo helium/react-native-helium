@@ -7,6 +7,10 @@ import * as Gateway from './utils/addGateway'
 import './polyfill'
 import HeliumHttpClient from '@helium/http'
 import { Transaction } from '@helium/transactions'
+import HotspotBleProvider, {
+  useHotspotBleContext as useHotspotBle,
+} from './HotspotBle/HotspotBleProvider'
+import type { HotspotBleManager } from 'example/src/HotspotBLE/HotspotBLETypes'
 
 const client = new HeliumHttpClient()
 const configChainVars = async () => {
@@ -14,11 +18,6 @@ const configChainVars = async () => {
   Transaction.config(vars)
 }
 configChainVars()
-
-import HotspotBleProvider, {
-  useHotspotBleContext as useHotspotBle,
-  BleManager,
-} from './HotspotBle/HotspotBleProvider'
 
 type HeliumNativeType = {
   multiply(a: number, b: number): Promise<number>
@@ -38,7 +37,7 @@ export {
   multiplyJS,
   multiply,
   HotspotBleProvider,
-  BleManager,
+  HotspotBleManager,
   useHotspotBle,
   Account,
   Staking,
