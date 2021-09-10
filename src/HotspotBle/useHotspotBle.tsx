@@ -327,6 +327,17 @@ const useHotspotBle = () => {
     return signGatewayTxn(value, ownerKeypairRaw)
   }
 
+  const getDiagnosticInfo = async () => {
+    checkDevice()
+
+    const charVal = await findAndReadCharacteristic(
+      HotspotCharacteristic.DIAGNOSTIC_UUID
+    )
+    if (!charVal) throw new Error('Could not read diagnostics')
+
+    return parseChar(charVal, HotspotCharacteristic.DIAGNOSTIC_UUID)
+  }
+
   return {
     startScan,
     stopScan,
@@ -342,6 +353,7 @@ const useHotspotBle = () => {
     removeConfiguredWifi,
     createGatewayTxn,
     ethernetOnline,
+    getDiagnosticInfo,
   }
 }
 

@@ -19,6 +19,17 @@ const initialState = {
   removeConfiguredWifi: async () => undefined,
   createGatewayTxn: async () => '',
   ethernetOnline: async () => false,
+  getDiagnosticInfo: async () => ({
+    connected: '',
+    dialable: '',
+    eth: '',
+    fw: '',
+    height: '',
+    ip: '',
+    nat_type: '',
+    wifi: '',
+    disk: '',
+  }),
 }
 
 const HotspotBleContext =

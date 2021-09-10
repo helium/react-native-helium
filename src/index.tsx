@@ -24,6 +24,7 @@ import Balance, {
   SecurityTokens,
   USDollars,
 } from '@helium/currency'
+export { DiagnosticInfo } from './HotspotBle/bleParse'
 
 const heliumHttpClient = new Client()
 const configChainVars = async () => {
@@ -40,14 +41,9 @@ const { Helium } = NativeModules
 
 const heliumNativeModules = Helium as HeliumNativeType
 
-const multiplyJS = (a: number, b: number) => {
-  return Promise.resolve(a * b)
-}
-
 const { multiply } = heliumNativeModules
 
 export {
-  multiplyJS,
   multiply,
   HotspotBleProvider,
   HotspotBleManager,
@@ -56,7 +52,6 @@ export {
   Keypair,
   State,
   Onboarding,
-  Client,
   AddGatewayV1,
   AddGateway,
   Location,
