@@ -10,7 +10,7 @@ target 'HeliumExample' do
 
   use_react_native!(:path => config["reactNativePath"])
 
-  pod 'react-native-helium', :path => '../..'
+  pod 'helium-react-native-sdk', :path => '../..'
 
   permissions_path = '../node_modules/react-native-permissions/ios'
   pod 'Permission-BluetoothPeripheral', :path => "#{permissions_path}/BluetoothPeripheral"

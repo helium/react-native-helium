@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
-import { Location, Onboarding } from 'react-native-helium'
+import { Location, Onboarding } from '@helium/react-native-sdk'
 import { Address } from '@helium/crypto-react-native'
 import {
   getAccount,

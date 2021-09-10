@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { View, TextInput, StyleSheet, Text, Button } from 'react-native'
-import { Onboarding, AddGateway } from 'react-native-helium'
+import { Onboarding, AddGateway } from '@helium/react-native-sdk'
 import {
   getHotspotDetails,
   getPendingTxn,

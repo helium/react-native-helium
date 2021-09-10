@@ -1,5 +1,5 @@
 {
-  "name": "react-native-helium",
+  "name": "@helium/react-native-sdk",
   "version": "0.1.0",
   "description": "Helium React Native SDK",
   "main": "lib/commonjs/index.js",
@@ -16,7 +16,7 @@
     "android",
     "ios",
     "cpp",
-    "react-native-helium.podspec",
+    "helium-react-native-sdk.podspec",
     "!lib/typescript/example",
     "!android/build",
     "!ios/build"
