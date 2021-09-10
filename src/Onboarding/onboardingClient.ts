@@ -31,10 +31,10 @@ export interface Maker {
   updatedAt: string
 }
 
-const STAKING_API_BASE_URL = 'https://onboarding.dewi.org/api/v2'
+const ONBOARDING_API_BASE_URL = 'https://onboarding.dewi.org/api/v2'
 
 const makeRequest = async (url: string, opts: RequestInit = {}) => {
-  const route = [STAKING_API_BASE_URL, url].join('/')
+  const route = [ONBOARDING_API_BASE_URL, url].join('/')
 
   const response = await fetch(route, {
     ...opts,
