@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useHotspotBle } from 'react-native-helium'
+import { useHotspotBle } from '@helium/react-native-sdk'
 import { useNavigation } from '@react-navigation/core'
 import type { HotspotBleNavProp } from './HotspotBLENav'
 

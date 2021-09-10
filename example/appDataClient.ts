@@ -1,4 +1,4 @@
-import { heliumHttpClient } from 'react-native-helium'
+import { heliumHttpClient } from '@helium/react-native-sdk'
 
 export const submitPendingTxn = (txn: string) =>
   heliumHttpClient.transactions.submit(txn)

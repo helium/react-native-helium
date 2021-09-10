@@ -1,6 +1,6 @@
 {
-  "name": "react-native-helium-example",
-  "description": "Example app for react-native-helium",
+  "name": "@helium/react-native-sdk-example",
+  "description": "Example app for @helium/react-native-sdk",
   "version": "0.0.1",
   "private": true,
   "scripts": {

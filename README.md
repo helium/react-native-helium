@@ -1,12 +1,12 @@
-# react-native-helium
+# @helium/react-native-sdk
 
 Helium React Native SDK
 
 ## Installation
 
 ```sh
-yarn add react-native-helium
-npm install react-native-helium
+yarn add @helium/react-native-sdk
+npm install @helium/react-native-sdk
 ```
 
 ## Usage

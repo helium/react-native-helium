@@ -2,7 +2,7 @@ import { RouteProp, useRoute } from '@react-navigation/native'
 import React, { useCallback, useState } from 'react'
 import { TextInput, View, Text, StyleSheet, Button } from 'react-native'
 import type { HotspotBLEStackParamList } from './HotspotBLENav'
-import { BleError, useHotspotBle } from 'react-native-helium'
+import { BleError, useHotspotBle } from '@helium/react-native-sdk'
 
 type Route = RouteProp<HotspotBLEStackParamList, 'WifiSetup'>
 const WifiSetup = () => {

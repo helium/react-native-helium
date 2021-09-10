@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
-import { DiagnosticInfo, useHotspotBle } from 'react-native-helium'
+import { DiagnosticInfo, useHotspotBle } from '@helium/react-native-sdk'
 
 const Diagnostics = () => {
   const [diagnosticInfo, setDiagnosticInfo] = useState<DiagnosticInfo>()

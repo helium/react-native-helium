@@ -1,5 +1,5 @@
 import * as SecureStore from 'expo-secure-store'
-import { Account, Mnemonic } from 'react-native-helium'
+import { Account, Mnemonic } from '@helium/react-native-sdk'
 
 const stringKeys = ['mnemonic', 'keypair', 'address'] as const
 type StringKey = typeof stringKeys[number]

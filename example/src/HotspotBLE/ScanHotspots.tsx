@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Device, useHotspotBle } from 'react-native-helium'
+import { Device, useHotspotBle } from '@helium/react-native-sdk'
 import {
   request,
   check,
