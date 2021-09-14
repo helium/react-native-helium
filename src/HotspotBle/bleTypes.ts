@@ -120,12 +120,16 @@ export interface HotspotBleManager {
   getDiagnosticInfo: () => Promise<DiagnosticInfo>
 
   /**
-   * Check if the connected Hotspots firmware is up to date
+   * Check if the connected Hotspots firmware is up to date.
    */
   checkFirmwareCurrent: () => Promise<{
     current: boolean
     minVersion: string
     deviceFirmwareVersion: string
   }>
+
+  /**
+   * Get the onboarding address from the Hotspot.
+   */
   getOnboardingAddress: () => Promise<string>
 }
