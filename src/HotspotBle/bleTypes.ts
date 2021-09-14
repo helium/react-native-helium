@@ -68,17 +68,12 @@ export interface HotspotBleManager {
    * Connect to a Hotspot. Pass the device from  {@link HotspotBleManager.scannedDevices | scannedDevices} after scanning.
    * @param hotspotDevice
    */
-  connect: (hotspotDevice: Device) => Promise<Device | undefined>
+  connect: (hotspotDevice: Device) => Promise<void>
 
   /**
    * Disconnect from a Hotspot.
    */
   disconnect: () => void
-
-  /**
-   * Discovers all Services, Characteristics and Descriptors for a connected Hotspot.
-   */
-  discoverAllServicesAndCharacteristics: () => void
 
   /**
    * Returns true if a Hotspot is connected.
@@ -127,5 +122,10 @@ export interface HotspotBleManager {
   /**
    * Check if the connected Hotspots firmware is up to date
    */
-  checkFirmwareCurrent: () => Promise<boolean>
+  checkFirmwareCurrent: () => Promise<{
+    current: boolean
+    minVersion: string
+    deviceFirmwareVersion: string
+  }>
+  getOnboardingAddress: () => Promise<string>
 }

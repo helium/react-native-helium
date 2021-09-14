@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   BleManager,
   Device,
@@ -76,67 +76,65 @@ const useHotspotBle = () => {
     }
   }, [])
 
-  const startScan = async (callback: (error: BleError | null) => void) => {
-    getBleManager().startDeviceScan(
-      [Service.MAIN_UUID],
-      { allowDuplicates: false },
-      (error, dev) => {
-        if (dev) {
-          setDevices((prevDevices) => ({
-            ...prevDevices,
-            [dev.id]: dev,
-          }))
+  const startScan = useCallback(
+    async (callback: (error: BleError | null) => void) => {
+      getBleManager().startDeviceScan(
+        [Service.MAIN_UUID],
+        { allowDuplicates: false },
+        (error, dev) => {
+          if (dev) {
+            setDevices((prevDevices) => ({
+              ...prevDevices,
+              [dev.id]: dev,
+            }))
+          }
+          if (error) callback(error)
         }
-        if (error) callback(error)
-      }
-    )
-  }
+      )
+    },
+    []
+  )
 
-  const stopScan = () => getBleManager().stopDeviceScan()
+  const stopScan = useCallback(() => getBleManager().stopDeviceScan(), [])
 
-  const connect = async (
-    hotspotDevice: Device
-  ): Promise<Device | undefined> => {
+  const connect = useCallback(async (hotspotDevice: Device) => {
     const connected = await hotspotDevice.connect({
       refreshGatt: 'OnConnected',
     })
     setDevice(connected)
-    return connected
-  }
+    const discovered = await connected.discoverAllServicesAndCharacteristics()
+    setDevice(discovered)
+  }, [])
 
-  const disconnect = async () => {
+  const isConnected = useCallback(
+    async () => device?.isConnected() || false,
+    [device]
+  )
+
+  const disconnect = useCallback(async () => {
     if (!device) return false
 
     const connected = await isConnected()
     if (!connected) return false
     await device.cancelConnection()
     return true
-  }
+  }, [device, isConnected])
 
-  const isConnected = async () => {
-    if (!device) return false
-    return device.isConnected()
-  }
+  const findCharacteristic = useCallback(
+    async (
+      characteristicUuid: HotspotCharacteristic | FirmwareCharacteristic,
+      service: Service = Service.MAIN_UUID
+    ) => {
+      if (!device) return
 
-  const discoverAllServicesAndCharacteristics = async () => {
-    const connected = await isConnected()
-    if (!connected || !device) return
-
-    return device.discoverAllServicesAndCharacteristics()
-  }
-
-  const findCharacteristic = async (
-    characteristicUuid: HotspotCharacteristic | FirmwareCharacteristic,
-    service: Service = Service.MAIN_UUID
-  ) => {
-    if (!device) return
-
-    const characteristics = await device.characteristicsForService(service)
-    const characteristic = characteristics.find(
-      (c) => c.uuid === characteristicUuid
-    )
-    return characteristic
-  }
+      const characteristics = await device.characteristicsForService(service)
+      const characteristic = characteristics.find(
+        (c) => c.uuid === characteristicUuid
+      )
+      return characteristic
+    },
+    [device]
+  )
 
   const readCharacteristic = async (
     char: Characteristic
@@ -145,191 +143,216 @@ const useHotspotBle = () => {
   const writeCharacteristic = async (char: Characteristic, payload: Base64) =>
     char.writeWithResponse(payload)
 
-  const findAndReadCharacteristic = async (
-    charUuid: HotspotCharacteristic | FirmwareCharacteristic,
-    service: Service = Service.MAIN_UUID
-  ) => {
-    if (!device) return
+  const findAndReadCharacteristic = useCallback(
+    async (
+      charUuid: HotspotCharacteristic | FirmwareCharacteristic,
+      service: Service = Service.MAIN_UUID
+    ) => {
+      if (!device) return
 
-    const characteristic = await findCharacteristic(charUuid, service)
-    if (!characteristic) return
+      const characteristic = await findCharacteristic(charUuid, service)
+      if (!characteristic) return
 
-    const readChar = await readCharacteristic(characteristic)
-    return readChar?.value || undefined
-  }
+      const readChar = await readCharacteristic(characteristic)
+      return readChar?.value || undefined
+    },
+    [device, findCharacteristic]
+  )
 
-  const checkDevice = async () => {
+  const checkDevice = useCallback(async () => {
     const connected = await isConnected()
-    if (!connected || !device) throw new Error('There is not connected device')
-  }
+    if (!connected || !device)
+      throw new Error('There is not a connected device')
+  }, [device, isConnected])
 
-  const findAndWriteCharacteristic = async (
-    characteristicUuid: HotspotCharacteristic | FirmwareCharacteristic,
-    payload: Base64,
-    service: Service = Service.MAIN_UUID
-  ) => {
-    if (!device) return
+  const findAndWriteCharacteristic = useCallback(
+    async (
+      characteristicUuid: HotspotCharacteristic | FirmwareCharacteristic,
+      payload: Base64,
+      service: Service = Service.MAIN_UUID
+    ) => {
+      if (!device) return
 
-    const characteristic = await findCharacteristic(characteristicUuid, service)
-    if (!characteristic) return
+      const characteristic = await findCharacteristic(
+        characteristicUuid,
+        service
+      )
+      if (!characteristic) return
 
-    return writeCharacteristic(characteristic, payload)
-  }
+      return writeCharacteristic(characteristic, payload)
+    },
+    [device, findCharacteristic]
+  )
 
-  const readString = async (
-    characteristic:
-      | HotspotCharacteristic.WIFI_SSID_UUID
-      | HotspotCharacteristic.PUBKEY_UUID
-      | HotspotCharacteristic.ONBOARDING_KEY_UUID
-  ) => {
-    await checkDevice()
-
-    const charVal = await findAndReadCharacteristic(characteristic)
-
-    let parsedStr = ''
-    if (charVal) {
-      parsedStr = parseChar(charVal, characteristic)
-    }
-    return parsedStr
-  }
-
-  const readBool = async (
-    characteristic: HotspotCharacteristic.ETHERNET_ONLINE_UUID
-  ) => {
-    await checkDevice()
-
-    const charVal = await findAndReadCharacteristic(characteristic)
-
-    let parsedStr = false
-    if (charVal) {
-      parsedStr = parseChar(charVal, characteristic)
-    }
-    return parsedStr
-  }
-
-  const ethernetOnline = () =>
-    readBool(HotspotCharacteristic.ETHERNET_ONLINE_UUID)
-
-  const getState = async () => getBleManager().state()
-
-  const enable = async () => {
-    await getBleManager().enable()
-    return true
-  }
-
-  const readWifiNetworks = async (configured = false) => {
-    await checkDevice()
-
-    const characteristic = configured
-      ? HotspotCharacteristic.WIFI_CONFIGURED_SERVICES
-      : HotspotCharacteristic.AVAILABLE_SSIDS_UUID
-
-    const charVal = await findAndReadCharacteristic(characteristic)
-    if (!charVal) return
-
-    return parseChar(charVal, characteristic)
-  }
-
-  const setWifi = async (ssid: string, password: string) => {
-    let subscription: Subscription | null
-    const removeSubscription = () => {
-      subscription?.remove()
-      subscription = null
-    }
-
-    return new Promise<WifiStatusType>(async (resolve, reject) => {
+  const readString = useCallback(
+    async (
+      characteristic:
+        | HotspotCharacteristic.WIFI_SSID_UUID
+        | HotspotCharacteristic.PUBKEY_UUID
+        | HotspotCharacteristic.ONBOARDING_KEY_UUID
+    ) => {
       await checkDevice()
 
-      const uuid = HotspotCharacteristic.WIFI_CONNECT_UUID
-      const encoded = encodeWifiConnect(ssid, password)
+      const charVal = await findAndReadCharacteristic(characteristic)
 
-      const wifiChar = await findCharacteristic(uuid)
+      let parsedStr = ''
+      if (charVal) {
+        parsedStr = parseChar(charVal, characteristic)
+      }
+      return parsedStr
+    },
+    [checkDevice, findAndReadCharacteristic]
+  )
 
-      if (!wifiChar) return
+  const readBool = useCallback(
+    async (characteristic: HotspotCharacteristic.ETHERNET_ONLINE_UUID) => {
+      await checkDevice()
 
-      await writeCharacteristic(wifiChar, encoded)
+      const charVal = await findAndReadCharacteristic(characteristic)
 
-      subscription = wifiChar?.monitor((error, c) => {
-        if (error) {
-          removeSubscription()
-          reject(error)
-          return
-        }
+      let parsedStr = false
+      if (charVal) {
+        parsedStr = parseChar(charVal, characteristic)
+      }
+      return parsedStr
+    },
+    [checkDevice, findAndReadCharacteristic]
+  )
 
-        if (!c?.value) return
+  const ethernetOnline = useCallback(
+    () => readBool(HotspotCharacteristic.ETHERNET_ONLINE_UUID),
+    [readBool]
+  )
 
-        const response = parseChar(c.value, uuid)
-        if (response === 'connecting') return
+  const getState = useCallback(async () => getBleManager().state(), [])
 
-        if (WifiStatusKeys.includes(response as WifiStatusType)) {
-          resolve(response as WifiStatusType)
-          return
-        }
+  const enable = useCallback(async () => {
+    await getBleManager().enable()
+    return true
+  }, [])
 
-        reject('Unknown Error')
+  const readWifiNetworks = useCallback(
+    async (configured = false) => {
+      await checkDevice()
+
+      const characteristic = configured
+        ? HotspotCharacteristic.WIFI_CONFIGURED_SERVICES
+        : HotspotCharacteristic.AVAILABLE_SSIDS_UUID
+
+      const charVal = await findAndReadCharacteristic(characteristic)
+      if (!charVal) return
+
+      return parseChar(charVal, characteristic)
+    },
+    [checkDevice, findAndReadCharacteristic]
+  )
+
+  const setWifi = useCallback(
+    async (ssid: string, password: string) => {
+      let subscription: Subscription | null
+      const removeSubscription = () => {
+        subscription?.remove()
+        subscription = null
+      }
+
+      return new Promise<WifiStatusType>(async (resolve, reject) => {
+        await checkDevice()
+
+        const uuid = HotspotCharacteristic.WIFI_CONNECT_UUID
+        const encoded = encodeWifiConnect(ssid, password)
+
+        const wifiChar = await findCharacteristic(uuid)
+
+        if (!wifiChar) return
+
+        await writeCharacteristic(wifiChar, encoded)
+
+        subscription = wifiChar?.monitor((error, c) => {
+          if (error) {
+            removeSubscription()
+            reject(error)
+            return
+          }
+
+          if (!c?.value) return
+
+          const response = parseChar(c.value, uuid)
+          if (response === 'connecting') return
+
+          if (WifiStatusKeys.includes(response as WifiStatusType)) {
+            resolve(response as WifiStatusType)
+            return
+          }
+
+          reject('Unknown Error')
+        })
       })
-    })
-  }
+    },
+    [checkDevice, findCharacteristic]
+  )
 
-  const removeConfiguredWifi = async (name: string) => {
-    await checkDevice()
+  const removeConfiguredWifi = useCallback(
+    async (name: string) => {
+      await checkDevice()
 
-    const uuid = HotspotCharacteristic.WIFI_REMOVE
-    const encoded = encodeWifiRemove(name)
+      const uuid = HotspotCharacteristic.WIFI_REMOVE
+      const encoded = encodeWifiRemove(name)
 
-    const characteristic = await findAndWriteCharacteristic(uuid, encoded)
+      const characteristic = await findAndWriteCharacteristic(uuid, encoded)
 
-    if (!characteristic?.value) return
-    const response = parseChar(characteristic.value, uuid)
-    return response
-  }
+      if (!characteristic?.value) return
+      const response = parseChar(characteristic.value, uuid)
+      return response
+    },
+    [checkDevice, findAndWriteCharacteristic]
+  )
 
-  const createGatewayTxn = async (
-    ownerAddress: string,
-    ownerKeypairRaw: SodiumKeyPair
-  ) => {
-    await checkDevice()
+  const createGatewayTxn = useCallback(
+    async (ownerAddress: string, ownerKeypairRaw: SodiumKeyPair) => {
+      await checkDevice()
 
-    const onboardingAddress = await readString(
-      HotspotCharacteristic.ONBOARDING_KEY_UUID
-    )
-    const onboardingRecord = await getOnboardingRecord(onboardingAddress)
-
-    const payer = onboardingRecord.maker.address
-    const { fee, stakingFee } = calculateAddGatewayFee(ownerAddress, payer)
-
-    const encodedPayload = encodeAddGateway(
-      ownerAddress,
-      stakingFee,
-      fee,
-      payer
-    )
-    const addGatewayUuid = HotspotCharacteristic.ADD_GATEWAY_UUID
-    const characteristic = await findCharacteristic(addGatewayUuid)
-
-    if (!characteristic) {
-      throw new Error(
-        `Could not find characteristic ${HotspotCharacteristic.ADD_GATEWAY_UUID}`
+      const onboardingAddress = await readString(
+        HotspotCharacteristic.ONBOARDING_KEY_UUID
       )
-    }
+      const onboardingRecord = await getOnboardingRecord(onboardingAddress)
 
-    await writeCharacteristic(characteristic, encodedPayload)
-    const { value } = await readCharacteristic(characteristic)
-    if (!value) {
-      throw new Error(
-        `Could not read characteristic ${HotspotCharacteristic.ADD_GATEWAY_UUID}`
+      const payer = onboardingRecord.maker.address
+      const { fee, stakingFee } = calculateAddGatewayFee(ownerAddress, payer)
+
+      const encodedPayload = encodeAddGateway(
+        ownerAddress,
+        stakingFee,
+        fee,
+        payer
       )
-    }
+      const addGatewayUuid = HotspotCharacteristic.ADD_GATEWAY_UUID
+      const characteristic = await findCharacteristic(addGatewayUuid)
 
-    const parsedValue = decode(value)
-    if (parsedValue in HotspotErrorCode || parsedValue.length < 20) {
-      throw new Error(parsedValue)
-    }
+      if (!characteristic) {
+        throw new Error(
+          `Could not find characteristic ${HotspotCharacteristic.ADD_GATEWAY_UUID}`
+        )
+      }
 
-    return signGatewayTxn(value, ownerKeypairRaw)
-  }
+      await writeCharacteristic(characteristic, encodedPayload)
+      const { value } = await readCharacteristic(characteristic)
+      if (!value) {
+        throw new Error(
+          `Could not read characteristic ${HotspotCharacteristic.ADD_GATEWAY_UUID}`
+        )
+      }
 
-  const getDiagnosticInfo = async () => {
+      const parsedValue = decode(value)
+      if (parsedValue in HotspotErrorCode || parsedValue.length < 20) {
+        throw new Error(parsedValue)
+      }
+
+      return signGatewayTxn(value, ownerKeypairRaw)
+    },
+    [checkDevice, findCharacteristic, readString]
+  )
+
+  const getDiagnosticInfo = useCallback(async () => {
     await checkDevice()
 
     const charVal = await findAndReadCharacteristic(
@@ -338,9 +361,9 @@ const useHotspotBle = () => {
     if (!charVal) throw new Error('Could not read diagnostics')
 
     return parseChar(charVal, HotspotCharacteristic.DIAGNOSTIC_UUID)
-  }
+  }, [checkDevice, findAndReadCharacteristic])
 
-  const checkFirmwareCurrent = async (): Promise<boolean> => {
+  const checkFirmwareCurrent = useCallback(async () => {
     await checkDevice()
 
     const characteristic = FirmwareCharacteristic.FIRMWAREVERSION_UUID
@@ -357,8 +380,24 @@ const useHotspotBle = () => {
     )
     const { version: minVersion } = firmware
 
-    return compareVersions.compare(deviceFirmwareVersion, minVersion, '>=')
-  }
+    const current = compareVersions.compare(
+      deviceFirmwareVersion,
+      minVersion,
+      '>='
+    )
+    return { current, minVersion, deviceFirmwareVersion }
+  }, [checkDevice, findAndReadCharacteristic])
+
+  const getOnboardingAddress = useCallback(async () => {
+    await checkDevice()
+
+    const charVal = await findAndReadCharacteristic(
+      HotspotCharacteristic.ONBOARDING_KEY_UUID
+    )
+    if (!charVal) throw new Error('Could not read diagnostics')
+
+    return parseChar(charVal, HotspotCharacteristic.ONBOARDING_KEY_UUID)
+  }, [checkDevice, findAndReadCharacteristic])
 
   return {
     startScan,
@@ -366,7 +405,6 @@ const useHotspotBle = () => {
     connect,
     disconnect,
     isConnected,
-    discoverAllServicesAndCharacteristics,
     getState,
     enable,
     scannedDevices,
@@ -377,6 +415,7 @@ const useHotspotBle = () => {
     ethernetOnline,
     getDiagnosticInfo,
     checkFirmwareCurrent,
+    getOnboardingAddress,
   }
 }
 

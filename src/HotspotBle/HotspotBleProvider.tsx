@@ -8,9 +8,8 @@ const initialState = {
   enable: async () => false,
   startScan: async () => {},
   stopScan: async () => {},
-  connect: async () => undefined,
+  connect: async () => {},
   disconnect: async () => false,
-  discoverAllServicesAndCharacteristics: async () => undefined,
   findCharacteristic: async () => undefined,
   isConnected: async () => false,
   readWifiNetworks: async () => [],
@@ -30,7 +29,12 @@ const initialState = {
     wifi: '',
     disk: '',
   }),
-  checkFirmwareCurrent: async () => false,
+  checkFirmwareCurrent: async () => ({
+    current: false,
+    minVersion: '',
+    deviceFirmwareVersion: '',
+  }),
+  getOnboardingAddress: async () => '',
 }
 
 const HotspotBleContext =
