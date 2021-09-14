@@ -1,10 +1,10 @@
 import { Address } from '@helium/crypto-react-native'
 import { AssertLocationV2, Transaction } from '@helium/transactions'
-import { heliumHttpClient } from '..'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
 import { getOnboardingSignedTransaction } from '../Onboarding/onboardingClient'
 import { geoToH3 } from 'h3-js'
 import { Balance, CurrencyType } from '@helium/currency'
+import { heliumHttpClient } from './httpClient'
 
 const DEFAULT_H3_RES = 12
 

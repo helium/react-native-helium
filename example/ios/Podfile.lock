@@ -98,7 +98,7 @@ PODS:
     - DoubleConversion
     - glog
   - glog (0.3.5)
-  - helium-react-native-sdk (0.1.0):
+  - helium-react-native-sdk (0.1.1):
     - React-Core
   - libevent (2.1.12)
   - MultiplatformBleAdapter (0.1.7)
@@ -547,7 +547,7 @@ SPEC CHECKSUMS:
   FlipperKit: 651f50a42eb95c01b3e89a60996dd6aded529eeb
   Folly: b73c3869541e86821df3c387eb0af5f65addfab4
   glog: 40a13f7840415b9a77023fbcae0f1e6f43192af3
-  helium-react-native-sdk: 71c62d7bc67baa3e01972e715b5e435122bca095
+  helium-react-native-sdk: cf624f531c73325a97f4d295e1ed490aa0fc9c2e
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   MultiplatformBleAdapter: 975cfb2a333b2c42b7a11628bd100ccb61872da2
   OpenSSL-Universal: 1aa4f6a6ee7256b83db99ec1ccdaa80d10f9af9b

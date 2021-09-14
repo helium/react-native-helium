@@ -1,19 +1,11 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { FlatList, StyleSheet, Text, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useHotspotBle } from '@helium/react-native-sdk'
 import { useNavigation } from '@react-navigation/native'
 import type { HotspotBleNavProp } from './HotspotBLENav'
 
 const HotspotSettings = () => {
   const navigation = useNavigation<HotspotBleNavProp>()
-  const { isConnected, discoverAllServicesAndCharacteristics } = useHotspotBle()
-
-  useEffect(() => {
-    isConnected().then((connected) => {
-      if (connected) discoverAllServicesAndCharacteristics()
-    })
-  }, [discoverAllServicesAndCharacteristics, isConnected])
 
   const renderItem = React.useCallback(
     ({
