@@ -24,6 +24,7 @@ import Balance, {
   SecurityTokens,
   USDollars,
 } from '@helium/currency'
+import { HotspotErrorCode } from './HotspotBle/useHotspotBle'
 export { DiagnosticInfo } from './HotspotBle/bleParse'
 
 const heliumHttpClient = new Client()
@@ -48,6 +49,7 @@ export {
   HotspotBleProvider,
   HotspotBleManager,
   useHotspotBle,
+  HotspotErrorCode,
   Account,
   Keypair,
   State,

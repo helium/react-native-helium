@@ -123,4 +123,9 @@ export interface HotspotBleManager {
    * Returns the diagnostic info for the connected Hotspot.
    */
   getDiagnosticInfo: () => Promise<DiagnosticInfo>
+
+  /**
+   * Check if the connected Hotspots firmware is up to date
+   */
+  checkFirmwareCurrent: () => Promise<boolean>
 }

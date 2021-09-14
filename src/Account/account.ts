@@ -1,5 +1,6 @@
 import { Address, Keypair, Mnemonic } from '@helium/crypto-react-native'
 import wordlist from './Wordlists/english.json'
+import { shuffle, uniq, take, reject, sampleSize } from 'lodash'
 
 /**
  * A libsodium keypair.
@@ -55,3 +56,15 @@ export const getKeypair = (keypairRaw: SodiumKeyPair): Keypair =>
  */
 export const getMatchingWords = (text: string) =>
   wordlist.filter((word) => word.indexOf(text.toLocaleLowerCase()) === 0)
+
+/**
+ * Generate a list of 12 bip39 words, one being the targetWord. You can use this
+ * to confirm the user knows their word out of a list or words.
+ * @param targetWord
+ */
+export const generateChallengeWords = (targetWord: string) =>
+  shuffle(
+    uniq(
+      take(reject(sampleSize(wordlist, 12), targetWord), 11).concat(targetWord)
+    )
+  )

@@ -8,6 +8,7 @@ import {
   Subscription,
   Base64,
 } from 'react-native-ble-plx'
+import compareVersions from 'compare-versions'
 import { getOnboardingRecord } from '../Onboarding/onboardingClient'
 import {
   encodeAddGateway,
@@ -23,6 +24,7 @@ import {
 import { signGatewayTxn, calculateAddGatewayFee } from '../utils/addGateway'
 import { decode } from 'base-64'
 import type { SodiumKeyPair } from '../Account/account'
+import { Onboarding } from '@helium/react-native-sdk'
 
 export enum HotspotErrorCode {
   WAIT = 'wait',
@@ -270,7 +272,7 @@ const useHotspotBle = () => {
   }
 
   const removeConfiguredWifi = async (name: string) => {
-    checkDevice()
+    await checkDevice()
 
     const uuid = HotspotCharacteristic.WIFI_REMOVE
     const encoded = encodeWifiRemove(name)
@@ -286,7 +288,7 @@ const useHotspotBle = () => {
     ownerAddress: string,
     ownerKeypairRaw: SodiumKeyPair
   ) => {
-    checkDevice()
+    await checkDevice()
 
     const onboardingAddress = await readString(
       HotspotCharacteristic.ONBOARDING_KEY_UUID
@@ -328,7 +330,7 @@ const useHotspotBle = () => {
   }
 
   const getDiagnosticInfo = async () => {
-    checkDevice()
+    await checkDevice()
 
     const charVal = await findAndReadCharacteristic(
       HotspotCharacteristic.DIAGNOSTIC_UUID
@@ -336,6 +338,26 @@ const useHotspotBle = () => {
     if (!charVal) throw new Error('Could not read diagnostics')
 
     return parseChar(charVal, HotspotCharacteristic.DIAGNOSTIC_UUID)
+  }
+
+  const checkFirmwareCurrent = async (): Promise<boolean> => {
+    await checkDevice()
+
+    const characteristic = FirmwareCharacteristic.FIRMWAREVERSION_UUID
+    const charVal = await findAndReadCharacteristic(
+      characteristic,
+      Service.FIRMWARESERVICE_UUID
+    )
+    if (!charVal) return false
+
+    const deviceFirmwareVersion = parseChar(charVal, characteristic)
+
+    const firmware: { version: string } = await Onboarding.getOnboarding(
+      'firmware'
+    )
+    const { version: minVersion } = firmware
+
+    return compareVersions.compare(deviceFirmwareVersion, minVersion, '>=')
   }
 
   return {
@@ -354,6 +376,7 @@ const useHotspotBle = () => {
     createGatewayTxn,
     ethernetOnline,
     getDiagnosticInfo,
+    checkFirmwareCurrent,
   }
 }
 

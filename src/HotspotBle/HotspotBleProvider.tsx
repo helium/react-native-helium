@@ -30,6 +30,7 @@ const initialState = {
     wifi: '',
     disk: '',
   }),
+  checkFirmwareCurrent: async () => false,
 }
 
 const HotspotBleContext =
