@@ -348,7 +348,7 @@ const useHotspotBle = () => {
       characteristic,
       Service.FIRMWARESERVICE_UUID
     )
-    if (!charVal) return false
+    if (!charVal) throw new Error('Could not read firmware version')
 
     const deviceFirmwareVersion = parseChar(charVal, characteristic)
 
