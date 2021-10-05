@@ -1,3 +1,9 @@
+/**
+ * [[include:HeliumHttpClient.md]]
+ * @packageDocumentation
+ * @module HeliumHttpClient
+ */
+
 import Client from '@helium/http'
 import { Transaction } from '@helium/transactions'
 

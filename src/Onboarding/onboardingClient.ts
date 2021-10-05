@@ -1,3 +1,9 @@
+/**
+ * [[include:Onboarding.md]]
+ * @packageDocumentation
+ * @module Onboarding
+ */
+
 export interface OnboardingRecord {
   id: number
   onboardingKey: string

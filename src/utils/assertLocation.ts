@@ -1,3 +1,9 @@
+/**
+ * [[include:Location.md]]
+ * @packageDocumentation
+ * @module Location
+ */
+
 import { Address } from '@helium/crypto-react-native'
 import { AssertLocationV2, Transaction } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
