@@ -49,7 +49,7 @@ const { Provider } = HotspotBleContext
  * ```jsx
  * <HotspotBleProvider>
  *     <YourRootAppComponent />
- * <HotspotBleProvider />
+ * </HotspotBleProvider>
  * ```
  */
 const HotspotBleProvider = ({ children }: { children: ReactNode }) => {

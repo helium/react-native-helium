@@ -20,7 +20,7 @@ import Balance, {
   USDollars,
 } from '@helium/currency'
 import { HotspotErrorCode } from './HotspotBle/useHotspotBle'
-import { heliumHttpClient } from './utils/httpClient'
+import { heliumHttpClient, createHttpClient } from './utils/httpClient'
 export { DiagnosticInfo } from './HotspotBle/bleParse'
 
 type HeliumNativeType = {
@@ -47,6 +47,7 @@ export {
   AddGateway,
   Location,
   heliumHttpClient,
+  createHttpClient,
   AssertLocationV2,
   Balance,
   NetworkTokens,

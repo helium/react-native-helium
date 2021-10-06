@@ -1,6 +1,6 @@
 Use this module to assist adding gateways to the Helium Network.
 
-For example calculating add gateway fees and signing add gateway transactions.
+For example calculate add Hotspot fees with {@link calculateAddGatewayFee}, and sign add gateway transactions with {@link signGatewayTxn}.
 
 ## Import the module
 
@@ -13,7 +13,7 @@ import { AddGateway } from '@helium/react-native-sdk'
 To add a gateway to the helium network you must create a signed
 [AddGatewayV1](https://helium.github.io/helium-js/classes/transactions.AddGatewayV1.html) transaction. You can use
 [@helium/transactions](https://helium.github.io/helium-js/modules/transactions.html) to create an [AddGatewayV1](https://helium.github.io/helium-js/classes/transactions.AddGatewayV1.html)
-transaction and then use this module to sign it.
+transaction and then use {@link signGatewayTxn} to sign it.
 
 Here is a short example. For more information you can see the fully working
 [example app](https://github.com/helium/react-native-helium/blob/main/example/src/AddGatewayTxn/AddGatewayTxn.tsx).
@@ -21,8 +21,9 @@ Here is a short example. For more information you can see the fully working
 
 ```ts
 import { AddGatewayV1 } from '@helium/transactions'
-import { AddGateway, Accoun, heliumHttpClient } from '@helium/react-native-sdk'
+import { AddGateway, Account, heliumHttpClient } from '@helium/react-native-sdk'
 
+// the hotspot owners account
 const { keypairRaw, address } = await Account.createKeypair() // could also pass in a mnemonic
 
 const owner = Address.fromB58(address.b58)

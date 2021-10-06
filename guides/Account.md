@@ -1,7 +1,7 @@
 Use this module to interact with Helium crypto accounts.
 
-For example creating an account keypair, generating challenge words to confirm users have written down their words, and
-get a list of possible account words that match a given substring.
+For example create an account with {@link createKeypair}, {@link generateChallengeWords} to confirm users have written down their words, and {@link getMatchingWords}
+to get a list of possible account words that match a given substring.
 
 ## Import the module
 
@@ -11,7 +11,7 @@ import { Account } from '@helium/react-native-sdk'
 
 ## Create a Keypair
 
-Create a keypair from a random mnemonic. A [mnemonic](https://en.bitcoin.it/wiki/Seed_phrase), or seed phrase, is a list
+{@link createKeypair} creates a keypair from a random mnemonic. A [mnemonic](https://en.bitcoin.it/wiki/Seed_phrase), or seed phrase, is a list
 of 12 [BIP 39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) words. The Mnemonic can be used to restore
 the account keypair. Creating the keypair returns its private key (keypairRaw), public key (address), and its mnemonic.
 
@@ -28,7 +28,7 @@ const { keypairRaw, address, mnemonic } = await Account.createKeypair(givenMnemo
 
 ## Generate Challenge Words
 
-If you need to confirm a user knows their words, you can use this to challenge each of their 12 words. It will generate
+If you need to confirm a user knows their words, you can use {@link generateChallengeWords} to challenge each of their 12 words. It will generate
 a list of words to challenge the target word.
 
 ```ts
@@ -41,9 +41,9 @@ which being the target word.
 
 ## Get Matching Words
 
-If you want to auto complete a list of words as a user types you can use `Account.getMatchingWords`. For example when
-restoring a users 12 words you may want to use this as they type there words so that they can select the word as they
-type and quickly fill in 12 words.
+If you want to auto complete a list of words as a user types you can use {@link getMatchingWords}. For example when
+restoring a users 12 words you may want to use this as they type their words so that they can select the word as they
+type.
 
 ```ts
 const text = "coll"
