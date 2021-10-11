@@ -5,7 +5,8 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "start": "react-native start"
+    "start": "react-native start",
+    "postinstall": "yarn patch-package"
   },
   "dependencies": {
     "@helium/crypto-react-native": "^3.9.0",
@@ -18,6 +19,7 @@
     "events": "^3.3.0",
     "expo-secure-store": "^10.2.0",
     "h3-js": "^3.7.2",
+    "patch-package": "^6.4.7",
     "react": "16.13.1",
     "react-native": "0.63.4",
     "react-native-ble-plx": "^2.0.2",
