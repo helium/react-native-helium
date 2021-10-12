@@ -1,3 +1,9 @@
+/**
+ * [[include:Location.md]]
+ * @packageDocumentation
+ * @module Location
+ */
+
 import { Address } from '@helium/crypto-react-native'
 import { AssertLocationV2, Transaction } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
@@ -8,9 +14,22 @@ import { heliumHttpClient } from './httpClient'
 
 const DEFAULT_H3_RES = 12
 
+/**
+ * Returns the H3 Hex of a lat lng location at a specific resolution.
+ * The default resolution is 12. See [Uber H3](https://github.com/uber/h3)
+ * for more info.
+ * @param lat
+ * @param lng
+ * @param res
+ */
 export const getH3Location = (lat: number, lng: number, res = DEFAULT_H3_RES) =>
   geoToH3(lat, lng, res)
 
+/**
+ * Determine if a hotspot still has a location assert paid for by its maker.
+ * @param nonce
+ * @param locationNonceLimit
+ */
 export const hasFreeLocationAssert = (
   nonce: number,
   locationNonceLimit: number
@@ -83,6 +102,21 @@ export const makeAssertLocTxn = async ({
   })
 }
 
+/**
+ * Create a signed [AddGatewayV1](https://helium.github.io/helium-js/classes/transactions.AddGatewayV1.html)
+ * transaction string which can be submit to the blockchain using {@link heliumHttpClient}
+ * @param gateway
+ * @param owner
+ * @param lat
+ * @param lng
+ * @param decimalGain
+ * @param elevation
+ * @param previousLocation
+ * @param dataOnly
+ * @param ownerKeypairRaw
+ * @param makerAddress
+ * @param locationNonceLimit
+ */
 export const assertLocationTxn = async ({
   gateway,
   owner,
@@ -163,6 +197,15 @@ export const assertLocationTxn = async ({
   return finalTxn.toString()
 }
 
+/**
+ * Get all required fee information for a Hotspot Assert Location transaction.
+ * @param nonce
+ * @param accountIntegerBalance
+ * @param locationNonceLimit
+ * @param makerAddress
+ * @param dataOnly
+ * @param owner
+ */
 export const loadLocationFeeData = async ({
   nonce = 0,
   accountIntegerBalance,

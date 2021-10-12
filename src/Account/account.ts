@@ -1,3 +1,9 @@
+/**
+ * [[include:Account.md]]
+ * @packageDocumentation
+ * @module Account
+ */
+
 import { Address, Keypair, Mnemonic } from '@helium/crypto-react-native'
 import wordlist from './Wordlists/english.json'
 import { shuffle, uniq, take, reject, sampleSize } from 'lodash'
@@ -15,7 +21,7 @@ export interface SodiumKeyPair {
  * @param givenMnemonic list of bip39 words to create the keypair with
  */
 export const createKeypair = async (
-  givenMnemonic: Mnemonic | Array<string> | null = null
+  givenMnemonic: Mnemonic | Array<string> | null
 ) => {
   let mnemonic: Mnemonic
   if (!givenMnemonic) {

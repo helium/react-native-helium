@@ -1,5 +1,6 @@
 {
   "entryPoints": ["src/index.tsx"],
   "out": "docs",
-  "readme": "README.md"
+  "readme": "README.md",
+  "includes": "guides"
 }

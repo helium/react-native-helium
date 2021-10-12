@@ -1,3 +1,9 @@
+/**
+ * [[include:AddGateway.md]]
+ * @packageDocumentation
+ * @module AddGateway
+ */
+
 import { AddGatewayV1 } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
 import { getOnboardingSignedTransaction } from '../Onboarding/onboardingClient'
