@@ -308,7 +308,7 @@ const useHotspotBle = () => {
   )
 
   const createGatewayTxn = useCallback(
-    async (ownerAddress: string, ownerKeypairRaw: SodiumKeyPair) => {
+    async (ownerAddress: string) => {
       await checkDevice()
 
       const onboardingAddress = await readString(
@@ -347,9 +347,17 @@ const useHotspotBle = () => {
         throw new Error(parsedValue)
       }
 
-      return signGatewayTxn(value, ownerKeypairRaw)
+      return value
     },
     [checkDevice, findCharacteristic, readString]
+  )
+
+  const createAndSignGatewayTxn = useCallback(
+    async (ownerAddress: string, ownerKeypairRaw: SodiumKeyPair) => {
+      const value = await createGatewayTxn(ownerAddress)
+      return signGatewayTxn(value, ownerKeypairRaw)
+    },
+    [createGatewayTxn]
   )
 
   const getDiagnosticInfo = useCallback(async () => {
@@ -412,6 +420,7 @@ const useHotspotBle = () => {
     setWifi,
     removeConfiguredWifi,
     createGatewayTxn,
+    createAndSignGatewayTxn,
     ethernetOnline,
     getDiagnosticInfo,
     checkFirmwareCurrent,

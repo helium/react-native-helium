@@ -5,6 +5,7 @@ import * as Account from './Account/account'
 import * as Onboarding from './Onboarding/onboardingClient'
 import * as AddGateway from './utils/addGateway'
 import * as Location from './utils/assertLocation'
+import * as WalletLink from './WalletLink'
 import './polyfill'
 import { AddGatewayV1, AssertLocationV2 } from '@helium/transactions'
 import HotspotBleProvider, {
@@ -54,4 +55,5 @@ export {
   DataCredits,
   SecurityTokens,
   USDollars,
+  WalletLink,
 }

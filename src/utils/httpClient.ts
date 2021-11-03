@@ -10,7 +10,7 @@ import { Transaction } from '@helium/transactions'
  * by default, you also have the option to host your own blockchain API. To use a
  * custom blockchain api see {@link createHttpClient}.
  */
-export const heliumHttpClient = new Client()
+export const heliumHttpClient = new Client(Network.production)
 
 /**
  * If you don't want to use the [Helium Blockchain API](https://docs.helium.com/api/blockchain/introduction)

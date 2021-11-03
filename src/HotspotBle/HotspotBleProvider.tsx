@@ -17,6 +17,7 @@ const initialState = {
   setWifi: async () => 'not_found' as WifiStatusType,
   removeConfiguredWifi: async () => undefined,
   createGatewayTxn: async () => '',
+  createAndSignGatewayTxn: async () => '',
   ethernetOnline: async () => false,
   getDiagnosticInfo: async () => ({
     connected: '',

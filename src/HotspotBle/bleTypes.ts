@@ -107,9 +107,15 @@ export interface HotspotBleManager {
   /**
    * Create an Add Gateway Transaction for the connected Device.
    * @param ownerAddress
+   */
+  createGatewayTxn: (ownerAddress: string) => Promise<string>
+
+  /**
+   * Create and sign an Add Gateway Transaction for the connected Device.
+   * @param ownerAddress
    * @param ownerKeypairRaw
    */
-  createGatewayTxn: (
+  createAndSignGatewayTxn: (
     ownerAddress: string,
     ownerKeypairRaw: SodiumKeyPair
   ) => Promise<string>
