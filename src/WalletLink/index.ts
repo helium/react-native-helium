@@ -8,6 +8,13 @@ export type LinkWalletRequest = {
   appName: string
 }
 
+export type Token = LinkWalletRequest & {
+  signingAppId: string
+  time: number
+  address: string
+  signature: string
+}
+
 export type LinkWalletResponse = {
   status: 'success' | 'user_cancelled'
   token?: string
@@ -71,13 +78,8 @@ const createWalletLinkToken = ({
 
 const parseWalletLinkToken = (base64Token: string) => {
   const buff = Buffer.from(base64Token, 'base64')
-  const token = buff.toString('utf-8')
-  const pieces = token.split(',')
-  if (pieces.length !== 6) return
-
-  const [address, time, requestAppId, signingAppId, callbackUrl, appName] =
-    pieces
-  return { address, time, requestAppId, signingAppId, callbackUrl, appName }
+  const container = buff.toString('utf-8')
+  return JSON.parse(container) as Token
 }
 
 const createWalletLinkUrl = (
