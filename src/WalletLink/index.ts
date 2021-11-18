@@ -14,7 +14,6 @@ export type LinkWalletResponse = {
 
 export type SignHotspotRequest = {
   universalLink: string
-  requestAppId: string
   token: string
   addGatewayTxn?: string
   assertLocationTxn?: string
@@ -58,13 +57,14 @@ const createWalletLinkToken = ({
   address,
   requestAppId,
   signingAppId,
-}: {
+  callbackUrl,
+  appName,
+}: LinkWalletRequest & {
   time: number
   address: string
-  requestAppId: string
   signingAppId: string
 }) => {
-  const token = `${address},${time},${requestAppId},${signingAppId}`
+  const token = `${address},${time},${requestAppId},${signingAppId},${callbackUrl},${appName}`
   const buff = Buffer.from(token, 'utf8')
   return buff.toString('base64')
 }
@@ -73,10 +73,11 @@ const parseWalletLinkToken = (base64Token: string) => {
   const buff = Buffer.from(base64Token, 'base64')
   const token = buff.toString('utf-8')
   const pieces = token.split(',')
-  if (pieces.length !== 4) return
+  if (pieces.length !== 6) return
 
-  const [address, time, requestAppId, signingAppId] = pieces
-  return { address, time, requestAppId, signingAppId }
+  const [address, time, requestAppId, signingAppId, callbackUrl, appName] =
+    pieces
+  return { address, time, requestAppId, signingAppId, callbackUrl, appName }
 }
 
 const createWalletLinkUrl = (
