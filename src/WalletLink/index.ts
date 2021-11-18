@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer'
 import queryString from 'query-string'
+import { Platform } from 'react-native'
 
 export type LinkWalletRequest = {
   requestAppId: string
@@ -13,7 +14,6 @@ export type LinkWalletResponse = {
 }
 
 export type SignHotspotRequest = {
-  universalLink: string
   token: string
   addGatewayTxn?: string
   assertLocationTxn?: string
@@ -91,8 +91,16 @@ const createWalletLinkUrl = (
   return `${universalLink}link_wallet?${query}`
 }
 const createUpdateHotspotUrl = (opts: SignHotspotRequest) => {
-  const { universalLink, ...params } = opts
-  const query = queryString.stringify(params)
+  const { signingAppId } = parseWalletLinkToken(opts.token) || {
+    signingAppId: '',
+  }
+  const requestApp = delegateApps.find(({ androidPackage, iosBundleId }) => {
+    const id = Platform.OS === 'android' ? androidPackage : iosBundleId
+    return id === signingAppId
+  })
+  const universalLink = requestApp?.universalLink
+  if (!universalLink) return
+  const query = queryString.stringify(opts)
   return `${universalLink}sign_hotspot?${query}`
 }
 
