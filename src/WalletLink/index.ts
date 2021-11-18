@@ -3,6 +3,8 @@ import queryString from 'query-string'
 
 export type LinkWalletRequest = {
   requestAppId: string
+  callbackUrl: string
+  appName: string
 }
 
 export type LinkWalletResponse = {
@@ -30,20 +32,6 @@ export type MakerApp = {
   androidPackage: string
   iosBundleId: string
 }
-
-const heliumStarter: MakerApp = {
-  universalLink: 'makerappscheme://',
-  name: 'Maker App',
-  androidPackage: 'com.maker.makerapp',
-  iosBundleId: 'com.maker.makerapp',
-}
-
-const makerApps = [heliumStarter]
-
-const getMakerApp = (bundleId: string) =>
-  makerApps.find(
-    (a) => a.androidPackage === bundleId || a.iosBundleId === bundleId
-  )
 
 export type DelegateApp = {
   urlScheme: string
@@ -91,10 +79,11 @@ const parseWalletLinkToken = (base64Token: string) => {
   return { address, time, requestAppId, signingAppId }
 }
 
-const createWalletLinkUrl = (opts: {
-  universalLink: string
-  requestAppId: string
-}) => {
+const createWalletLinkUrl = (
+  opts: LinkWalletRequest & {
+    universalLink: string
+  }
+) => {
   const { universalLink, ...params } = opts
   const query = queryString.stringify(params)
 
@@ -122,8 +111,6 @@ const createLinkWalletCallbackUrl = (
 
 export {
   delegateApps,
-  makerApps,
-  getMakerApp,
   createWalletLinkToken,
   parseWalletLinkToken,
   createWalletLinkUrl,
