@@ -1,3 +1,9 @@
+/**
+ * [[include:WalletLink.md]]
+ * @packageDocumentation
+ * @module WalletLink
+ */
+
 import { Buffer } from 'buffer'
 import queryString from 'query-string'
 import { Platform } from 'react-native'
@@ -59,34 +65,26 @@ const heliumHotspotApp: DelegateApp = {
 
 const delegateApps = [heliumHotspotApp]
 
-const createWalletLinkToken = ({
-  time,
-  address,
-  requestAppId,
-  signingAppId,
-  callbackUrl,
-  appName,
-}: LinkWalletRequest & {
-  time: number
-  address: string
-  signingAppId: string
-}) => {
-  const token = `${address},${time},${requestAppId},${signingAppId},${callbackUrl},${appName}`
-  const buff = Buffer.from(token, 'utf8')
-  return buff.toString('base64')
-}
-
 const parseWalletLinkToken = (base64Token: string) => {
   const buff = Buffer.from(base64Token, 'base64')
   const container = buff.toString('utf-8')
   return JSON.parse(container) as Token
 }
 
-const createWalletLinkUrl = (
-  opts: LinkWalletRequest & {
-    universalLink: string
-  }
-) => {
+/**
+ *Request a token from your app to an app capable of signing a transaction (e.g. Helium Hotspot).
+ * @param opts
+ * @param opts.requestAppId the bundleId of the app requesting a token. Use `import { getBundleId } from 'react-native-device-info'`
+ * @param opts.callbackUrl the url used to deeplink back to the requesting app
+ * @param opts.appName the name of the app requesting a link
+ * @param opts.universalLink the deeplink url of the app that will be creating the link (e.g. https://helium.com/)
+ */
+const createWalletLinkUrl = (opts: {
+  requestAppId: string
+  callbackUrl: string
+  appName: string
+  universalLink: string
+}) => {
   const { universalLink, ...params } = opts
   const query = queryString.stringify(params)
 
@@ -122,7 +120,6 @@ const createLinkWalletCallbackUrl = (
 
 export {
   delegateApps,
-  createWalletLinkToken,
   parseWalletLinkToken,
   createWalletLinkUrl,
   createUpdateHotspotUrl,
