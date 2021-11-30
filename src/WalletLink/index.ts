@@ -63,9 +63,9 @@ const heliumHotspotApp: DelegateApp = {
   appStoreId: 1450463605,
 }
 
-const delegateApps = [heliumHotspotApp]
+export const delegateApps = [heliumHotspotApp]
 
-const parseWalletLinkToken = (base64Token: string) => {
+export const parseWalletLinkToken = (base64Token: string) => {
   const buff = Buffer.from(base64Token, 'base64')
   const container = buff.toString('utf-8')
   return JSON.parse(container) as Token
@@ -79,7 +79,7 @@ const parseWalletLinkToken = (base64Token: string) => {
  * @param opts.appName the name of the app requesting a link
  * @param opts.universalLink the deeplink url of the app that will be creating the link (e.g. https://helium.com/)
  */
-const createWalletLinkUrl = (opts: {
+export const createWalletLinkUrl = (opts: {
   requestAppId: string
   callbackUrl: string
   appName: string
@@ -90,7 +90,7 @@ const createWalletLinkUrl = (opts: {
 
   return `${universalLink}link_wallet?${query}`
 }
-const createUpdateHotspotUrl = (opts: SignHotspotRequest) => {
+export const createUpdateHotspotUrl = (opts: SignHotspotRequest) => {
   const { signingAppId } = parseWalletLinkToken(opts.token) || {
     signingAppId: '',
   }
@@ -104,12 +104,12 @@ const createUpdateHotspotUrl = (opts: SignHotspotRequest) => {
   return `${universalLink}sign_hotspot?${query}`
 }
 
-const createSignHotspotCallbackUrl = (
+export const createSignHotspotCallbackUrl = (
   makerAppLink: string,
   responseParams: SignHotspotResponse
 ) => `${makerAppLink}sign_hotspot?${queryString.stringify(responseParams)}`
 
-const createLinkWalletCallbackUrl = (
+export const createLinkWalletCallbackUrl = (
   makerAppLink: string,
   address: string,
   responseParams: SignHotspotResponse
@@ -117,12 +117,3 @@ const createLinkWalletCallbackUrl = (
   `${makerAppLink}link_wallet/${address}?${queryString.stringify(
     responseParams
   )}`
-
-export {
-  delegateApps,
-  parseWalletLinkToken,
-  createWalletLinkUrl,
-  createUpdateHotspotUrl,
-  createSignHotspotCallbackUrl,
-  createLinkWalletCallbackUrl,
-}
