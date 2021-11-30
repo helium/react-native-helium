@@ -112,7 +112,7 @@ const AssertLocation = () => {
 
     setSubmitted(true)
     const ownerKeypairRaw = await getKeypair()
-    const txn = await Location.assertLocationTxn({
+    const txn = await Location.createAndSignAssertLocationTxn({
       gateway: gatewayAddress,
       owner: ownerAddress,
       lat: parseFloat(lat),

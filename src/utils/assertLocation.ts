@@ -58,7 +58,42 @@ export const calculateAssertLocFee = (
   return { fee: txn.fee || 0, stakingFee: txn.stakingFee || 0 }
 }
 
-export const makeAssertLocTxn = async ({
+export const makeAssertLocTxn = ({
+  ownerB58,
+  gatewayB58,
+  payerB58,
+  location,
+  nonce,
+  gain,
+  elevation,
+  stakingFee,
+}: {
+  ownerB58: string
+  gatewayB58: string
+  payerB58: string
+  location: string
+  nonce: number
+  gain: number
+  elevation: number
+  stakingFee: number
+}) => {
+  const owner = Address.fromB58(ownerB58)
+  const gateway = Address.fromB58(gatewayB58)
+  const payer = Address.fromB58(payerB58)
+
+  return new AssertLocationV2({
+    owner,
+    gateway,
+    payer,
+    nonce,
+    gain,
+    elevation,
+    location,
+    stakingFee,
+  })
+}
+
+export const signAssertLocTxn = async ({
   ownerB58,
   gatewayB58,
   payerB58,
@@ -78,29 +113,28 @@ export const makeAssertLocTxn = async ({
   elevation: number
   stakingFee: number
   ownerKeypairRaw: SodiumKeyPair
-}): Promise<AssertLocationV2> => {
-  const keypair = await getKeypair(ownerKeypairRaw)
-  const owner = Address.fromB58(ownerB58)
-  const gateway = Address.fromB58(gatewayB58)
-  const payer = Address.fromB58(payerB58)
-  const ownerIsPayer = payerB58 === ownerB58
-
-  const assertLocTxn = new AssertLocationV2({
-    owner,
-    gateway,
-    payer,
+}) => {
+  const assertLocTxn = makeAssertLocTxn({
+    ownerB58,
+    gatewayB58,
+    payerB58,
+    location,
     nonce,
     gain,
     elevation,
-    location,
     stakingFee,
   })
+
+  const keypair = await getKeypair(ownerKeypairRaw)
+  const ownerIsPayer = payerB58 === ownerB58
 
   return assertLocTxn.sign({
     owner: keypair,
     payer: ownerIsPayer ? keypair : undefined,
   })
 }
+export const txnFromString = (txnStr: string) =>
+  AssertLocationV2.fromString(txnStr)
 
 /**
  * Create a signed [AddGatewayV1](https://helium.github.io/helium-js/classes/transactions.AddGatewayV1.html)
@@ -111,20 +145,20 @@ export const makeAssertLocTxn = async ({
  * @param lng
  * @param decimalGain
  * @param elevation
- * @param previousLocation
+ * @param currentLocation
  * @param dataOnly
  * @param ownerKeypairRaw
  * @param makerAddress
  * @param locationNonceLimit
  */
-export const assertLocationTxn = async ({
+export const createAndSignAssertLocationTxn = async ({
   gateway,
   owner,
   lat,
   lng,
   decimalGain = 1.2,
   elevation = 0,
-  currentLocation: previousLocation,
+  currentLocation,
   dataOnly = false,
   ownerKeypairRaw,
   makerAddress,
@@ -139,6 +173,75 @@ export const assertLocationTxn = async ({
   currentLocation?: string
   dataOnly?: boolean
   ownerKeypairRaw: SodiumKeyPair
+  makerAddress: string
+  locationNonceLimit: number
+}) => {
+  if (!lat || !lng) {
+    throw new Error('Lat Lng invalid')
+  }
+  let speculativeNonce = 0
+  const response = await heliumHttpClient.hotspots.get(gateway)
+  speculativeNonce = response.speculativeNonce || 0
+  let isFree = false
+  if (!dataOnly) {
+    isFree = hasFreeLocationAssert(speculativeNonce, locationNonceLimit)
+  }
+  const payer = isFree ? makerAddress : owner
+
+  const locTxn = await createLocationTxn({
+    gateway,
+    owner,
+    lat,
+    lng,
+    decimalGain,
+    elevation,
+    currentLocation,
+    dataOnly,
+    makerAddress,
+    locationNonceLimit,
+  })
+
+  const keypair = await getKeypair(ownerKeypairRaw)
+  const ownerIsPayer = payer === owner
+
+  locTxn.sign({
+    owner: keypair,
+    payer: ownerIsPayer ? keypair : undefined,
+  })
+
+  let finalTxn = locTxn
+
+  if (isFree) {
+    const stakingServerSignedTxn = await getOnboardingSignedTransaction(
+      gateway,
+      locTxn.toString()
+    )
+    finalTxn = AssertLocationV2.fromString(stakingServerSignedTxn)
+  }
+
+  return finalTxn.toString()
+}
+
+export const createLocationTxn = async ({
+  gateway,
+  owner,
+  lat,
+  lng,
+  decimalGain = 1.2,
+  elevation = 0,
+  currentLocation: previousLocation,
+  dataOnly = false,
+  makerAddress,
+  locationNonceLimit,
+}: {
+  gateway: string
+  owner: string
+  lat: number
+  lng: number
+  decimalGain?: number
+  elevation?: number
+  currentLocation?: string
+  dataOnly?: boolean
   makerAddress: string
   locationNonceLimit: number
 }) => {
@@ -171,8 +274,7 @@ export const assertLocationTxn = async ({
       stakingFee = Transaction.stakingFeeTxnAssertLocationV1
     }
   }
-
-  const txn = await makeAssertLocTxn({
+  return makeAssertLocTxn({
     ownerB58: owner,
     gatewayB58: gateway,
     payerB58: payer,
@@ -181,20 +283,7 @@ export const assertLocationTxn = async ({
     gain: antennaGain,
     elevation,
     stakingFee,
-    ownerKeypairRaw,
   })
-
-  let finalTxn = txn
-
-  if (isFree) {
-    const stakingServerSignedTxn = await getOnboardingSignedTransaction(
-      gateway,
-      txn.toString()
-    )
-    finalTxn = AssertLocationV2.fromString(stakingServerSignedTxn)
-  }
-
-  return finalTxn.toString()
 }
 
 /**

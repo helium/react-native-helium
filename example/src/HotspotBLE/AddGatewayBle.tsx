@@ -5,7 +5,7 @@ import { getPendingTxn, submitPendingTxn } from '../../appDataClient'
 import { getKeypair, getSecureItem } from '../Account/secureAccount'
 
 const AddGatewayBle = () => {
-  const { createGatewayTxn } = useHotspotBle()
+  const { createAndSignGatewayTxn } = useHotspotBle()
   const [hash, setHash] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
@@ -17,12 +17,12 @@ const AddGatewayBle = () => {
     const keypair = await getKeypair()
     if (!accountAddress) return
 
-    const gatewayTxn = await createGatewayTxn(accountAddress, keypair)
+    const gatewayTxn = await createAndSignGatewayTxn(accountAddress, keypair)
     const pendingTxn = await submitPendingTxn(gatewayTxn)
     setHash(pendingTxn.hash)
     setStatus(pendingTxn.status)
     setFailedReason(pendingTxn.failedReason || '')
-  }, [createGatewayTxn])
+  }, [createAndSignGatewayTxn])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
