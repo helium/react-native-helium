@@ -254,8 +254,13 @@ export const createLocationTxn = async ({
     !previousLocation || previousLocation !== nextLocation
 
   let speculativeNonce = 0
-  const response = await heliumHttpClient.hotspots.get(gateway)
-  speculativeNonce = response.speculativeNonce || 0
+  try {
+    const response = await heliumHttpClient.hotspots.get(gateway)
+    speculativeNonce = response.speculativeNonce || 0
+  } catch {
+    // this is expected if the hotspot has not yet been added
+    console.log(`Could not find hotspot details for ${gateway}`)
+  }
   const newNonce = speculativeNonce + 1
   let isFree = false
   if (!dataOnly) {
