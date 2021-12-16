@@ -1,4 +1,7 @@
 {
   "name": "HeliumExample",
-  "displayName": "Helium Example"
+  "displayName": "Helium Example",
+  "expo": {
+    "scheme": "react-native-helium"
+  }
 }
