@@ -27,21 +27,15 @@ Please browse the [documentation](https://helium.github.io/react-native-helium/i
 
 You can import the different modules such as [Account](https://helium.github.io/react-native-helium/modules/Account.html),
 [Location](https://helium.github.io/react-native-helium/modules/Location.html),
-[Onboarding](https://helium.github.io/react-native-helium/modules/Onboarding.html),
 [HotspotBleManager](https://helium.github.io/react-native-helium/interfaces/HotspotBleManager.html),
 [heliumHttpClient](https://helium.github.io/react-native-helium/docs/modules.html#heliumHttpClient),
 and [AddGateway](https://helium.github.io/react-native-helium/modules/AddGateway.html) to get started.
 
 ```ts
-import {
-  Account,
-  Location,
-  Onboarding,
-  AddGateway,
-} from '@helium/react-native-sdk'
+import { Account, Location, AddGateway } from '@helium/react-native-sdk';
 
 // example usage of Account.createKeypair
-const { keypairRaw, address, mnemonic } = await Account.createKeypair()
+const { keypairRaw, address, mnemonic } = await Account.createKeypair();
 ```
 
 ## Example App
@@ -56,10 +50,10 @@ Use the {@link HotspotBleManager} to interact with a Hotspot via bluetooth.
 ### Import the Bluetooth modules
 
 ```ts
-import { HotspotBleProvider, useHotspotBle } from '@helium/react-native-sdk'
+import { HotspotBleProvider, useHotspotBle } from '@helium/react-native-sdk';
 
 // some examples of the functions you may want to use
-const { startScan, stopScan, connect, scannedDevices } = useHotspotBle()
+const { startScan, stopScan, connect, scannedDevices } = useHotspotBle();
 ```
 
 ### Getting Started with Bluetooth
@@ -70,14 +64,14 @@ In order to get started with the {@link HotspotBleManager} you must first wrap y
 For example:
 
 ```tsx
-import React from 'react'
-import { HotspotBleProvider } from '@helium/react-native-sdk'
+import React from 'react';
+import { HotspotBleProvider } from '@helium/react-native-sdk';
 
 const App = () => (
   <HotspotBleProvider>
     <YourRootAppComponent />
   </HotspotBleProvider>
-)
+);
 ```
 
 You are now ready to use the {@link HotspotBleManager} throughout your application.
@@ -90,26 +84,26 @@ out the {@link Device} docs for more info on scanned devices.
 For a full working example see the [example app](https://github.com/helium/react-native-helium/blob/main/example/src/HotspotBLE/ScanHotspots.tsx).
 
 ```tsx
-import React, { useEffect } from 'react'
-import { useHotspotBle } from '@helium/react-native-sdk'
+import React, { useEffect } from 'react';
+import { useHotspotBle } from '@helium/react-native-sdk';
 
-const { startScan, stopScan, scannedDevices } = useHotspotBle()
+const { startScan, stopScan, scannedDevices } = useHotspotBle();
 
 useEffect(() => {
   // you would probably want to call this on a button click, we scan right away
   startScan((error) => {
     if (error) {
-      console.error(error)
+      console.error(error);
     }
-  })
-}, [])
+  });
+}, []);
 
 useEffect(() => {
   // you would probably want to call this on a button click, but we stop after 10 seconds
-  setTimeout(stopScan, 10000)
-}, [])
+  setTimeout(stopScan, 10000);
+}, []);
 
-const ScanComponent = () => <Text>{scannedDevices[0]?.localName}</Text>
+const ScanComponent = () => <Text>{scannedDevices[0]?.localName}</Text>;
 ```
 
 ### Connect to a Hotspot
@@ -117,10 +111,10 @@ const ScanComponent = () => <Text>{scannedDevices[0]?.localName}</Text>
 After scanning, you can connect to {@link scannedDevices} by calling {@link connect}.
 
 ```ts
-import { useHotspotBle } from '@helium/react-native-sdk'
+import { useHotspotBle } from '@helium/react-native-sdk';
 
-const { connect, scannedDevices } = useHotspotBle()
-connect(scannedDevices[0])
+const { connect, scannedDevices } = useHotspotBle();
+connect(scannedDevices[0]);
 ```
 
 ### Interact with a connected Hotspot

@@ -7,7 +7,7 @@ with {@link calculateAssertLocFee}.
 ## Import the module
 
 ```ts
-import { Location } from '@helium/react-native-sdk'
+import { Location } from '@helium/react-native-sdk';
 ```
 
 ## Create a signed Assert Location Transaction
@@ -23,29 +23,32 @@ fee section below to learn more.
 Here is a short example. For more information you can see the fully working
 [example app](https://github.com/helium/react-native-helium/blob/main/example/src/AssertLocation/AssertLocation.tsx).
 
-
 ```ts
-import { Location, Onboarding, Account, heliumHttpClient } from '@helium/react-native-sdk'
+import { Location, Account, heliumHttpClient } from '@helium/react-native-sdk';
+import OnboardingClient, { OnboardingRecord } from '@helium/onboarding';
 
 // the hotspot owners account
-const { keypairRaw, address } = await Account.createKeypair() // could also pass in a mnemonic
+const { keypairRaw, address } = await Account.createKeypair(); // could also pass in a mnemonic
 
 // Use Onboarding to get the hotspots onboarding record
-const onboardingRecord = await Onboarding.getOnboardingRecord(hotspotAddress)
-const signedTxn = await Location.assertLocationTxn({
-    gateway: hotspot.address, // from the current hotspot
-    owner: address,
-    lat: 	37.773972, // location latitude
-    lng: -122.431297, // location longitude
-    decimalGain: 1.0, // dbi
-    elevation: 5, // meters
-    locationNonceLimit: onboardingRecord.maker.locationNonceLimit,
-    makerAddress: onboardingRecord.maker.address,
-    ownerKeypairRaw: keypairRaw,
-    currentLocation: hotspot.location, // from the current hotspot
-  })
+const onboardingRecord = await new OnboardingClient().getOnboardingRecord(
+  hotspotAddress
+)?.data;
 
-heliumHttpClient.transactions.submit(signedTxn)
+const signedTxn = await Location.assertLocationTxn({
+  gateway: hotspot.address, // from the current hotspot
+  owner: address,
+  lat: 37.773972, // location latitude
+  lng: -122.431297, // location longitude
+  decimalGain: 1.0, // dbi
+  elevation: 5, // meters
+  locationNonceLimit: onboardingRecord.maker.locationNonceLimit,
+  makerAddress: onboardingRecord.maker.address,
+  ownerKeypairRaw: keypairRaw,
+  currentLocation: hotspot.location, // from the current hotspot
+});
+
+heliumHttpClient.transactions.submit(signedTxn);
 ```
 
 ## Calculate Assert Location Fees

@@ -9,7 +9,6 @@ import {
   Base64,
 } from 'react-native-ble-plx'
 import compareVersions from 'compare-versions'
-import { getOnboardingRecord } from '../Onboarding/onboardingClient'
 import {
   encodeAddGateway,
   encodeWifiConnect,
@@ -24,7 +23,8 @@ import {
 import { signGatewayTxn, calculateAddGatewayFee } from '../utils/addGateway'
 import { decode } from 'base-64'
 import type { SodiumKeyPair } from '../Account/account'
-import { Onboarding } from '@helium/react-native-sdk'
+import OnboardingClient from '@helium/onboarding'
+import { AddGatewayV1 } from '@helium/transactions'
 
 export enum HotspotErrorCode {
   WAIT = 'wait',
@@ -41,6 +41,7 @@ const useHotspotBle = () => {
   const instanceRef = useRef<BleManager | null>(null)
   const [devices, setDevices] = useState<Record<string, Device>>({})
   const [device, setDevice] = useState<Device>()
+  const [onboardingClient] = useState(new OnboardingClient())
 
   const scannedDevices = useMemo(
     () => Object.keys(devices).map((id) => devices[id]),
@@ -314,8 +315,15 @@ const useHotspotBle = () => {
       const onboardingAddress = await readString(
         HotspotCharacteristic.ONBOARDING_KEY_UUID
       )
-      const onboardingRecord = await getOnboardingRecord(onboardingAddress)
-
+      const onboardingResponse = await onboardingClient.getOnboardingRecord(
+        onboardingAddress
+      )
+      if (!onboardingResponse?.success || !onboardingResponse.data) {
+        throw new Error(
+          onboardingResponse.errorMessage || 'Could not fetch onboarding record'
+        )
+      }
+      const { data: onboardingRecord } = onboardingResponse
       const payer = onboardingRecord.maker.address
       const { fee, stakingFee } = calculateAddGatewayFee(ownerAddress, payer)
 
@@ -349,11 +357,14 @@ const useHotspotBle = () => {
 
       return value
     },
-    [checkDevice, findCharacteristic, readString]
+    [checkDevice, findCharacteristic, onboardingClient, readString]
   )
 
   const createAndSignGatewayTxn = useCallback(
-    async (ownerAddress: string, ownerKeypairRaw: SodiumKeyPair) => {
+    async (
+      ownerAddress: string,
+      ownerKeypairRaw: SodiumKeyPair
+    ): Promise<AddGatewayV1 | undefined> => {
       const value = await createGatewayTxn(ownerAddress)
       return signGatewayTxn(value, ownerKeypairRaw)
     },
@@ -383,10 +394,13 @@ const useHotspotBle = () => {
 
     const deviceFirmwareVersion = parseChar(charVal, characteristic)
 
-    const firmware: { version: string } = await Onboarding.getOnboarding(
-      'firmware'
-    )
-    const { version: minVersion } = firmware
+    const firmwareResponse = await onboardingClient.getFirmware()
+    if (!firmwareResponse?.data?.version) {
+      throw new Error('Could not fetch minimum firware version')
+    }
+    const {
+      data: { version: minVersion },
+    } = firmwareResponse
 
     const current = compareVersions.compare(
       deviceFirmwareVersion,
@@ -394,7 +408,7 @@ const useHotspotBle = () => {
       '>='
     )
     return { current, minVersion, deviceFirmwareVersion }
-  }, [checkDevice, findAndReadCharacteristic])
+  }, [checkDevice, findAndReadCharacteristic, onboardingClient])
 
   const getOnboardingAddress = useCallback(async () => {
     await checkDevice()

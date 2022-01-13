@@ -1,3 +1,4 @@
+import OnboardingClient from '@helium/onboarding'
 import React, { useCallback, useEffect, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
 import { useHotspotBle } from '../../../src'
@@ -17,8 +18,24 @@ const AddGatewayBle = () => {
     const keypair = await getKeypair()
     if (!accountAddress) return
 
-    const gatewayTxn = await createAndSignGatewayTxn(accountAddress, keypair)
-    const pendingTxn = await submitPendingTxn(gatewayTxn)
+    const txnOwnerSigned = await createAndSignGatewayTxn(
+      accountAddress,
+      keypair
+    )
+
+    if (!txnOwnerSigned?.gateway?.b58) {
+      throw new Error('Error signing gateway txn')
+    }
+
+    const response = await new OnboardingClient().postPaymentTransaction(
+      txnOwnerSigned.gateway.b58,
+      txnOwnerSigned.toString()
+    )
+    const txn = response.data?.transaction
+    if (!txn) {
+      throw new Error('Could not get signed txn from onboarding server')
+    }
+    const pendingTxn = await submitPendingTxn(txn)
     setHash(pendingTxn.hash)
     setStatus(pendingTxn.status)
     setFailedReason(pendingTxn.failedReason || '')

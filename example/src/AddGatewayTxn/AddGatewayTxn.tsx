@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { View, TextInput, StyleSheet, Text, Button } from 'react-native'
-import { Onboarding, AddGateway } from '@helium/react-native-sdk'
+import { AddGateway } from '@helium/react-native-sdk'
 import {
   getHotspotDetails,
   getPendingTxn,
   submitPendingTxn,
 } from '../../appDataClient'
 import { getKeypair } from '../Account/secureAccount'
+import OnboardingClient, { OnboardingRecord } from '@helium/onboarding'
 
 const AddGatewayTxn = () => {
   const [txnStr, setTxnStr] = useState('')
@@ -14,7 +15,7 @@ const AddGatewayTxn = () => {
   const [macAddress, setMacAddress] = useState('')
   const [ownerAddress, setOwnerAddress] = useState('')
   const [onboardingRecord, setOnboardingRecord] =
-    useState<Onboarding.OnboardingRecord>()
+    useState<OnboardingRecord | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [hash, setHash] = useState('')
   const [status, setStatus] = useState('')
@@ -24,9 +25,9 @@ const AddGatewayTxn = () => {
     if (!publicKey) return
 
     const getRecord = async () => {
-      const record = await Onboarding.getOnboardingRecord(publicKey)
-      setMacAddress(record.macEth0 || 'unknown')
-      setOnboardingRecord(record)
+      const record = await new OnboardingClient().getOnboardingRecord(publicKey)
+      setMacAddress(record.data?.macEth0 || 'unknown')
+      setOnboardingRecord(record.data)
     }
     getRecord()
   }, [publicKey])
@@ -68,7 +69,19 @@ const AddGatewayTxn = () => {
 
     // construct and publish add gateway
     const keypair = await getKeypair()
-    const txn = await AddGateway.signGatewayTxn(txnStr, keypair)
+    const txnOwnerSigned = await AddGateway.signGatewayTxn(txnStr, keypair)
+    if (!txnOwnerSigned.gateway?.b58) {
+      throw new Error('Error signing gateway txn')
+    }
+
+    const response = await new OnboardingClient().postPaymentTransaction(
+      txnOwnerSigned.gateway.b58,
+      txnOwnerSigned.toString()
+    )
+    const txn = response.data?.transaction
+    if (!txn) {
+      throw new Error('Could not get signed txn from onboarding server')
+    }
     const pendingTxn = await submitPendingTxn(txn)
     setHash(pendingTxn.hash)
     setStatus(pendingTxn.status)

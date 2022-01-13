@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
-import { Location, Onboarding } from '@helium/react-native-sdk'
+import { AssertLocationV2, Location } from '@helium/react-native-sdk'
 import { Address } from '@helium/crypto-react-native'
 import {
   getAccount,
@@ -16,6 +16,7 @@ import type {
   NetworkTokens,
   USDollars,
 } from '@helium/currency'
+import OnboardingClient, { OnboardingRecord } from '@helium/onboarding'
 import Input from '../Input'
 import animalName from 'angry-purple-tiger'
 
@@ -34,7 +35,7 @@ const AssertLocation = () => {
   const [ownerAddress, setOwnerAddress] = useState<string | null>(null)
   const [hotspot, setHotspot] = useState<Hotspot>()
   const [onboardingRecord, setOnboardingRecord] =
-    useState<Onboarding.OnboardingRecord>()
+    useState<OnboardingRecord | null>(null)
   const [feeData, setFeeData] = useState<{
     isFree: boolean
     hasSufficientBalance: boolean
@@ -67,8 +68,10 @@ const AssertLocation = () => {
     getHotspotDetails(gatewayAddress)
       .then(setHotspot)
       .catch((e) => console.log(e))
-    Onboarding.getOnboardingRecord(gatewayAddress)
-      .then(setOnboardingRecord)
+
+    new OnboardingClient()
+      .getOnboardingRecord(gatewayAddress)
+      .then((d) => setOnboardingRecord(d.data))
       .catch((e) => console.log(e))
   }, [gatewayAddress])
 
@@ -112,20 +115,38 @@ const AssertLocation = () => {
 
     setSubmitted(true)
     const ownerKeypairRaw = await getKeypair()
-    const txn = await Location.createAndSignAssertLocationTxn({
-      gateway: gatewayAddress,
-      owner: ownerAddress,
-      lat: parseFloat(lat),
-      lng: parseFloat(lng),
-      decimalGain: parseFloat(gain),
-      elevation: parseFloat(elevation),
-      locationNonceLimit: onboardingRecord.maker.locationNonceLimit,
-      makerAddress: onboardingRecord.maker.address,
-      ownerKeypairRaw,
-      currentLocation: hotspot?.location,
-    })
+    const { isFree, signedTxn } = await Location.createAndSignAssertLocationTxn(
+      {
+        gateway: gatewayAddress,
+        owner: ownerAddress,
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        decimalGain: parseFloat(gain),
+        elevation: parseFloat(elevation),
+        locationNonceLimit: onboardingRecord.maker.locationNonceLimit,
+        makerAddress: onboardingRecord.maker.address,
+        ownerKeypairRaw,
+        currentLocation: hotspot?.location,
+      }
+    )
 
-    const pendingTxn = await submitPendingTxn(txn)
+    let finalTxn = signedTxn
+
+    if (isFree) {
+      const onboardingResponse =
+        await new OnboardingClient().postPaymentTransaction(
+          gatewayAddress,
+          finalTxn.toString()
+        )
+      if (!onboardingResponse.data?.transaction) {
+        throw new Error('Could not sign txn')
+      }
+      finalTxn = AssertLocationV2.fromString(
+        onboardingResponse.data.transaction
+      )
+    }
+
+    const pendingTxn = await submitPendingTxn(finalTxn.toString())
     setHash(pendingTxn.hash)
     setStatus(pendingTxn.status)
     setFailedReason(pendingTxn.failedReason || '')

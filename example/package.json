@@ -11,6 +11,7 @@
   "dependencies": {
     "@helium/crypto-react-native": "^3.9.0",
     "@helium/http": "^3.48.0",
+    "@helium/onboarding": "^3.59.0",
     "@helium/proto-ble": "^3.37.0",
     "@helium/transactions": "^3.38.0",
     "@react-navigation/native": "^6.0.2",
