@@ -39,6 +39,7 @@ export type SignHotspotResponse = {
   status: 'success' | 'token_not_found' | 'user_cancelled' | 'gateway_not_found'
   assertTxn?: string
   gatewayTxn?: string
+  gatewayAddress?: string
 }
 
 export type MakerApp = {
