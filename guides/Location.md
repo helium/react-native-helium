@@ -1,3 +1,10 @@
+### The following high level steps need to be taken to update hotspot location
+
+1. Construct an AssertLocationV2 txn
+2. Deep link to hotspot app for signing
+3. If the assertion is to be paid for by the maker, send to onboarding server
+4. Submit to helium api
+
 Use this module to assist asserting gateway locations on the Helium Network. You will be able to both change the
 location of the hotspot, and update its antenna gain and elevation.
 
@@ -10,45 +17,21 @@ with {@link calculateAssertLocFee}.
 import { Location } from '@helium/react-native-sdk';
 ```
 
-## Create a signed Assert Location Transaction
-
-To assert a gateway's location you must create a signed
-[AssertLocationV2](https://helium.github.io/helium-js/classes/transactions.AssertLocationV2.html) transaction. This is done using
-[@helium/transactions](https://helium.github.io/helium-js/modules/transactions.html), and packaged nicely into the
-{@link assertLocationTxn} function. This function will take in the required fields and return you a signed transaction.
-If you only want to change gain and elevation you do not need to pass in the lat and lng properties. Likewise, if you
-only want to change location don't pass in the gain and elevation. The transaction fee depends on what is passed, see the
-fee section below to learn more.
-
-Here is a short example. For more information you can see the fully working
-[example app](https://github.com/helium/react-native-helium/blob/main/example/src/AssertLocation/AssertLocation.tsx).
+## Create the Assert Location Transaction
 
 ```ts
-import { Location, Account, heliumHttpClient } from '@helium/react-native-sdk';
-import OnboardingClient, { OnboardingRecord } from '@helium/onboarding';
-
-// the hotspot owners account
-const { keypairRaw, address } = await Account.createKeypair(); // could also pass in a mnemonic
-
-// Use Onboarding to get the hotspots onboarding record
-const onboardingRecord = await new OnboardingClient().getOnboardingRecord(
-  hotspotAddress
-)?.data;
-
-const signedTxn = await Location.assertLocationTxn({
-  gateway: hotspot.address, // from the current hotspot
-  owner: address,
-  lat: 37.773972, // location latitude
-  lng: -122.431297, // location longitude
-  decimalGain: 1.0, // dbi
-  elevation: 5, // meters
-  locationNonceLimit: onboardingRecord.maker.locationNonceLimit,
+const assertLocationTxn = await Location.createLocationTxn({
+  gateway: hotspotAddress,
+  lat,
+  lng,
+  decimalGain: params.gain,
+  elevation: params.elevation,
+  dataOnly: false,
+  owner: ownerAddress,
+  // currentLocation: '', // If reasserting location, put previous location here
   makerAddress: onboardingRecord.maker.address,
-  ownerKeypairRaw: keypairRaw,
-  currentLocation: hotspot.location, // from the current hotspot
+  location,
 });
-
-heliumHttpClient.transactions.submit(signedTxn);
 ```
 
 ## Calculate Assert Location Fees

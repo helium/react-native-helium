@@ -13,6 +13,7 @@ import HotspotBleProvider, {
 import OnboardingProvider, {
   useOnboardingContext as useOnboarding,
 } from './Onboarding/OnboardingProvider'
+import { OnboardingManager } from './Onboarding/onboardingTypes'
 import { Keypair } from '@helium/crypto-react-native'
 import { HotspotBleManager } from './HotspotBle/bleTypes'
 import { State } from 'react-native-ble-plx'
@@ -40,6 +41,7 @@ export {
   multiply,
   HotspotBleProvider,
   HotspotBleManager,
+  OnboardingManager,
   OnboardingProvider,
   useOnboarding,
   useHotspotBle,

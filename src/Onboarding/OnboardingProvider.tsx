@@ -21,8 +21,15 @@ const { Provider } = OnboardingContext
  * It must wrap your apps root component.
  *
  * For example:
- * ```jsx
+ * ```tsx
  * <OnboardingProvider>
+ *     <YourRootAppComponent />
+ * </OnboardingProvider>
+ * ```
+ * or if you will be using your own onboarding server
+ *
+ * ```tsx
+ * <OnboardingProvider baseUrl="https://youronboardingserver.com">
  *     <YourRootAppComponent />
  * </OnboardingProvider>
  * ```
@@ -39,11 +46,11 @@ const OnboardingProvider = ({
 
 /**
  * Provides the {@link OnboardingManager} instance. You must wrap your root app
- * component in a {@link OnboardingProvider} to use this.
+ * component in an {@link OnboardingProvider} to use this.
  *
  * For example:
  * ```typescript
- * const { startScan, stopScan, connect, scannedDevices } = useOnboarding()
+    const { getOnboardingRecord, postPaymentTransaction } = useOnboarding()}
  * ```
  */
 export const useOnboardingContext = (): OnboardingManager =>
