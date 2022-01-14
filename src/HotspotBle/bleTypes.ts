@@ -109,17 +109,21 @@ export interface HotspotBleManager {
    * Create an Add Gateway Transaction for the connected Device.
    * @param ownerAddress
    */
-  createGatewayTxn: (ownerAddress: string) => Promise<string>
+  createGatewayTxn: (opts: {
+    ownerAddress: string
+    payerAddress: string
+  }) => Promise<string>
 
   /**
    * Create and sign an Add Gateway Transaction for the connected Device.
    * @param ownerAddress
    * @param ownerKeypairRaw
    */
-  createAndSignGatewayTxn: (
-    ownerAddress: string,
+  createAndSignGatewayTxn: (opts: {
+    ownerAddress: string
+    payerAddress: string
     ownerKeypairRaw: SodiumKeyPair
-  ) => Promise<AddGatewayV1 | undefined>
+  }) => Promise<AddGatewayV1 | undefined>
 
   /**
    * Returns the diagnostic info for the connected Hotspot.
@@ -129,7 +133,7 @@ export interface HotspotBleManager {
   /**
    * Check if the connected Hotspots firmware is up to date.
    */
-  checkFirmwareCurrent: () => Promise<{
+  checkFirmwareCurrent: (minVersion: string) => Promise<{
     current: boolean
     minVersion: string
     deviceFirmwareVersion: string

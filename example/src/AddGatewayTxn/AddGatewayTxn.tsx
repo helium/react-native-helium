@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { View, TextInput, StyleSheet, Text, Button } from 'react-native'
-import { AddGateway } from '@helium/react-native-sdk'
+import { AddGateway, useOnboarding } from '@helium/react-native-sdk'
 import {
   getHotspotDetails,
   getPendingTxn,
   submitPendingTxn,
 } from '../../appDataClient'
 import { getKeypair } from '../Account/secureAccount'
-import OnboardingClient, { OnboardingRecord } from '@helium/onboarding'
+import { OnboardingRecord } from '@helium/onboarding'
 
 const AddGatewayTxn = () => {
   const [txnStr, setTxnStr] = useState('')
@@ -20,17 +20,19 @@ const AddGatewayTxn = () => {
   const [hash, setHash] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
+  const { getOnboardingRecord, postPaymentTransaction } = useOnboarding()
 
   useEffect(() => {
     if (!publicKey) return
 
     const getRecord = async () => {
-      const record = await new OnboardingClient().getOnboardingRecord(publicKey)
-      setMacAddress(record.data?.macEth0 || 'unknown')
-      setOnboardingRecord(record.data)
+      const record = await getOnboardingRecord(publicKey)
+      if (!record) return
+      setMacAddress(record.macEth0 || 'unknown')
+      setOnboardingRecord(record)
     }
     getRecord()
-  }, [publicKey])
+  }, [getOnboardingRecord, publicKey])
 
   useEffect(() => {
     if (!txnStr) return
@@ -74,19 +76,22 @@ const AddGatewayTxn = () => {
       throw new Error('Error signing gateway txn')
     }
 
-    const response = await new OnboardingClient().postPaymentTransaction(
+    const onboardTxn = await postPaymentTransaction(
       txnOwnerSigned.gateway.b58,
       txnOwnerSigned.toString()
     )
-    const txn = response.data?.transaction
-    if (!txn) {
-      throw new Error('Could not get signed txn from onboarding server')
-    }
-    const pendingTxn = await submitPendingTxn(txn)
+
+    if (!onboardTxn) return
+    const pendingTxn = await submitPendingTxn(onboardTxn)
     setHash(pendingTxn.hash)
     setStatus(pendingTxn.status)
     setFailedReason(pendingTxn.failedReason || '')
-  }, [hotspotOnChain, onboardingRecord?.publicAddress, txnStr])
+  }, [
+    hotspotOnChain,
+    onboardingRecord?.publicAddress,
+    postPaymentTransaction,
+    txnStr,
+  ])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return

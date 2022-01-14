@@ -1,11 +1,12 @@
-import OnboardingClient from '@helium/onboarding'
 import React, { useCallback, useEffect, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
 import { useHotspotBle } from '../../../src'
 import { getPendingTxn, submitPendingTxn } from '../../appDataClient'
 import { getKeypair, getSecureItem } from '../Account/secureAccount'
+import { useOnboarding } from '@helium/react-native-sdk'
 
 const AddGatewayBle = () => {
+  const { postPaymentTransaction } = useOnboarding()
   const { createAndSignGatewayTxn } = useHotspotBle()
   const [hash, setHash] = useState('')
   const [status, setStatus] = useState('')
@@ -18,28 +19,27 @@ const AddGatewayBle = () => {
     const keypair = await getKeypair()
     if (!accountAddress) return
 
-    const txnOwnerSigned = await createAndSignGatewayTxn(
-      accountAddress,
-      keypair
-    )
+    const txnOwnerSigned = await createAndSignGatewayTxn({
+      ownerAddress: accountAddress,
+      ownerKeypairRaw: keypair,
+      //TODO: GET MAKER ADDRESS
+      payerAddress: '',
+    })
 
     if (!txnOwnerSigned?.gateway?.b58) {
       throw new Error('Error signing gateway txn')
     }
 
-    const response = await new OnboardingClient().postPaymentTransaction(
+    const onboardTxn = await postPaymentTransaction(
       txnOwnerSigned.gateway.b58,
       txnOwnerSigned.toString()
     )
-    const txn = response.data?.transaction
-    if (!txn) {
-      throw new Error('Could not get signed txn from onboarding server')
-    }
-    const pendingTxn = await submitPendingTxn(txn)
+    if (!onboardTxn) return
+    const pendingTxn = await submitPendingTxn(onboardTxn)
     setHash(pendingTxn.hash)
     setStatus(pendingTxn.status)
     setFailedReason(pendingTxn.failedReason || '')
-  }, [createAndSignGatewayTxn])
+  }, [createAndSignGatewayTxn, postPaymentTransaction])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return

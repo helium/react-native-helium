@@ -23,7 +23,6 @@ import {
 import { signGatewayTxn, calculateAddGatewayFee } from '../utils/addGateway'
 import { decode } from 'base-64'
 import type { SodiumKeyPair } from '../Account/account'
-import OnboardingClient from '@helium/onboarding'
 import { AddGatewayV1 } from '@helium/transactions'
 
 export enum HotspotErrorCode {
@@ -41,7 +40,6 @@ const useHotspotBle = () => {
   const instanceRef = useRef<BleManager | null>(null)
   const [devices, setDevices] = useState<Record<string, Device>>({})
   const [device, setDevice] = useState<Device>()
-  const [onboardingClient] = useState(new OnboardingClient())
 
   const scannedDevices = useMemo(
     () => Object.keys(devices).map((id) => devices[id]),
@@ -185,26 +183,6 @@ const useHotspotBle = () => {
     [device, findCharacteristic]
   )
 
-  const readString = useCallback(
-    async (
-      characteristic:
-        | HotspotCharacteristic.WIFI_SSID_UUID
-        | HotspotCharacteristic.PUBKEY_UUID
-        | HotspotCharacteristic.ONBOARDING_KEY_UUID
-    ) => {
-      await checkDevice()
-
-      const charVal = await findAndReadCharacteristic(characteristic)
-
-      let parsedStr = ''
-      if (charVal) {
-        parsedStr = parseChar(charVal, characteristic)
-      }
-      return parsedStr
-    },
-    [checkDevice, findAndReadCharacteristic]
-  )
-
   const readBool = useCallback(
     async (characteristic: HotspotCharacteristic.ETHERNET_ONLINE_UUID) => {
       await checkDevice()
@@ -309,29 +287,25 @@ const useHotspotBle = () => {
   )
 
   const createGatewayTxn = useCallback(
-    async (ownerAddress: string) => {
+    async ({
+      ownerAddress,
+      payerAddress,
+    }: {
+      ownerAddress: string
+      payerAddress: string
+    }) => {
       await checkDevice()
 
-      const onboardingAddress = await readString(
-        HotspotCharacteristic.ONBOARDING_KEY_UUID
+      const { fee, stakingFee } = calculateAddGatewayFee(
+        ownerAddress,
+        payerAddress
       )
-      const onboardingResponse = await onboardingClient.getOnboardingRecord(
-        onboardingAddress
-      )
-      if (!onboardingResponse?.success || !onboardingResponse.data) {
-        throw new Error(
-          onboardingResponse.errorMessage || 'Could not fetch onboarding record'
-        )
-      }
-      const { data: onboardingRecord } = onboardingResponse
-      const payer = onboardingRecord.maker.address
-      const { fee, stakingFee } = calculateAddGatewayFee(ownerAddress, payer)
 
       const encodedPayload = encodeAddGateway(
         ownerAddress,
         stakingFee,
         fee,
-        payer
+        payerAddress
       )
       const addGatewayUuid = HotspotCharacteristic.ADD_GATEWAY_UUID
       const characteristic = await findCharacteristic(addGatewayUuid)
@@ -357,15 +331,20 @@ const useHotspotBle = () => {
 
       return value
     },
-    [checkDevice, findCharacteristic, onboardingClient, readString]
+    [checkDevice, findCharacteristic]
   )
 
   const createAndSignGatewayTxn = useCallback(
-    async (
-      ownerAddress: string,
+    async ({
+      ownerAddress,
+      payerAddress,
+      ownerKeypairRaw,
+    }: {
+      ownerAddress: string
+      payerAddress: string
       ownerKeypairRaw: SodiumKeyPair
-    ): Promise<AddGatewayV1 | undefined> => {
-      const value = await createGatewayTxn(ownerAddress)
+    }): Promise<AddGatewayV1 | undefined> => {
+      const value = await createGatewayTxn({ ownerAddress, payerAddress })
       return signGatewayTxn(value, ownerKeypairRaw)
     },
     [createGatewayTxn]
@@ -382,33 +361,28 @@ const useHotspotBle = () => {
     return parseChar(charVal, HotspotCharacteristic.DIAGNOSTIC_UUID)
   }, [checkDevice, findAndReadCharacteristic])
 
-  const checkFirmwareCurrent = useCallback(async () => {
-    await checkDevice()
+  const checkFirmwareCurrent = useCallback(
+    async (minVersion: string) => {
+      await checkDevice()
 
-    const characteristic = FirmwareCharacteristic.FIRMWAREVERSION_UUID
-    const charVal = await findAndReadCharacteristic(
-      characteristic,
-      Service.FIRMWARESERVICE_UUID
-    )
-    if (!charVal) throw new Error('Could not read firmware version')
+      const characteristic = FirmwareCharacteristic.FIRMWAREVERSION_UUID
+      const charVal = await findAndReadCharacteristic(
+        characteristic,
+        Service.FIRMWARESERVICE_UUID
+      )
+      if (!charVal) throw new Error('Could not read firmware version')
 
-    const deviceFirmwareVersion = parseChar(charVal, characteristic)
+      const deviceFirmwareVersion = parseChar(charVal, characteristic)
 
-    const firmwareResponse = await onboardingClient.getFirmware()
-    if (!firmwareResponse?.data?.version) {
-      throw new Error('Could not fetch minimum firware version')
-    }
-    const {
-      data: { version: minVersion },
-    } = firmwareResponse
-
-    const current = compareVersions.compare(
-      deviceFirmwareVersion,
-      minVersion,
-      '>='
-    )
-    return { current, minVersion, deviceFirmwareVersion }
-  }, [checkDevice, findAndReadCharacteristic, onboardingClient])
+      const current = compareVersions.compare(
+        deviceFirmwareVersion,
+        minVersion,
+        '>='
+      )
+      return { current, minVersion, deviceFirmwareVersion }
+    },
+    [checkDevice, findAndReadCharacteristic]
+  )
 
   const getOnboardingAddress = useCallback(async () => {
     await checkDevice()

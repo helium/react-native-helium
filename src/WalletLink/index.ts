@@ -1,5 +1,4 @@
-/**
- * [[include:WalletLink.md]]
+/* [[include:WalletLink.md]]
  * @packageDocumentation
  * @module WalletLink
  */

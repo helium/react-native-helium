@@ -30,7 +30,7 @@ const initialState = {
     wifi: '',
     disk: '',
   }),
-  checkFirmwareCurrent: async () => ({
+  checkFirmwareCurrent: async (_minVersion: string) => ({
     current: false,
     minVersion: '',
     deviceFirmwareVersion: '',

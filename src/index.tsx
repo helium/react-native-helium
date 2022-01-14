@@ -10,6 +10,9 @@ import { AddGatewayV1, AssertLocationV2 } from '@helium/transactions'
 import HotspotBleProvider, {
   useHotspotBleContext as useHotspotBle,
 } from './HotspotBle/HotspotBleProvider'
+import OnboardingProvider, {
+  useOnboardingContext as useOnboarding,
+} from './Onboarding/OnboardingProvider'
 import { Keypair } from '@helium/crypto-react-native'
 import { HotspotBleManager } from './HotspotBle/bleTypes'
 import { State } from 'react-native-ble-plx'
@@ -37,6 +40,8 @@ export {
   multiply,
   HotspotBleProvider,
   HotspotBleManager,
+  OnboardingProvider,
+  useOnboarding,
   useHotspotBle,
   HotspotErrorCode,
   Account,

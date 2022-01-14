@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
-import { AssertLocationV2, Location } from '@helium/react-native-sdk'
+import {
+  AssertLocationV2,
+  Location,
+  useOnboarding,
+} from '@helium/react-native-sdk'
 import { Address } from '@helium/crypto-react-native'
 import {
   getAccount,
@@ -16,11 +20,12 @@ import type {
   NetworkTokens,
   USDollars,
 } from '@helium/currency'
-import OnboardingClient, { OnboardingRecord } from '@helium/onboarding'
+import { OnboardingRecord } from '@helium/onboarding'
 import Input from '../Input'
 import animalName from 'angry-purple-tiger'
 
 const AssertLocation = () => {
+  const { getOnboardingRecord, postPaymentTransaction } = useOnboarding()
   const [account, setAccount] = useState<Account>()
   const [gatewayAddress, setGatewayAddress] = useState('')
   const [gatewayName, setGatewayName] = useState('')
@@ -69,11 +74,10 @@ const AssertLocation = () => {
       .then(setHotspot)
       .catch((e) => console.log(e))
 
-    new OnboardingClient()
-      .getOnboardingRecord(gatewayAddress)
-      .then((d) => setOnboardingRecord(d.data))
+    getOnboardingRecord(gatewayAddress)
+      .then((d) => setOnboardingRecord(d))
       .catch((e) => console.log(e))
-  }, [gatewayAddress])
+  }, [gatewayAddress, getOnboardingRecord])
 
   useEffect(() => {
     if (!hotspot || !onboardingRecord || !ownerAddress || !account?.balance) {
@@ -133,17 +137,14 @@ const AssertLocation = () => {
     let finalTxn = signedTxn
 
     if (isFree) {
-      const onboardingResponse =
-        await new OnboardingClient().postPaymentTransaction(
-          gatewayAddress,
-          finalTxn.toString()
-        )
-      if (!onboardingResponse.data?.transaction) {
+      const onboardTxn = await postPaymentTransaction(
+        gatewayAddress,
+        finalTxn.toString()
+      )
+      if (!onboardTxn) {
         throw new Error('Could not sign txn')
       }
-      finalTxn = AssertLocationV2.fromString(
-        onboardingResponse.data.transaction
-      )
+      finalTxn = AssertLocationV2.fromString(onboardTxn)
     }
 
     const pendingTxn = await submitPendingTxn(finalTxn.toString())
@@ -159,6 +160,7 @@ const AssertLocation = () => {
     lng,
     onboardingRecord,
     ownerAddress,
+    postPaymentTransaction,
   ])
 
   const updateTxnStatus = useCallback(async () => {
