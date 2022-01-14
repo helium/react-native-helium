@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { View, TextInput, StyleSheet, Text, Button } from 'react-native'
-import { Onboarding, AddGateway } from '@helium/react-native-sdk'
+import { AddGateway, useOnboarding } from '@helium/react-native-sdk'
 import {
   getHotspotDetails,
   getPendingTxn,
   submitPendingTxn,
 } from '../../appDataClient'
 import { getKeypair } from '../Account/secureAccount'
+import { OnboardingRecord } from '@helium/onboarding'
 
 const AddGatewayTxn = () => {
   const [txnStr, setTxnStr] = useState('')
@@ -14,22 +15,24 @@ const AddGatewayTxn = () => {
   const [macAddress, setMacAddress] = useState('')
   const [ownerAddress, setOwnerAddress] = useState('')
   const [onboardingRecord, setOnboardingRecord] =
-    useState<Onboarding.OnboardingRecord>()
+    useState<OnboardingRecord | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [hash, setHash] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
+  const { getOnboardingRecord, postPaymentTransaction } = useOnboarding()
 
   useEffect(() => {
     if (!publicKey) return
 
     const getRecord = async () => {
-      const record = await Onboarding.getOnboardingRecord(publicKey)
+      const record = await getOnboardingRecord(publicKey)
+      if (!record) return
       setMacAddress(record.macEth0 || 'unknown')
       setOnboardingRecord(record)
     }
     getRecord()
-  }, [publicKey])
+  }, [getOnboardingRecord, publicKey])
 
   useEffect(() => {
     if (!txnStr) return
@@ -68,12 +71,27 @@ const AddGatewayTxn = () => {
 
     // construct and publish add gateway
     const keypair = await getKeypair()
-    const txn = await AddGateway.signGatewayTxn(txnStr, keypair)
-    const pendingTxn = await submitPendingTxn(txn)
+    const txnOwnerSigned = await AddGateway.signGatewayTxn(txnStr, keypair)
+    if (!txnOwnerSigned.gateway?.b58) {
+      throw new Error('Error signing gateway txn')
+    }
+
+    const onboardTxn = await postPaymentTransaction(
+      txnOwnerSigned.gateway.b58,
+      txnOwnerSigned.toString()
+    )
+
+    if (!onboardTxn) return
+    const pendingTxn = await submitPendingTxn(onboardTxn)
     setHash(pendingTxn.hash)
     setStatus(pendingTxn.status)
     setFailedReason(pendingTxn.failedReason || '')
-  }, [hotspotOnChain, onboardingRecord?.publicAddress, txnStr])
+  }, [
+    hotspotOnChain,
+    onboardingRecord?.publicAddress,
+    postPaymentTransaction,
+    txnStr,
+  ])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return

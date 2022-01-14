@@ -2,6 +2,7 @@ import type { BleError, Device, State } from 'react-native-ble-plx'
 import { DiagnosticInfo } from '..'
 import type { SodiumKeyPair } from '../Account/account'
 import type { WifiStatusType } from './useHotspotBle'
+import { AddGatewayV1 } from '@helium/transactions'
 
 export enum Service {
   FIRMWARESERVICE_UUID = '0000180a-0000-1000-8000-00805f9b34fb',
@@ -108,17 +109,21 @@ export interface HotspotBleManager {
    * Create an Add Gateway Transaction for the connected Device.
    * @param ownerAddress
    */
-  createGatewayTxn: (ownerAddress: string) => Promise<string>
+  createGatewayTxn: (opts: {
+    ownerAddress: string
+    payerAddress: string
+  }) => Promise<string>
 
   /**
    * Create and sign an Add Gateway Transaction for the connected Device.
    * @param ownerAddress
    * @param ownerKeypairRaw
    */
-  createAndSignGatewayTxn: (
-    ownerAddress: string,
+  createAndSignGatewayTxn: (opts: {
+    ownerAddress: string
+    payerAddress: string
     ownerKeypairRaw: SodiumKeyPair
-  ) => Promise<string>
+  }) => Promise<AddGatewayV1 | undefined>
 
   /**
    * Returns the diagnostic info for the connected Hotspot.
@@ -128,7 +133,7 @@ export interface HotspotBleManager {
   /**
    * Check if the connected Hotspots firmware is up to date.
    */
-  checkFirmwareCurrent: () => Promise<{
+  checkFirmwareCurrent: (minVersion: string) => Promise<{
     current: boolean
     minVersion: string
     deviceFirmwareVersion: string

@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
-import { Location, Onboarding } from '@helium/react-native-sdk'
+import {
+  AssertLocationV2,
+  Location,
+  useOnboarding,
+} from '@helium/react-native-sdk'
 import { Address } from '@helium/crypto-react-native'
 import {
   getAccount,
@@ -16,10 +20,12 @@ import type {
   NetworkTokens,
   USDollars,
 } from '@helium/currency'
+import { OnboardingRecord } from '@helium/onboarding'
 import Input from '../Input'
 import animalName from 'angry-purple-tiger'
 
 const AssertLocation = () => {
+  const { getOnboardingRecord, postPaymentTransaction } = useOnboarding()
   const [account, setAccount] = useState<Account>()
   const [gatewayAddress, setGatewayAddress] = useState('')
   const [gatewayName, setGatewayName] = useState('')
@@ -34,7 +40,7 @@ const AssertLocation = () => {
   const [ownerAddress, setOwnerAddress] = useState<string | null>(null)
   const [hotspot, setHotspot] = useState<Hotspot>()
   const [onboardingRecord, setOnboardingRecord] =
-    useState<Onboarding.OnboardingRecord>()
+    useState<OnboardingRecord | null>(null)
   const [feeData, setFeeData] = useState<{
     isFree: boolean
     hasSufficientBalance: boolean
@@ -67,10 +73,11 @@ const AssertLocation = () => {
     getHotspotDetails(gatewayAddress)
       .then(setHotspot)
       .catch((e) => console.log(e))
-    Onboarding.getOnboardingRecord(gatewayAddress)
-      .then(setOnboardingRecord)
+
+    getOnboardingRecord(gatewayAddress)
+      .then((d) => setOnboardingRecord(d))
       .catch((e) => console.log(e))
-  }, [gatewayAddress])
+  }, [gatewayAddress, getOnboardingRecord])
 
   useEffect(() => {
     if (!hotspot || !onboardingRecord || !ownerAddress || !account?.balance) {
@@ -112,20 +119,35 @@ const AssertLocation = () => {
 
     setSubmitted(true)
     const ownerKeypairRaw = await getKeypair()
-    const txn = await Location.createAndSignAssertLocationTxn({
-      gateway: gatewayAddress,
-      owner: ownerAddress,
-      lat: parseFloat(lat),
-      lng: parseFloat(lng),
-      decimalGain: parseFloat(gain),
-      elevation: parseFloat(elevation),
-      locationNonceLimit: onboardingRecord.maker.locationNonceLimit,
-      makerAddress: onboardingRecord.maker.address,
-      ownerKeypairRaw,
-      currentLocation: hotspot?.location,
-    })
+    const { isFree, signedTxn } = await Location.createAndSignAssertLocationTxn(
+      {
+        gateway: gatewayAddress,
+        owner: ownerAddress,
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        decimalGain: parseFloat(gain),
+        elevation: parseFloat(elevation),
+        locationNonceLimit: onboardingRecord.maker.locationNonceLimit,
+        makerAddress: onboardingRecord.maker.address,
+        ownerKeypairRaw,
+        currentLocation: hotspot?.location,
+      }
+    )
 
-    const pendingTxn = await submitPendingTxn(txn)
+    let finalTxn = signedTxn
+
+    if (isFree) {
+      const onboardTxn = await postPaymentTransaction(
+        gatewayAddress,
+        finalTxn.toString()
+      )
+      if (!onboardTxn) {
+        throw new Error('Could not sign txn')
+      }
+      finalTxn = AssertLocationV2.fromString(onboardTxn)
+    }
+
+    const pendingTxn = await submitPendingTxn(finalTxn.toString())
     setHash(pendingTxn.hash)
     setStatus(pendingTxn.status)
     setFailedReason(pendingTxn.failedReason || '')
@@ -138,6 +160,7 @@ const AssertLocation = () => {
     lng,
     onboardingRecord,
     ownerAddress,
+    postPaymentTransaction,
   ])
 
   const updateTxnStatus = useCallback(async () => {

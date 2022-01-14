@@ -17,7 +17,7 @@ const initialState = {
   setWifi: async () => 'not_found' as WifiStatusType,
   removeConfiguredWifi: async () => undefined,
   createGatewayTxn: async () => '',
-  createAndSignGatewayTxn: async () => '',
+  createAndSignGatewayTxn: async () => undefined,
   ethernetOnline: async () => false,
   getDiagnosticInfo: async () => ({
     connected: '',
@@ -30,7 +30,7 @@ const initialState = {
     wifi: '',
     disk: '',
   }),
-  checkFirmwareCurrent: async () => ({
+  checkFirmwareCurrent: async (_minVersion: string) => ({
     current: false,
     minVersion: '',
     deviceFirmwareVersion: '',

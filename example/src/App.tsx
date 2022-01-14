@@ -9,7 +9,10 @@ import Home from './Home'
 import Mulitply from './Multiply'
 import AddGatewayTxn from './AddGatewayTxn/AddGatewayTxn'
 import HotspotBLENav from './HotspotBLE/HotspotBLENav'
-import { HotspotBleProvider } from '@helium/react-native-sdk'
+import {
+  HotspotBleProvider,
+  OnboardingProvider,
+} from '@helium/react-native-sdk'
 import AccountNav from './Account/AccountNav'
 import '../appDataClient'
 import AssertLocation from './AssertLocation/AssertLocation'
@@ -33,22 +36,24 @@ export default function App() {
   ])
 
   return (
-    <HotspotBleProvider>
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={({ route }) => ({
-            presentation: 'modal',
-            headerShown: route.name === 'Home',
-          })}
-        >
-          <Stack.Screen name="Home" component={Home} />
-          <Stack.Screen name="Multiply" component={Mulitply} />
-          <Stack.Screen name="HotspotBLE" component={HotspotBLENav} />
-          <Stack.Screen name="Account" component={AccountNav} />
-          <Stack.Screen name="AddGatewayTxn" component={AddGatewayTxn} />
-          <Stack.Screen name="AssertLocation" component={AssertLocation} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </HotspotBleProvider>
+    <OnboardingProvider baseUrl="https://onboarding.dewi.org/api/v2">
+      <HotspotBleProvider>
+        <NavigationContainer>
+          <Stack.Navigator
+            screenOptions={({ route }) => ({
+              presentation: 'modal',
+              headerShown: route.name === 'Home',
+            })}
+          >
+            <Stack.Screen name="Home" component={Home} />
+            <Stack.Screen name="Multiply" component={Mulitply} />
+            <Stack.Screen name="HotspotBLE" component={HotspotBLENav} />
+            <Stack.Screen name="Account" component={AccountNav} />
+            <Stack.Screen name="AddGatewayTxn" component={AddGatewayTxn} />
+            <Stack.Screen name="AssertLocation" component={AssertLocation} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </HotspotBleProvider>
+    </OnboardingProvider>
   )
 }

@@ -2,7 +2,6 @@ import { NativeModules } from 'react-native'
 export { Device, BleError } from 'react-native-ble-plx'
 export { Mnemonic, Address } from '@helium/crypto-react-native'
 import * as Account from './Account/account'
-import * as Onboarding from './Onboarding/onboardingClient'
 import * as AddGateway from './utils/addGateway'
 import * as Location from './utils/assertLocation'
 import * as WalletLink from './WalletLink'
@@ -11,6 +10,10 @@ import { AddGatewayV1, AssertLocationV2 } from '@helium/transactions'
 import HotspotBleProvider, {
   useHotspotBleContext as useHotspotBle,
 } from './HotspotBle/HotspotBleProvider'
+import OnboardingProvider, {
+  useOnboardingContext as useOnboarding,
+} from './Onboarding/OnboardingProvider'
+import { OnboardingManager } from './Onboarding/onboardingTypes'
 import { Keypair } from '@helium/crypto-react-native'
 import { HotspotBleManager } from './HotspotBle/bleTypes'
 import { State } from 'react-native-ble-plx'
@@ -38,12 +41,14 @@ export {
   multiply,
   HotspotBleProvider,
   HotspotBleManager,
+  OnboardingManager,
+  OnboardingProvider,
+  useOnboarding,
   useHotspotBle,
   HotspotErrorCode,
   Account,
   Keypair,
   State,
-  Onboarding,
   AddGatewayV1,
   AddGateway,
   Location,

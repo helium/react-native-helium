@@ -3,8 +3,10 @@ import { Button, StyleSheet, Text, View } from 'react-native'
 import { useHotspotBle } from '../../../src'
 import { getPendingTxn, submitPendingTxn } from '../../appDataClient'
 import { getKeypair, getSecureItem } from '../Account/secureAccount'
+import { useOnboarding } from '@helium/react-native-sdk'
 
 const AddGatewayBle = () => {
+  const { postPaymentTransaction } = useOnboarding()
   const { createAndSignGatewayTxn } = useHotspotBle()
   const [hash, setHash] = useState('')
   const [status, setStatus] = useState('')
@@ -17,12 +19,27 @@ const AddGatewayBle = () => {
     const keypair = await getKeypair()
     if (!accountAddress) return
 
-    const gatewayTxn = await createAndSignGatewayTxn(accountAddress, keypair)
-    const pendingTxn = await submitPendingTxn(gatewayTxn)
+    const txnOwnerSigned = await createAndSignGatewayTxn({
+      ownerAddress: accountAddress,
+      ownerKeypairRaw: keypair,
+      //TODO: GET MAKER ADDRESS
+      payerAddress: '',
+    })
+
+    if (!txnOwnerSigned?.gateway?.b58) {
+      throw new Error('Error signing gateway txn')
+    }
+
+    const onboardTxn = await postPaymentTransaction(
+      txnOwnerSigned.gateway.b58,
+      txnOwnerSigned.toString()
+    )
+    if (!onboardTxn) return
+    const pendingTxn = await submitPendingTxn(onboardTxn)
     setHash(pendingTxn.hash)
     setStatus(pendingTxn.status)
     setFailedReason(pendingTxn.failedReason || '')
-  }, [createAndSignGatewayTxn])
+  }, [createAndSignGatewayTxn, postPaymentTransaction])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return

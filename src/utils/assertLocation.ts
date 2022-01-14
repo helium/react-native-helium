@@ -7,7 +7,6 @@
 import { Address } from '@helium/crypto-react-native'
 import { AssertLocationV2, Transaction } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
-import { getOnboardingSignedTransaction } from '../Onboarding/onboardingClient'
 import { geoToH3 } from 'h3-js'
 import { Balance, CurrencyType } from '@helium/currency'
 import { heliumHttpClient } from './httpClient'
@@ -209,17 +208,7 @@ export const createAndSignAssertLocationTxn = async ({
     payer: ownerIsPayer ? keypair : undefined,
   })
 
-  let finalTxn = locTxn
-
-  if (isFree) {
-    const stakingServerSignedTxn = await getOnboardingSignedTransaction(
-      gateway,
-      locTxn.toString()
-    )
-    finalTxn = AssertLocationV2.fromString(stakingServerSignedTxn)
-  }
-
-  return finalTxn.toString()
+  return { signedTxn: locTxn, isFree }
 }
 
 export const createLocationTxn = async ({
