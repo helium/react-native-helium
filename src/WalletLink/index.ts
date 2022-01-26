@@ -35,7 +35,12 @@ export type SignHotspotRequest = {
 }
 
 export type SignHotspotResponse = {
-  status: 'success' | 'token_not_found' | 'user_cancelled' | 'gateway_not_found'
+  status:
+    | 'success'
+    | 'token_not_found'
+    | 'user_cancelled'
+    | 'gateway_not_found'
+    | 'invalid_link'
   assertTxn?: string
   gatewayTxn?: string
   gatewayAddress?: string
