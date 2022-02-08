@@ -5,8 +5,13 @@ import * as Account from './Account/account'
 import * as AddGateway from './utils/addGateway'
 import * as Location from './utils/assertLocation'
 import * as WalletLink from './WalletLink'
+import * as Transfer from './utils/transferHotspot'
 import './polyfill'
-import { AddGatewayV1, AssertLocationV2 } from '@helium/transactions'
+import {
+  AddGatewayV1,
+  AssertLocationV2,
+  TransferHotspotV2,
+} from '@helium/transactions'
 import HotspotBleProvider, {
   useHotspotBleContext as useHotspotBle,
 } from './HotspotBle/HotspotBleProvider'
@@ -61,4 +66,6 @@ export {
   SecurityTokens,
   USDollars,
   WalletLink,
+  Transfer,
+  TransferHotspotV2,
 }

@@ -10,6 +10,7 @@ import { getKeypair, SodiumKeyPair } from '../Account/account'
 import { geoToH3 } from 'h3-js'
 import { Balance, CurrencyType } from '@helium/currency'
 import { heliumHttpClient } from './httpClient'
+import { emptyB58Address } from './txnHelper'
 
 const DEFAULT_H3_RES = 12
 
@@ -34,8 +35,6 @@ export const hasFreeLocationAssert = (
   locationNonceLimit: number
 ) => nonce < locationNonceLimit
 
-const emptyB58Address = () =>
-  Address.fromB58('13PuqyWXzPYeXcF1B9ZRx7RLkEygeL374ZABiQdwRSNzASdA1sn')
 export const calculateAssertLocFee = (
   ownerB58: string | undefined,
   payerB58: string | undefined,

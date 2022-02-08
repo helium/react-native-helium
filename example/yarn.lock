@@ -1132,10 +1132,10 @@
   dependencies:
     "@hapi/hoek" "^8.3.0"
 
-"@helium/crypto-react-native@^3.9.0":
-  version "3.9.0"
-  resolved "https://registry.yarnpkg.com/@helium/crypto-react-native/-/crypto-react-native-3.9.0.tgz#53604d64db64420e5cbf822a1be7f52e553d1b9a"
-  integrity sha512-IqHCYFq1yk2V8yByNeohNcTr7l0pyZrl7+oARPDSwHHXWhM8M52ioJ5I6QhsOpn/sbMMqk6robATupsyiNfyoA==
+"@helium/crypto-react-native@^3.60.0":
+  version "3.60.0"
+  resolved "https://registry.yarnpkg.com/@helium/crypto-react-native/-/crypto-react-native-3.60.0.tgz#f43e1abc74e560fa24686a42c26b36451157efb3"
+  integrity sha512-gb9p+qqJXx4wpaZk51z3P701TEqc78GJNCx4Ev4xRAmkUEtYdTywdalK1AaSN78VRVQAJkt1F/QYFJp4fwIeYA==
   dependencies:
     bs58 "^4.0.1"
     buffer "^6.0.1"
@@ -1143,28 +1143,29 @@
     react-native-sodium "^0.3.8"
     safe-buffer "^5.2.1"
 
-"@helium/crypto@^3.38.0":
-  version "3.38.0"
-  resolved "https://registry.yarnpkg.com/@helium/crypto/-/crypto-3.38.0.tgz#b321f9a42b0e6144eb2044f0d05f6874d731fa85"
-  integrity sha512-dvmVaeTsk+05nBhbeqqWu0nugCeCrdX9A61YNxNxnb5NWYW6cAuIOuzutgTjr3v4MxZPtLEVyH9g8eWTQuCsug==
+"@helium/crypto@^3.60.0":
+  version "3.60.0"
+  resolved "https://registry.yarnpkg.com/@helium/crypto/-/crypto-3.60.0.tgz#58be74745d0c7cc3198481dc69f5530393fc7287"
+  integrity sha512-zvDshfSv9wv0PAmmKvZPFP9pnNmR6Q7ZAy+WuGpCD3AxuWv9fiODgKATVuTMhV/QXkkxI+5t8TbGUjTOxsXAmA==
   dependencies:
     bs58 "^4.0.1"
     create-hash "^1.2.0"
     libsodium-wrappers "^0.7.6"
 
-"@helium/currency@^3.45.0":
-  version "3.45.0"
-  resolved "https://registry.yarnpkg.com/@helium/currency/-/currency-3.45.0.tgz#326933225047601f447209fb9c77c6d4b114c381"
-  integrity sha512-6hajnB+L5OQgbQJyGzzYrHlcpRnt1j9thjt+zKhLP672VgfqJWaBs5unI+yhqHvF3JPB2/DsLj3/oT4hL0z84A==
+"@helium/currency@^3.52.0":
+  version "3.52.0"
+  resolved "https://registry.yarnpkg.com/@helium/currency/-/currency-3.52.0.tgz#68b8ec1c2db73b7c88f54c1b59686a5ade148986"
+  integrity sha512-L91EKuzO+X4v45df8fgr9ihR1WTzThTQIx3Uh2bQwpwkDjxvxdI6xq43VEhz0+y7JN2XGRl3tX4ljQST+Azw4Q==
   dependencies:
     bignumber.js "^9.0.0"
 
-"@helium/http@^3.48.0":
-  version "3.48.0"
-  resolved "https://registry.yarnpkg.com/@helium/http/-/http-3.48.0.tgz#26076de27cd76eeca297534d64d64dbe2a1b87f7"
-  integrity sha512-lbV2VOb28ctJN7GAxV8KqnPTMwUaUtVBRoDFEMx0NWXp9nT1x39Myi3/2rTRkaM2ZpwW6tpA/I7pHo2jZctiSg==
+"@helium/http@^3.63.0":
+  version "3.63.0"
+  resolved "https://registry.yarnpkg.com/@helium/http/-/http-3.63.0.tgz#47b11003f6e333f8178fa6f15355874617d0b589"
+  integrity sha512-YZVgAysuceUe2pJ5CWS5cc4w5n6da/C65zyl46YSPnJvsxgLXt69sqFcbF9kic5mWLnVqh0kwgUhoCIby56F7Q==
   dependencies:
-    "@helium/currency" "^3.45.0"
+    "@helium/crypto" "^3.60.0"
+    "@helium/currency" "^3.52.0"
     axios "^0.21.1"
     camelcase-keys "^6.2.2"
     qs "^6.9.3"
@@ -1186,20 +1187,20 @@
   dependencies:
     protobufjs "^6.8.9"
 
-"@helium/proto@^1.4.0":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@helium/proto/-/proto-1.4.0.tgz#7a0ce268642173966519c2fb5f6e57508bff76d1"
-  integrity sha512-0yzzwfwpygowZNqB/9+vI/0gq5TV55ALAUqVuX6TbZZd9DGv4+AHICLiaIandLBBmNPpFzJ0c/IBdBcHJS/g1w==
+"@helium/proto@^1.5.0":
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/@helium/proto/-/proto-1.5.0.tgz#bf42fad97d46c3e08653176dcf93b0d6b9633212"
+  integrity sha512-dP3M6rApsNG0fl7IZgYu0R0kxEbhZ/z6BhBoYdmCQDyX9FX+kNlzuPWMji4P9jUFcAs7UAXTZLHR5XATJifVPw==
   dependencies:
     protobufjs "^6.8.9"
 
-"@helium/transactions@^3.38.0":
-  version "3.38.0"
-  resolved "https://registry.yarnpkg.com/@helium/transactions/-/transactions-3.38.0.tgz#c3b36d0e744e61b14c7585feb3e144476c93e49c"
-  integrity sha512-nFOEYGk102a+levjrSQLr94Dj3PYe/vyZMD8g/xPKx98uV47m6b1yzUwhr/Mm5+iUAJcCPo1gT/6UUGBi0+XWg==
+"@helium/transactions@^3.62.0":
+  version "3.62.0"
+  resolved "https://registry.yarnpkg.com/@helium/transactions/-/transactions-3.62.0.tgz#f201b3e502f65b0d0eb400d931064fc850246793"
+  integrity sha512-akmgI7GjW2WLMrT97HJCwSPn9Pz7Rj7p7OoDgoh3XVHLMhTHQbo23yT8lVvVrfNEh9KR3HJXsutOy5xn957yhQ==
   dependencies:
-    "@helium/crypto" "^3.38.0"
-    "@helium/proto" "^1.4.0"
+    "@helium/crypto" "^3.60.0"
+    "@helium/proto" "^1.5.0"
     "@types/libsodium-wrappers" "^0.7.8"
     long "^4.0.0"
     path "^0.12.7"

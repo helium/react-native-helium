@@ -7,9 +7,7 @@
 import { AddGatewayV1 } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
 import { Address } from '@helium/crypto-react-native'
-
-const emptyB58Address = () =>
-  Address.fromB58('13PuqyWXzPYeXcF1B9ZRx7RLkEygeL374ZABiQdwRSNzASdA1sn')
+import { emptyB58Address } from './txnHelper'
 
 /**
  * Calculate the transaction fee and staking fee for an AddGatewayV1 transaction.
