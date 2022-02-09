@@ -18,6 +18,10 @@ const Home = () => {
         title: 'Assert Location',
         handler: () => navigation.push('AssertLocation'),
       },
+      {
+        title: 'Transfer Hotspot from Transaction String',
+        handler: () => navigation.push('TransferHotspot'),
+      },
     ],
     [navigation]
   )

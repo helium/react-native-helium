@@ -16,6 +16,7 @@ import {
 import AccountNav from './Account/AccountNav'
 import '../appDataClient'
 import AssertLocation from './AssertLocation/AssertLocation'
+import TransferHotspot from './TransferHotspot/TransferHotspot'
 
 const Stack = createNativeStackNavigator()
 
@@ -26,6 +27,7 @@ export type RootStackParamList = {
   Account: undefined
   AddGatewayTxn: undefined
   AssertLocation: undefined
+  TransferHotspot: undefined
 }
 
 export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>
@@ -51,6 +53,7 @@ export default function App() {
             <Stack.Screen name="Account" component={AccountNav} />
             <Stack.Screen name="AddGatewayTxn" component={AddGatewayTxn} />
             <Stack.Screen name="AssertLocation" component={AssertLocation} />
+            <Stack.Screen name="TransferHotspot" component={TransferHotspot} />
           </Stack.Navigator>
         </NavigationContainer>
       </HotspotBleProvider>
