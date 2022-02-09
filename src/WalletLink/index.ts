@@ -32,6 +32,7 @@ export type SignHotspotRequest = {
   token: string
   addGatewayTxn?: string
   assertLocationTxn?: string
+  transferHotspotTxn?: string
 }
 
 export type SignHotspotResponse = {
@@ -43,6 +44,7 @@ export type SignHotspotResponse = {
     | 'invalid_link'
   assertTxn?: string
   gatewayTxn?: string
+  transferTxn?: string
   gatewayAddress?: string
 }
 
