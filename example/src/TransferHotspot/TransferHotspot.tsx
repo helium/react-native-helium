@@ -31,7 +31,7 @@ const TransferHotspot = () => {
   const submitTxn = useCallback(async () => {
     setSubmitted(true)
 
-    // construct and publish add gateway
+    // construct and publish transfer v2
     const keypair = await getKeypair()
     const signedTxn = await Transfer.signTransferV2Txn(txnStr, keypair)
     if (!signedTxn.gateway?.b58) {
