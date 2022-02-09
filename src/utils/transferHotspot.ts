@@ -20,7 +20,7 @@ export const createTransferV2 = (
   ownerB58: string,
   newOwnerB58: string,
   nonce: number
-) => {
+): TransferHotspotV2 => {
   const gateway = Address.fromB58(gatewayB58)
   const owner = Address.fromB58(ownerB58)
   const newOwner = Address.fromB58(newOwnerB58)
@@ -48,7 +48,7 @@ export const txnFromString = (txnStr: string): TransferHotspotV2 =>
 export const signTransferV2Txn = async (
   txnStr: string,
   ownerKeypairRaw: SodiumKeyPair
-) => {
+): Promise<TransferHotspotV2> => {
   const ownerKeypair = getKeypair(ownerKeypairRaw)
   const transferHotspotV2 = txnFromString(txnStr)
 
