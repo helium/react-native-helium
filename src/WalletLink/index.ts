@@ -109,7 +109,7 @@ export const createWalletLinkUrl = (opts: {
 }
 
 /**
- * Creates the url needed to add and/or assert location of a gateway.
+ * Creates the url needed to add, assert location, or transfer a gateway.
  * The signing app will callback with the signed Transactions
  */
 export const createUpdateHotspotUrl = (opts: SignHotspotRequest) => {
