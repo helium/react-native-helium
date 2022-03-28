@@ -11,8 +11,11 @@ import { WalletLink } from '@helium/react-native-sdk';
 
 ### Request a wallet link token
 
-Request a token from your app to an app capable of signing a transaction (e.g. Helium Hotspot). This token is
-required when requesting a signed transaction. See {@link createWalletLinkUrl} for more info.
+The first step to deep linking is to request a token from an app capable of signing transactions (e.g. Helium Hotspot).
+To do this you must use {@link createWalletLinkUrl} to create a deep link URL for the app capable of signing transactions.
+This will then redirect the user to the authenticated app (e.g. Helium Hotspot) and create a wallet link token. The token
+will then be passed back to your app via deep link back to the `callbackUrl`. This token should then be saved in your
+app, it is required when requesting a signed transaction.
 
 ```ts
 import { WalletLink } from '@helium/react-native-sdk';
@@ -28,10 +31,14 @@ const url = WalletLink.createWalletLinkUrl({
 Linking.openURL(url);
 ```
 
-### Request signed gateway transactions
+### Request signed gateway transactions (Add Gateway, Assert Location, Transfer Hotspot)
 
-Request signed gateway transactions from a supported app (e.g. Helium Hotspot).
-You will need to submit these transactions `heliumHttpClient.transactions.submit(txn)`.
+Request signing a gateway transactions by a supported app (e.g. Helium Hotspot). This is used for assert location,
+add gateway, and transfer hotspot transactions. Only one transaction should be passed at a time. After creating the url
+and opening the deep link, the app capable of signing transactions (e.g. Helium Hotspot) will be opened and the user
+must confirm the information. After confirmation the transaction passed will be signed and passed back to your app via
+the callback URL set by {@link createWalletLinkUrl} which is contained in the wallet link token. After receiving the
+signed transaction, you will need to submit it via the helium api or sdk `heliumHttpClient.transactions.submit(txn)`.
 See {@link createUpdateHotspotUrl} for more info.
 
 ```ts
@@ -42,6 +49,7 @@ import { Linking } from 'react-native';
 const url = WalletLink.createUpdateHotspotUrl({
   assertLocationTxn: 'assert_location_v2',
   addGatewayTxn: 'add_gateway_v1',
+  transferHotspotTxn: 'add_transfer_v2',
   token: 'your_token',
 });
 
