@@ -6,7 +6,7 @@
 
 import { Address, Keypair, Mnemonic } from '@helium/crypto-react-native'
 import wordlist from './Wordlists/english.json'
-import { shuffle, uniq, take, reject, sampleSize } from 'lodash'
+import { shuffle, uniq, take, sampleSize } from 'lodash'
 
 /**
  * A libsodium keypair.
@@ -71,6 +71,9 @@ export const getMatchingWords = (text: string) =>
 export const generateChallengeWords = (targetWord: string) =>
   shuffle(
     uniq(
-      take(reject(sampleSize(wordlist, 12), targetWord), 11).concat(targetWord)
+      take(
+        sampleSize(wordlist, 12).filter((w) => w !== targetWord),
+        11
+      ).concat(targetWord)
     )
   )
