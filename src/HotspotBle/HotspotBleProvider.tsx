@@ -8,6 +8,7 @@ const initialState = {
   enable: async () => false,
   startScan: async () => {},
   stopScan: async () => {},
+  resetDevices: () => {},
   connect: async () => {},
   disconnect: async () => false,
   findCharacteristic: async () => undefined,
