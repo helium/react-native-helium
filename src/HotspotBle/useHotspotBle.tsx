@@ -75,8 +75,12 @@ const useHotspotBle = () => {
     }
   }, [])
 
+  const resetDevices = useCallback(() => setDevices({}), [])
+
   const startScan = useCallback(
     async (callback: (error: BleError | null) => void) => {
+      resetDevices()
+
       getBleManager().startDeviceScan(
         [Service.MAIN_UUID],
         { allowDuplicates: false },
@@ -91,7 +95,7 @@ const useHotspotBle = () => {
         }
       )
     },
-    []
+    [resetDevices]
   )
 
   const stopScan = useCallback(() => getBleManager().stopDeviceScan(), [])
@@ -398,6 +402,7 @@ const useHotspotBle = () => {
   return {
     startScan,
     stopScan,
+    resetDevices,
     connect,
     disconnect,
     isConnected,
