@@ -5,20 +5,23 @@ const useOnboarding = (baseUrl?: string) => {
   const onboardingClient = useRef(new OnboardingClient(baseUrl))
 
   const handleError = useCallback(
-    ({
-      success,
-      errorMessage,
-    }: {
-      code: number
-      success: boolean
-      errorMessage?: string
-      errors?: Array<any>
-    }) => {
+    (
+      {
+        success,
+        errorMessage,
+      }: {
+        code: number
+        success: boolean
+        errorMessage?: string
+        errors?: Array<any>
+      },
+      fallbackErrorMessage: string
+    ) => {
       if (success) {
         return
       }
 
-      throw new Error(errorMessage || 'Onboarding client error')
+      throw new Error(errorMessage || fallbackErrorMessage)
     },
     []
   )
@@ -26,7 +29,7 @@ const useOnboarding = (baseUrl?: string) => {
   const getMinFirmware = useCallback(async () => {
     const response = await onboardingClient.current.getFirmware()
 
-    handleError(response)
+    handleError(response, 'unable to get min firmware version')
 
     return response.data?.version || null
   }, [handleError])
@@ -34,7 +37,7 @@ const useOnboarding = (baseUrl?: string) => {
   const getMakers = useCallback(async () => {
     const response = await onboardingClient.current.getMakers()
 
-    handleError(response)
+    handleError(response, 'unable to get makers')
 
     return response.data
   }, [handleError])
@@ -45,7 +48,10 @@ const useOnboarding = (baseUrl?: string) => {
         hotspotAddress
       )
 
-      handleError(response)
+      handleError(
+        response,
+        `unable to get onboarding record for ${hotspotAddress}`
+      )
 
       return response.data
     },
@@ -59,7 +65,10 @@ const useOnboarding = (baseUrl?: string) => {
         transaction
       )
 
-      handleError(response)
+      handleError(
+        response,
+        `unable to post payment transaction for ${hotspotAddress}`
+      )
 
       return response.data?.transaction || null
     },

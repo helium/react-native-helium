@@ -66,6 +66,11 @@ export interface HotspotBleManager {
   stopScan: () => void
 
   /**
+   * Reset devices that have been scanned.
+   */
+  resetDevices: () => void
+
+  /**
    * Connect to a Hotspot. Pass the device from  {@link HotspotBleManager.scannedDevices | scannedDevices} after scanning.
    * @param hotspotDevice
    */
