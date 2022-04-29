@@ -64,7 +64,7 @@ export type DelegateApp = {
 }
 
 const heliumWalletApp: DelegateApp = {
-  universalLink: 'heliumwallet://',
+  universalLink: 'https://wallet.helium.com/',
   name: 'helium-wallet',
   androidPackage: 'com.helium.wallet.app',
   iosBundleId: 'com.helium.wallet.app',
