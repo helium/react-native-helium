@@ -56,7 +56,6 @@ export type MakerApp = {
 }
 
 export type DelegateApp = {
-  urlScheme: string
   universalLink: string
   name: string
   androidPackage: string
@@ -64,8 +63,15 @@ export type DelegateApp = {
   appStoreId: number
 }
 
+const heliumWalletApp: DelegateApp = {
+  universalLink: 'https://wallet.helium.com/',
+  name: 'helium-wallet',
+  androidPackage: 'com.helium.wallet.app',
+  iosBundleId: 'com.helium.wallet.app',
+  appStoreId: 1609525848,
+}
+
 const heliumHotspotApp: DelegateApp = {
-  urlScheme: 'helium://',
   universalLink: 'https://helium.com/',
   name: 'helium-hotspot',
   androidPackage: 'com.helium.wallet',
@@ -76,7 +82,7 @@ const heliumHotspotApp: DelegateApp = {
 /**
  * A list of known apps that support signing transactions
  */
-export const delegateApps = [heliumHotspotApp]
+export const delegateApps = [heliumWalletApp, heliumHotspotApp]
 
 /**
  * Parse a wallet link token
