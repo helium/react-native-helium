@@ -61,6 +61,7 @@ export type DelegateApp = {
   androidPackage: string
   iosBundleId: string
   appStoreId: number
+  scheme: string
 }
 
 const heliumWalletApp: DelegateApp = {
@@ -69,6 +70,7 @@ const heliumWalletApp: DelegateApp = {
   androidPackage: 'com.helium.wallet.app',
   iosBundleId: 'com.helium.wallet.app',
   appStoreId: 1609525848,
+  scheme: '',
 }
 
 const heliumHotspotApp: DelegateApp = {
@@ -77,6 +79,7 @@ const heliumHotspotApp: DelegateApp = {
   androidPackage: 'com.helium.wallet',
   iosBundleId: 'com.helium.mobile.wallet',
   appStoreId: 1450463605,
+  scheme: 'helium',
 }
 
 /**
