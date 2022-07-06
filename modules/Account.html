@@ -142,18 +142,19 @@
 					<a name="createKeypair" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagConst">Const</span> create<wbr>Keypair</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-namespace">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Keypair<span class="tsd-signature-symbol">(</span>givenMnemonic<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> | </span><a href="../classes/Mnemonic.html" class="tsd-signature-type" data-tsd-kind="Class">Mnemonic</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span>address<span class="tsd-signature-symbol">: </span><a href="../classes/Address.html" class="tsd-signature-type" data-tsd-kind="Class">Address</a><span class="tsd-signature-symbol">; </span>keypairRaw<span class="tsd-signature-symbol">: </span><a href="../interfaces/Account.SodiumKeyPair.html" class="tsd-signature-type" data-tsd-kind="Interface">SodiumKeyPair</a><span class="tsd-signature-symbol">; </span>mnemonic<span class="tsd-signature-symbol">: </span><a href="../classes/Mnemonic.html" class="tsd-signature-type" data-tsd-kind="Class">Mnemonic</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Keypair<span class="tsd-signature-symbol">(</span>givenMnemonic<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> | </span><a href="../classes/Mnemonic.html" class="tsd-signature-type" data-tsd-kind="Class">Mnemonic</a>, wordCount<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">12</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">24</span>, netType<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span>address<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">default</span><span class="tsd-signature-symbol">; </span>keypairRaw<span class="tsd-signature-symbol">: </span><a href="../interfaces/Account.SodiumKeyPair.html" class="tsd-signature-type" data-tsd-kind="Interface">SodiumKeyPair</a><span class="tsd-signature-symbol">; </span>mnemonic<span class="tsd-signature-symbol">: </span><a href="../classes/Mnemonic.html" class="tsd-signature-type" data-tsd-kind="Class">Mnemonic</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/083d76b/src/Account/account.ts#L23">src/Account/account.ts:23</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/928bc0b/src/Account/account.ts#L27">src/Account/account.ts:27</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Creates a keypair from the provided <a href="../classes/Mnemonic.html">Mnemonic</a>, or from a newly generated one.</p>
+									<p>Creates a keypair from the provided <a href="../classes/Mnemonic.html">Mnemonic</a>, or from a newly
+									generated one. Defaults to a wordCount of 12 and netType of MainNet.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -164,8 +165,20 @@
 										<p>list of bip39 words to create the keypair with</p>
 									</div>
 								</li>
+								<li>
+									<h5>wordCount: <span class="tsd-signature-type">12</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">24</span><span class="tsd-signature-symbol"> = 12</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>either 12 or 24 to indicate how many seed words to use</p>
+									</div>
+								</li>
+								<li>
+									<h5>netType: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = ...</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the NetType to use for the keypair (Mainnet / Testnet)</p>
+									</div>
+								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span>address<span class="tsd-signature-symbol">: </span><a href="../classes/Address.html" class="tsd-signature-type" data-tsd-kind="Class">Address</a><span class="tsd-signature-symbol">; </span>keypairRaw<span class="tsd-signature-symbol">: </span><a href="../interfaces/Account.SodiumKeyPair.html" class="tsd-signature-type" data-tsd-kind="Interface">SodiumKeyPair</a><span class="tsd-signature-symbol">; </span>mnemonic<span class="tsd-signature-symbol">: </span><a href="../classes/Mnemonic.html" class="tsd-signature-type" data-tsd-kind="Class">Mnemonic</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span>address<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">default</span><span class="tsd-signature-symbol">; </span>keypairRaw<span class="tsd-signature-symbol">: </span><a href="../interfaces/Account.SodiumKeyPair.html" class="tsd-signature-type" data-tsd-kind="Interface">SodiumKeyPair</a><span class="tsd-signature-symbol">; </span>mnemonic<span class="tsd-signature-symbol">: </span><a href="../classes/Mnemonic.html" class="tsd-signature-type" data-tsd-kind="Class">Mnemonic</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -179,7 +192,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/083d76b/src/Account/account.ts#L71">src/Account/account.ts:71</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/928bc0b/src/Account/account.ts#L77">src/Account/account.ts:77</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -204,18 +217,18 @@
 					<a name="getAddress" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagConst">Const</span> get<wbr>Address</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-namespace">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Address<span class="tsd-signature-symbol">(</span>addressB58<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../classes/Address.html" class="tsd-signature-type" data-tsd-kind="Class">Address</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Address<span class="tsd-signature-symbol">(</span>addressB58<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">default</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/083d76b/src/Account/account.ts#L43">src/Account/account.ts:43</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/928bc0b/src/Account/account.ts#L49">src/Account/account.ts:49</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Get an <a href="../classes/Address.html">Address</a> from a b58 string.</p>
+									<p>Get an {@link Address} from a b58 string.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -226,7 +239,7 @@
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../classes/Address.html" class="tsd-signature-type" data-tsd-kind="Class">Address</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">default</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -240,7 +253,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/083d76b/src/Account/account.ts#L56">src/Account/account.ts:56</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/928bc0b/src/Account/account.ts#L62">src/Account/account.ts:62</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -270,7 +283,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/083d76b/src/Account/account.ts#L63">src/Account/account.ts:63</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/928bc0b/src/Account/account.ts#L69">src/Account/account.ts:69</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -300,7 +313,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/083d76b/src/Account/account.ts#L50">src/Account/account.ts:50</a></li>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/928bc0b/src/Account/account.ts#L56">src/Account/account.ts:56</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -339,9 +352,6 @@
 					</li>
 					<li class=" tsd-kind-namespace">
 						<a href="Transfer.html">Transfer</a>
-					</li>
-					<li class=" tsd-kind-namespace">
-						<a href="WalletLink.html">Wallet<wbr>Link</a>
 					</li>
 				</ul>
 			</nav>
