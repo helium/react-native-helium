@@ -5,7 +5,7 @@ import {
   Location,
   useOnboarding,
 } from '@helium/react-native-sdk'
-import { Address } from '@helium/crypto-react-native'
+import Address from '@helium/address'
 import {
   getAccount,
   getHotspotDetails,

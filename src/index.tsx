@@ -1,10 +1,9 @@
 import { NativeModules } from 'react-native'
 export { Device, BleError } from 'react-native-ble-plx'
-export { Mnemonic, Address } from '@helium/crypto-react-native'
+export { Mnemonic } from '@helium/crypto-react-native'
 import * as Account from './Account/account'
 import * as AddGateway from './utils/addGateway'
 import * as Location from './utils/assertLocation'
-import * as WalletLink from './WalletLink'
 import * as Transfer from './utils/transferHotspot'
 import './polyfill'
 import {
@@ -65,7 +64,6 @@ export {
   DataCredits,
   SecurityTokens,
   USDollars,
-  WalletLink,
   Transfer,
   TransferHotspotV2,
 }

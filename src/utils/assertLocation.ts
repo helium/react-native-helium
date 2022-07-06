@@ -4,7 +4,7 @@
  * @module Location
  */
 
-import { Address } from '@helium/crypto-react-native'
+import Address from '@helium/address'
 import { AssertLocationV2, Transaction } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
 import { geoToH3 } from 'h3-js'

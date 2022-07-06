@@ -6,7 +6,7 @@
 
 import { AddGatewayV1 } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
-import { Address } from '@helium/crypto-react-native'
+import Address from '@helium/address'
 import { emptyB58Address } from './txnHelper'
 
 /**
