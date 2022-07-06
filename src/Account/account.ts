@@ -4,7 +4,8 @@
  * @module Account
  */
 
-import { Address, Keypair, Mnemonic } from '@helium/crypto-react-native'
+import { Keypair, Mnemonic } from '@helium/crypto-react-native'
+import Address from '@helium/address'
 import wordlist from './Wordlists/english.json'
 import { shuffle, uniq, take, sampleSize } from 'lodash'
 

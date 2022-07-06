@@ -9,11 +9,12 @@
     "postinstall": "yarn patch-package"
   },
   "dependencies": {
-    "@helium/crypto-react-native": "^3.60.0",
-    "@helium/http": "^3.63.0",
-    "@helium/onboarding": "^3.59.0",
-    "@helium/proto-ble": "^3.37.0",
-    "@helium/transactions": "^3.62.0",
+    "@helium/address": "^4.3.1",
+    "@helium/crypto-react-native": "^4.5.0",
+    "@helium/http": "^4.4.0",
+    "@helium/onboarding": "^4.5.0",
+    "@helium/proto-ble": "^4.0.0",
+    "@helium/transactions": "^4.3.1",
     "@react-navigation/native": "^6.0.2",
     "@react-navigation/native-stack": "^6.1.0",
     "angry-purple-tiger": "^1.0.5",

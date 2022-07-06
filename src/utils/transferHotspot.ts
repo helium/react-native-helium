@@ -6,7 +6,7 @@
 
 import { TransferHotspotV2 } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
-import { Address } from '@helium/crypto-react-native'
+import Address from '@helium/address'
 
 /**
  * Create a  {@link TransferHotspotV2} transaction.
