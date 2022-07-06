@@ -5,7 +5,7 @@
  */
 
 import { Keypair, Mnemonic } from '@helium/crypto-react-native'
-import Address from '@helium/address'
+import Address, { NetTypes } from '@helium/address'
 import wordlist from './Wordlists/english.json'
 import { shuffle, uniq, take, sampleSize } from 'lodash'
 
@@ -18,21 +18,26 @@ export interface SodiumKeyPair {
 }
 
 /**
- * Creates a keypair from the provided {@link Mnemonic}, or from a newly generated one.
+ * Creates a keypair from the provided {@link Mnemonic}, or from a newly
+ * generated one. Defaults to a wordCount of 12 and netType of MainNet.
  * @param givenMnemonic list of bip39 words to create the keypair with
+ * @param wordCount either 12 or 24 to indicate how many seed words to use
+ * @param netType the NetType to use for the keypair (Mainnet / Testnet)
  */
 export const createKeypair = async (
-  givenMnemonic: Mnemonic | Array<string> | null
+  givenMnemonic: Mnemonic | Array<string> | null,
+  wordCount: 12 | 24 = 12,
+  netType: NetTypes.NetType = NetTypes.MAINNET
 ) => {
   let mnemonic: Mnemonic
   if (!givenMnemonic) {
-    mnemonic = await Mnemonic.create()
+    mnemonic = await Mnemonic.create(wordCount)
   } else if ('words' in givenMnemonic) {
     mnemonic = givenMnemonic
   } else {
     mnemonic = new Mnemonic(givenMnemonic)
   }
-  const { keypair, address } = await Keypair.fromMnemonic(mnemonic)
+  const { keypair, address } = await Keypair.fromMnemonic(mnemonic, netType)
   const keypairRaw = keypair as SodiumKeyPair
   return { keypairRaw, address, mnemonic }
 }
