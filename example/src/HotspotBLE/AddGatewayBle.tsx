@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Button, StyleSheet, Text, View } from 'react-native'
+import { Button, StyleSheet, Text, View, Alert } from 'react-native'
 import { useHotspotBle } from '../../../src'
 import { getPendingTxn, submitPendingTxn } from '../../appDataClient'
 import { getKeypair, getSecureItem } from '../Account/secureAccount'
@@ -17,7 +17,13 @@ const AddGatewayBle = () => {
     setSubmitted(true)
     const accountAddress = await getSecureItem('address')
     const keypair = await getKeypair()
-    if (!accountAddress) return
+    if (!accountAddress) {
+      Alert.alert(
+        'Error',
+        'You must first add a wallet address from the main menu'
+      )
+      return
+    }
 
     const txnOwnerSigned = await createAndSignGatewayTxn({
       ownerAddress: accountAddress,
