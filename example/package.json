@@ -18,6 +18,7 @@
     "@react-navigation/native": "^6.0.2",
     "@react-navigation/native-stack": "^6.1.0",
     "angry-purple-tiger": "^1.0.5",
+    "buffer": "^6.0.3",
     "events": "^3.3.0",
     "expo-secure-store": "^10.2.0",
     "h3-js": "^3.7.2",
