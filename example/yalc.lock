@@ -1,0 +1,10 @@
+{
+  "version": "v1",
+  "packages": {
+    "@helium/onboarding": {
+      "signature": "2099b4ddc1e11f563f27ef89c1f22a23",
+      "file": true,
+      "replaced": "^4.5.0"
+    }
+  }
+}

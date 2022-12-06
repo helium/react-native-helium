@@ -38,7 +38,10 @@ export default function App() {
   ])
 
   return (
-    <OnboardingProvider baseUrl="https://onboarding.dewi.org/api/v2">
+    <OnboardingProvider
+      baseUrl="https://onboarding.dewi.org/api/v2"
+      solanaCluster="devnet"
+    >
       <HotspotBleProvider>
         <NavigationContainer>
           <Stack.Navigator

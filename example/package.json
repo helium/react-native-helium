@@ -12,7 +12,7 @@
     "@helium/address": "^4.3.1",
     "@helium/crypto-react-native": "^4.5.0",
     "@helium/http": "^4.4.0",
-    "@helium/onboarding": "^4.5.0",
+    "@helium/onboarding": "^4.8.2",
     "@helium/proto-ble": "^4.0.0",
     "@helium/transactions": "^4.3.1",
     "@react-navigation/native": "^6.0.2",

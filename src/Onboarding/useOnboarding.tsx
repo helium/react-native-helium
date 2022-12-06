@@ -1,8 +1,13 @@
 import { useCallback, useRef } from 'react'
 import OnboardingClient from '@helium/onboarding'
+import SolanaClient from '../utils/SolanaClient'
 
-const useOnboarding = (baseUrl?: string) => {
+const useOnboarding = (
+  baseUrl?: string,
+  solanaCluster?: 'mainnet-beta' | 'devnet' | 'testnet'
+) => {
   const onboardingClient = useRef(new OnboardingClient(baseUrl))
+  const solanaClient = useRef(new SolanaClient(solanaCluster))
 
   const handleError = useCallback(
     (
@@ -70,7 +75,21 @@ const useOnboarding = (baseUrl?: string) => {
         `unable to post payment transaction for ${hotspotAddress}`
       )
 
-      return response.data?.transaction || null
+      if (!response.data) {
+        return null
+      }
+
+      if (response.data.solanaTransactions?.length) {
+        const solanaResponses = await solanaClient.current.submitAll(
+          response.data.solanaTransactions
+        )
+        return {
+          transaction: response.data.transaction,
+          solanaResponses,
+        }
+      }
+
+      return { transaction: response.data.transaction, solanaResponses: [] }
     },
     [handleError]
   )
@@ -80,6 +99,8 @@ const useOnboarding = (baseUrl?: string) => {
     getMakers,
     getOnboardingRecord,
     postPaymentTransaction,
+    submitSolana: solanaClient.current.submit,
+    submitAllSolana: solanaClient.current.submitAll,
   }
 }
 

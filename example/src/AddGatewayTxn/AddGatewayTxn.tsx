@@ -8,6 +8,7 @@ import {
 } from '../../appDataClient'
 import { getKeypair } from '../Account/secureAccount'
 import { OnboardingRecord } from '@helium/onboarding'
+import getSolanaStatus from '../../../src/utils/getSolanaStatus'
 
 const AddGatewayTxn = () => {
   const [txnStr, setTxnStr] = useState('')
@@ -59,6 +60,11 @@ const AddGatewayTxn = () => {
   }, [onboardingRecord?.publicAddress])
 
   const submitOnboardingTxns = useCallback(async () => {
+    const solanaStatus = await getSolanaStatus()
+    if (solanaStatus === 'in_progress') {
+      throw new Error('Chain transfer in progress')
+    }
+
     setSubmitted(true)
 
     // check if add gateway needed
@@ -81,11 +87,24 @@ const AddGatewayTxn = () => {
       txnOwnerSigned.toString()
     )
 
-    if (!onboardTxn) return
-    const pendingTxn = await submitPendingTxn(onboardTxn)
-    setHash(pendingTxn.hash)
-    setStatus(pendingTxn.status)
-    setFailedReason(pendingTxn.failedReason || '')
+    if (!onboardTxn?.transaction) return
+
+    if (solanaStatus === 'not_started') {
+      const pendingTxn = await submitPendingTxn(onboardTxn.transaction)
+      setHash(pendingTxn.hash)
+      setStatus(pendingTxn.status)
+      setFailedReason(pendingTxn.failedReason || '')
+      return
+    }
+
+    if (onboardTxn.solanaResponses) {
+      const sigs = onboardTxn.solanaResponses.map((r) => r.signature).join(',')
+      setHash(sigs)
+      const errors = onboardTxn.solanaResponses.map((r) => r.err?.toString())
+      const hasError = !!onboardTxn.solanaResponses.find((r) => !!r.err)
+      setFailedReason(errors.join(','))
+      setStatus(hasError ? 'Success' : 'Error')
+    }
   }, [
     hotspotOnChain,
     onboardingRecord?.publicAddress,

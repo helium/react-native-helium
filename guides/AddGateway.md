@@ -13,14 +13,17 @@ Your app can utilize the `OnboardingProvider` and `HotspotBle` providers to simp
 import {
   HotspotBleProvider,
   OnboardingProvider,
-} from '@helium/react-native-sdk';
+} from '@helium/react-native-sdk'
 
 // Dewi is the default url. You do not need to assign baseUrl if you plan to use it.
-<OnboardingProvider baseUrl="https://onboarding.dewi.org/api/v2">
+;<OnboardingProvider
+  baseUrl="https://onboarding.dewi.org/api/v2"
+  solanaCluster="devnet"
+>
   <HotspotBleProvider>
     <YourApp />
   </HotspotBleProvider>
-</OnboardingProvider>;
+</OnboardingProvider>
 ```
 
 They can then be used like

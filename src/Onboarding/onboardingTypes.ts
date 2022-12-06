@@ -15,6 +15,7 @@
  * for a working demo of scanning for Hotspots.
  */
 import { OnboardingRecord, Maker } from '@helium/onboarding'
+import { TransactionError } from '@solana/web3.js'
 export interface OnboardingManager {
   /**
    * Get the onboarding record from the Onboarding Server.
@@ -39,5 +40,26 @@ export interface OnboardingManager {
   postPaymentTransaction: (
     hotspotAddress: string,
     transaction: string
-  ) => Promise<string | null>
+  ) => Promise<{
+    transaction: string
+    solanaResponses: {
+      err: TransactionError | null
+      slot: number
+      signature: string
+    }[]
+  } | null>
+
+  submitAllSolana: (_txns: string[]) => Promise<
+    {
+      err: TransactionError | null
+      slot: number
+      signature: string
+    }[]
+  >
+
+  submitSolana: (_txn: string) => Promise<{
+    err: TransactionError | null
+    slot: number
+    signature: string
+  }>
 }
