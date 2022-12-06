@@ -11,6 +11,10 @@ const Home = () => {
       { title: 'HotspotBLE', handler: () => navigation.push('HotspotBLE') },
       { title: 'Account', handler: () => navigation.push('Account') },
       {
+        title: 'Create Solana Hotspot',
+        handler: () => navigation.push('CreateRandomHotspot'),
+      },
+      {
         title: 'Add Gateway from Transaction String',
         handler: () => navigation.push('AddGatewayTxn'),
       },
@@ -19,8 +23,16 @@ const Home = () => {
         handler: () => navigation.push('AssertLocation'),
       },
       {
-        title: 'Transfer Hotspot from Transaction String',
+        title: 'Transfer Hotspot',
         handler: () => navigation.push('TransferHotspot'),
+      },
+      {
+        title: 'Get Oracle Price',
+        handler: () => navigation.push('OraclePrice'),
+      },
+      {
+        title: 'Hotspot List',
+        handler: () => navigation.push('HotspotList'),
       },
     ],
     [navigation]

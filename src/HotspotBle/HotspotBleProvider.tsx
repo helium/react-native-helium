@@ -1,7 +1,6 @@
 import React, { createContext, ReactNode, useContext } from 'react'
 import { Device, State } from 'react-native-ble-plx'
 import useHotspotBle, { WifiStatusType } from './useHotspotBle'
-import type { HotspotBleManager } from './bleTypes'
 
 const initialState = {
   getState: async () => State.Unknown,
@@ -67,6 +66,7 @@ const HotspotBleProvider = ({ children }: { children: ReactNode }) => {
  * const { startScan, stopScan, connect, scannedDevices } = useHotspotBle()
  * ```
  */
+export type HotspotBleManager = ReturnType<typeof useHotspotBle>
 export const useHotspotBleContext = (): HotspotBleManager =>
   useContext(HotspotBleContext)
 

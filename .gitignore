@@ -31,6 +31,8 @@ project.xcworkspace
 example/ios/.xcode.env.local
 ios/.xcode.env.local
 
+example/.env
+
 # Android/IJ
 #
 .idea
@@ -67,3 +69,8 @@ lib/
 
 # generated docs
 docs/
+
+.yalc
+yalc.lock
+example/.yalc
+example/yalc.lock

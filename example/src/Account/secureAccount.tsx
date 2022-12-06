@@ -1,5 +1,13 @@
 import * as SecureStore from 'expo-secure-store'
 import { Account, Mnemonic } from '@helium/react-native-sdk'
+import { Keypair } from '@solana/web3.js'
+import { Buffer } from 'buffer'
+
+export type SecureAccount = {
+  mnemonic: string[]
+  keypair: { pk: string; sk: string }
+  address: string
+}
 
 const stringKeys = ['mnemonic', 'keypair', 'address'] as const
 type StringKey = typeof stringKeys[number]
@@ -30,17 +38,18 @@ export const makeKeypair = async (
 
 export const getAddress = async () => {
   const addressB58 = await getSecureItem('address')
-  if (!addressB58) return
+  if (!addressB58) throw new Error('No user address found')
 
   return Account.getAddress(addressB58)
 }
 
-export const getKeypair = async () => {
+export const getKeypairRaw = async () => {
   const keypairStr = await getSecureItem('keypair')
-  if (!keypairStr) return
+  if (!keypairStr) throw new Error('Keypair not found')
 
-  if (keypairStr) {
-    return JSON.parse(keypairStr)
+  return JSON.parse(keypairStr) as {
+    sk: string
+    pk: string
   }
 }
 
@@ -49,10 +58,15 @@ export const getAddressStr = async () => {
   return addy?.b58
 }
 
-export const getMnemonic = async (): Promise<Mnemonic | undefined> => {
+export const getMnemonic = async () => {
   const wordsStr = await getSecureItem('mnemonic')
   if (!wordsStr) return
 
   const words = JSON.parse(wordsStr)
   return Account.getMnemonic(words)
+}
+
+export const getSolanaPubKey = async (sk: string) => {
+  const kp = Keypair.fromSecretKey(Buffer.from(sk, 'base64'))
+  return kp.publicKey
 }

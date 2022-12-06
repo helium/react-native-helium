@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
 import type { AccountNavProp } from './AccountNav'
 import { getAddressStr, signOut } from './secureAccount'
+import { Account } from '@helium/react-native-sdk'
 
 const AccountHome = () => {
   const [address, setAddress] = useState<string>()
@@ -32,10 +33,18 @@ const AccountHome = () => {
   return (
     <View>
       <View style={styles.info}>
-        <Text style={styles.address}>Address:</Text>
+        <Text style={styles.address}>Helium Address:</Text>
         <Text style={styles.address} selectable>
-          {address || 'none'}
+          {address}
         </Text>
+        {address && (
+          <>
+            <Text style={[styles.address, styles.marginTop]}>Sol Address:</Text>
+            <Text style={styles.address} selectable>
+              {Account.heliumAddressToSolAddress(address)}
+            </Text>
+          </>
+        )}
       </View>
       {!!address && <Button title="Sign Out" onPress={handleSignout} />}
       {!address && <Button title="Create Account" onPress={handleCreate} />}
@@ -52,6 +61,7 @@ const styles = StyleSheet.create({
     minHeight: 40,
   },
   address: { fontSize: 17 },
+  marginTop: { marginTop: 16 },
 })
 
 export default AccountHome
