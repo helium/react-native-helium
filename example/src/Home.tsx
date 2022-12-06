@@ -11,6 +11,10 @@ const Home = () => {
       { title: 'HotspotBLE', handler: () => navigation.push('HotspotBLE') },
       { title: 'Account', handler: () => navigation.push('Account') },
       {
+        title: 'Create Random Hotspot',
+        handler: () => navigation.push('CreateRandomHotspot'),
+      },
+      {
         title: 'Add Gateway from Transaction String',
         handler: () => navigation.push('AddGatewayTxn'),
       },

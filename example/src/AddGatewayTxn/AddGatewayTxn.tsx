@@ -8,6 +8,7 @@ import {
 } from '../../appDataClient'
 import { getKeypair } from '../Account/secureAccount'
 import { OnboardingRecord } from '@helium/onboarding'
+import getSolanaStatus from '../../../src/utils/getSolanaStatus'
 
 const AddGatewayTxn = () => {
   const [txnStr, setTxnStr] = useState('')
@@ -18,6 +19,7 @@ const AddGatewayTxn = () => {
     useState<OnboardingRecord | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [hash, setHash] = useState('')
+  const [solTxIds, setSolTxIds] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
   const { getOnboardingRecord, postPaymentTransaction } = useOnboarding()
@@ -59,6 +61,11 @@ const AddGatewayTxn = () => {
   }, [onboardingRecord?.publicAddress])
 
   const submitOnboardingTxns = useCallback(async () => {
+    const solanaStatus = await getSolanaStatus()
+    if (solanaStatus === 'in_progress') {
+      throw new Error('Chain transfer in progress')
+    }
+
     setSubmitted(true)
 
     // check if add gateway needed
@@ -66,8 +73,9 @@ const AddGatewayTxn = () => {
     if (
       isOnChain || // gateway already exists, handle error
       !onboardingRecord?.publicAddress
-    )
+    ) {
       return
+    }
 
     // construct and publish add gateway
     const keypair = await getKeypair()
@@ -81,17 +89,20 @@ const AddGatewayTxn = () => {
       txnOwnerSigned.toString()
     )
 
-    if (!onboardTxn) return
-    const pendingTxn = await submitPendingTxn(onboardTxn)
-    setHash(pendingTxn.hash)
-    setStatus(pendingTxn.status)
-    setFailedReason(pendingTxn.failedReason || '')
-  }, [
-    hotspotOnChain,
-    onboardingRecord?.publicAddress,
-    postPaymentTransaction,
-    txnStr,
-  ])
+    if (onboardTxn?.transaction && solanaStatus === 'not_started') {
+      const pendingTxn = await submitPendingTxn(onboardTxn.transaction)
+      setHash(pendingTxn.hash)
+      setStatus(pendingTxn.status)
+      setFailedReason(pendingTxn.failedReason || '')
+      return
+    }
+
+    if (onboardTxn?.solanaResponses) {
+      const txIds = onboardTxn.solanaResponses.join(',')
+      setSolTxIds(txIds)
+      setStatus(`${txIds.length} responses`)
+    }
+  }, [hotspotOnChain, onboardingRecord, postPaymentTransaction, txnStr])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
@@ -128,6 +139,11 @@ const AddGatewayTxn = () => {
         disabled={!txnStr || submitted}
         onPress={submitOnboardingTxns}
       />
+
+      <Text style={styles.topMargin}>Sol Tx Ids</Text>
+      <Text style={styles.topMargin} selectable>
+        {solTxIds}
+      </Text>
       <Text style={styles.topMargin}>Pending Txn Hash:</Text>
       <Text style={styles.topMargin} selectable>
         {hash}

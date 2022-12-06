@@ -17,6 +17,8 @@ import AccountNav from './Account/AccountNav'
 import '../appDataClient'
 import AssertLocation from './AssertLocation/AssertLocation'
 import TransferHotspot from './TransferHotspot/TransferHotspot'
+import CreateRandomHotspot from './CreateRandomHotspot/CreateRandomHotspot'
+import Config from 'react-native-config'
 
 const Stack = createNativeStackNavigator()
 
@@ -25,6 +27,7 @@ export type RootStackParamList = {
   Multiply: undefined
   HotspotBLE: undefined
   Account: undefined
+  CreateRandomHotspot: undefined
   AddGatewayTxn: undefined
   AssertLocation: undefined
   TransferHotspot: undefined
@@ -38,7 +41,12 @@ export default function App() {
   ])
 
   return (
-    <OnboardingProvider baseUrl="https://onboarding.dewi.org/api/v2">
+    <OnboardingProvider
+      baseUrl={
+        Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api/v2'
+      }
+      solanaCluster="devnet"
+    >
       <HotspotBleProvider>
         <NavigationContainer>
           <Stack.Navigator
@@ -52,6 +60,10 @@ export default function App() {
             <Stack.Screen name="HotspotBLE" component={HotspotBLENav} />
             <Stack.Screen name="Account" component={AccountNav} />
             <Stack.Screen name="AddGatewayTxn" component={AddGatewayTxn} />
+            <Stack.Screen
+              name="CreateRandomHotspot"
+              component={CreateRandomHotspot}
+            />
             <Stack.Screen name="AssertLocation" component={AssertLocation} />
             <Stack.Screen name="TransferHotspot" component={TransferHotspot} />
           </Stack.Navigator>

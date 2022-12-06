@@ -3,13 +3,17 @@ import { OnboardingManager } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
 
 const initialState = {
+  baseUrl: '',
   getMinFirmware: async () => '',
   getMakers: async () => [],
   getOnboardingRecord: async (_hotspotAddress: string) => null,
   postPaymentTransaction: async (
     _hotspotAddress: string,
     _transaction: string
-  ) => '',
+  ) => null,
+  submitSolana: (_txn: string) => new Promise<string>((resolve) => resolve('')),
+  submitAllSolana: (_txns: string[]) =>
+    new Promise<string[]>((resolve) => resolve([''])),
 }
 
 const OnboardingContext =
@@ -29,7 +33,7 @@ const { Provider } = OnboardingContext
  * or if you will be using your own onboarding server
  *
  * ```tsx
- * <OnboardingProvider baseUrl="https://youronboardingserver.com">
+ * <OnboardingProvider baseUrl="https://youronboardingserver.com" solanaCluster="devnet">
  *     <YourRootAppComponent />
  * </OnboardingProvider>
  * ```
@@ -37,11 +41,17 @@ const { Provider } = OnboardingContext
 const OnboardingProvider = ({
   children,
   baseUrl,
+  solanaCluster,
 }: {
   children: ReactNode
   baseUrl?: string
+  solanaCluster?: 'devnet' | 'testnet' | 'mainnet-beta'
 }) => {
-  return <Provider value={useOnboarding(baseUrl)}>{children}</Provider>
+  return (
+    <Provider value={useOnboarding(baseUrl, solanaCluster)}>
+      {children}
+    </Provider>
+  )
 }
 
 /**

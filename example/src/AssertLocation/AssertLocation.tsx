@@ -23,9 +23,11 @@ import type {
 import { OnboardingRecord } from '@helium/onboarding'
 import Input from '../Input'
 import animalName from 'angry-purple-tiger'
+import getSolanaStatus from '../../../src/utils/getSolanaStatus'
 
 const AssertLocation = () => {
-  const { getOnboardingRecord, postPaymentTransaction } = useOnboarding()
+  const { getOnboardingRecord, postPaymentTransaction, submitSolana } =
+    useOnboarding()
   const [account, setAccount] = useState<Account>()
   const [gatewayAddress, setGatewayAddress] = useState('')
   const [gatewayName, setGatewayName] = useState('')
@@ -35,6 +37,7 @@ const AssertLocation = () => {
   const [elevation, setElevation] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [hash, setHash] = useState('')
+  const [solTxIds, setSolTxIds] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
   const [ownerAddress, setOwnerAddress] = useState<string | null>(null)
@@ -106,6 +109,11 @@ const AssertLocation = () => {
   }, [hotspot])
 
   const handleAssert = useCallback(async () => {
+    const solanaStatus = await getSolanaStatus()
+    if (solanaStatus === 'in_progress') {
+      throw new Error('Chain transfer in progress')
+    }
+
     if (
       !gatewayAddress ||
       !ownerAddress ||
@@ -135,22 +143,39 @@ const AssertLocation = () => {
     )
 
     let finalTxn = signedTxn
+    let solanaResponses: string[] = []
 
     if (isFree) {
-      const onboardTxn = await postPaymentTransaction(
+      // Note: This submits to solana 👇
+      const onboardResponse = await postPaymentTransaction(
         gatewayAddress,
         finalTxn.toString()
       )
-      if (!onboardTxn) {
-        throw new Error('Could not sign txn')
+
+      solanaResponses = onboardResponse?.solanaResponses || []
+
+      if (onboardResponse?.transaction) {
+        finalTxn = AssertLocationV2.fromString(onboardResponse.transaction)
       }
-      finalTxn = AssertLocationV2.fromString(onboardTxn)
+    } else {
+      // Need to submit to solana
+      const response = await submitSolana(finalTxn.toString())
+      solanaResponses = [response]
     }
 
-    const pendingTxn = await submitPendingTxn(finalTxn.toString())
-    setHash(pendingTxn.hash)
-    setStatus(pendingTxn.status)
-    setFailedReason(pendingTxn.failedReason || '')
+    if (solanaStatus === 'not_started') {
+      const pendingTxn = await submitPendingTxn(finalTxn.toString())
+      setHash(pendingTxn.hash)
+      setStatus(pendingTxn.status)
+      setFailedReason(pendingTxn.failedReason || '')
+      return
+    }
+
+    if (solanaResponses.length) {
+      const txIds = solanaResponses.join(',')
+      setSolTxIds(txIds)
+      setStatus(`${txIds.length} responses`)
+    }
   }, [
     elevation,
     gain,
@@ -161,6 +186,7 @@ const AssertLocation = () => {
     onboardingRecord,
     ownerAddress,
     postPaymentTransaction,
+    submitSolana,
   ])
 
   const updateTxnStatus = useCallback(async () => {
@@ -316,6 +342,10 @@ const AssertLocation = () => {
           disabled={!canUpdateAntenna}
         />
       </View>
+      <Text style={styles.topMargin}>Sol Tx Ids</Text>
+      <Text style={styles.topMargin} selectable>
+        {solTxIds}
+      </Text>
       <Text style={styles.topMargin}>Pending Txn Hash:</Text>
       <Text style={styles.topMargin} selectable>
         {hash}

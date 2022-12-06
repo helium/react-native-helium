@@ -50,11 +50,11 @@
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^11.0.0",
-    "@helium/address": "^4.3.1",
+    "@helium/address": "^4.8.1",
     "@helium/crypto-react-native": "^4.5.0",
     "@helium/currency": "^4.2.0",
-    "@helium/http": "^4.4.0",
-    "@helium/onboarding": "^4.5.0",
+    "@helium/http": "^4.8.1",
+    "@helium/onboarding": "^4.8.2",
     "@helium/proto-ble": "^4.0.0",
     "@helium/transactions": "^4.3.1",
     "@react-native-community/eslint-config": "^2.0.0",
@@ -187,5 +187,14 @@
       "module",
       "typescript"
     ]
+  },
+  "dependencies": {
+    "@helium/spl-utils": "^0.0.10",
+    "@metaplex-foundation/beet": "^0.7.1",
+    "@metaplex-foundation/beet-solana": "^0.4.0",
+    "@metaplex-foundation/mpl-token-metadata": "^2.5.2",
+    "@solana/spl-token": "^0.3.6",
+    "@solana/web3.js": "^1.69.0",
+    "assert": "^2.0.0"
   }
 }

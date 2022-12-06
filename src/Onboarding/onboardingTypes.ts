@@ -39,5 +39,14 @@ export interface OnboardingManager {
   postPaymentTransaction: (
     hotspotAddress: string,
     transaction: string
-  ) => Promise<string | null>
+  ) => Promise<{
+    transaction: string
+    solanaResponses: string[]
+  } | null>
+
+  submitAllSolana: (_txns: string[]) => Promise<string[]>
+
+  submitSolana: (_txn: string) => Promise<string>
+
+  baseUrl?: string
 }

@@ -4,16 +4,23 @@ import { useHotspotBle } from '../../../src'
 import { getPendingTxn, submitPendingTxn } from '../../appDataClient'
 import { getKeypair, getSecureItem } from '../Account/secureAccount'
 import { useOnboarding } from '@helium/react-native-sdk'
+import getSolanaStatus from '../../../src/utils/getSolanaStatus'
 
 const AddGatewayBle = () => {
-  const { postPaymentTransaction } = useOnboarding()
-  const { createAndSignGatewayTxn } = useHotspotBle()
+  const { postPaymentTransaction, getOnboardingRecord } = useOnboarding()
+  const { createAndSignGatewayTxn, getOnboardingAddress } = useHotspotBle()
   const [hash, setHash] = useState('')
+  const [solTxIds, setSolTxIds] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
   const handleAddGateway = useCallback(async () => {
+    const solanaStatus = await getSolanaStatus()
+    if (solanaStatus === 'in_progress') {
+      throw new Error('Chain transfer in progress')
+    }
+
     setSubmitted(true)
     const accountAddress = await getSecureItem('address')
     const keypair = await getKeypair()
@@ -25,11 +32,17 @@ const AddGatewayBle = () => {
       return
     }
 
+    const onboardAddress = await getOnboardingAddress()
+    const onboardRecord = await getOnboardingRecord(onboardAddress)
+
+    if (!onboardRecord?.maker.address) {
+      throw new Error('Could not get maker address')
+    }
+
     const txnOwnerSigned = await createAndSignGatewayTxn({
       ownerAddress: accountAddress,
       ownerKeypairRaw: keypair,
-      //TODO: GET MAKER ADDRESS
-      payerAddress: '',
+      payerAddress: onboardRecord?.maker.address,
     })
 
     if (!txnOwnerSigned?.gateway?.b58) {
@@ -40,12 +53,26 @@ const AddGatewayBle = () => {
       txnOwnerSigned.gateway.b58,
       txnOwnerSigned.toString()
     )
-    if (!onboardTxn) return
-    const pendingTxn = await submitPendingTxn(onboardTxn)
-    setHash(pendingTxn.hash)
-    setStatus(pendingTxn.status)
-    setFailedReason(pendingTxn.failedReason || '')
-  }, [createAndSignGatewayTxn, postPaymentTransaction])
+
+    if (onboardTxn?.transaction && solanaStatus === 'not_started') {
+      const pendingTxn = await submitPendingTxn(onboardTxn.transaction)
+      setHash(pendingTxn.hash)
+      setStatus(pendingTxn.status)
+      setFailedReason(pendingTxn.failedReason || '')
+      return
+    }
+
+    if (onboardTxn?.solanaResponses) {
+      const txIds = onboardTxn.solanaResponses.join(',')
+      setSolTxIds(txIds)
+      setStatus(`${txIds.length} responses`)
+    }
+  }, [
+    createAndSignGatewayTxn,
+    getOnboardingAddress,
+    getOnboardingRecord,
+    postPaymentTransaction,
+  ])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
@@ -70,6 +97,10 @@ const AddGatewayBle = () => {
         onPress={handleAddGateway}
         disabled={submitted}
       />
+      <Text style={styles.topMargin}>Sol Tx Ids</Text>
+      <Text style={styles.topMargin} selectable>
+        {solTxIds}
+      </Text>
       <Text style={styles.topMargin}>Pending Txn Hash:</Text>
       <Text style={styles.topMargin} selectable>
         {hash}
