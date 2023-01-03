@@ -69,12 +69,9 @@ const useCreateRandomHotspot = () => {
 
     setTxn(signedTxn.toString())
 
-    return axios.post(
-      `https://onboarding.oracle.test-helium.com/api/v2/transactions/pay/${onboardingKey}`,
-      {
-        transaction: signedTxn.toString(),
-      }
-    )
+    return axios.post(`${baseUrl}/transactions/pay/${onboardingKey}`, {
+      transaction: signedTxn.toString(),
+    })
   }
 
   return { txn, create }
