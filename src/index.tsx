@@ -30,6 +30,7 @@ import Balance, {
 import { HotspotErrorCode } from './HotspotBle/useHotspotBle'
 import { heliumHttpClient, createHttpClient } from './utils/httpClient'
 export { DiagnosticInfo } from './HotspotBle/bleParse'
+import { getSolanaStatus, getSolanaVars } from './utils/solanaSentinel'
 
 type HeliumNativeType = {
   multiply(a: number, b: number): Promise<number>
@@ -42,28 +43,30 @@ const heliumNativeModules = Helium as HeliumNativeType
 const { multiply } = heliumNativeModules
 
 export {
-  multiply,
-  HotspotBleProvider,
-  HotspotBleManager,
-  OnboardingManager,
-  OnboardingProvider,
-  useOnboarding,
-  useHotspotBle,
-  HotspotErrorCode,
   Account,
-  Keypair,
-  State,
-  AddGatewayV1,
   AddGateway,
-  Location,
-  heliumHttpClient,
-  createHttpClient,
+  AddGatewayV1,
   AssertLocationV2,
   Balance,
-  NetworkTokens,
+  createHttpClient,
   DataCredits,
+  getSolanaStatus,
+  getSolanaVars,
+  heliumHttpClient,
+  HotspotBleManager,
+  HotspotBleProvider,
+  HotspotErrorCode,
+  Keypair,
+  Location,
+  multiply,
+  NetworkTokens,
+  OnboardingManager,
+  OnboardingProvider,
   SecurityTokens,
-  USDollars,
+  State,
   Transfer,
   TransferHotspotV2,
+  USDollars,
+  useHotspotBle,
+  useOnboarding,
 }

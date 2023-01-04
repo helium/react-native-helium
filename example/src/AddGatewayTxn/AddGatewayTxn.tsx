@@ -1,20 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { View, TextInput, StyleSheet, Text, Button } from 'react-native'
-import { AddGateway, useOnboarding } from '@helium/react-native-sdk'
 import {
-  getHotspotDetails,
-  getPendingTxn,
-  submitPendingTxn,
-} from '../../appDataClient'
+  View,
+  TextInput,
+  StyleSheet,
+  Text,
+  Button,
+  TouchableOpacity,
+} from 'react-native'
+import { AddGateway, useOnboarding } from '@helium/react-native-sdk'
+import { getPendingTxn } from '../../appDataClient'
 import { getKeypair } from '../Account/secureAccount'
 import { OnboardingRecord } from '@helium/onboarding'
-import getSolanaStatus from '../../../src/utils/getSolanaStatus'
+import Clipboard from '@react-native-community/clipboard'
 
 const AddGatewayTxn = () => {
   const [txnStr, setTxnStr] = useState('')
   const [publicKey, setPublicKey] = useState('')
   const [macAddress, setMacAddress] = useState('')
   const [ownerAddress, setOwnerAddress] = useState('')
+  const [hotspotAddress, setHotspotAddress] = useState('')
   const [onboardingRecord, setOnboardingRecord] =
     useState<OnboardingRecord | null>(null)
   const [submitted, setSubmitted] = useState(false)
@@ -22,7 +26,7 @@ const AddGatewayTxn = () => {
   const [solTxIds, setSolTxIds] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
-  const { getOnboardingRecord, postPaymentTransaction } = useOnboarding()
+  const { getOnboardingRecord, addGateway } = useOnboarding()
 
   useEffect(() => {
     if (!publicKey) return
@@ -49,31 +53,10 @@ const AddGatewayTxn = () => {
     }
   }, [txnStr])
 
-  const hotspotOnChain = useCallback(async () => {
-    if (!onboardingRecord?.publicAddress) return false
-
-    try {
-      await getHotspotDetails(onboardingRecord.publicAddress)
-      return true
-    } catch (error) {
-      return false
-    }
-  }, [onboardingRecord?.publicAddress])
-
   const submitOnboardingTxns = useCallback(async () => {
-    const solanaStatus = await getSolanaStatus()
-    if (solanaStatus === 'in_progress') {
-      throw new Error('Chain transfer in progress')
-    }
-
     setSubmitted(true)
 
-    // check if add gateway needed
-    const isOnChain = await hotspotOnChain()
-    if (
-      isOnChain || // gateway already exists, handle error
-      !onboardingRecord?.publicAddress
-    ) {
+    if (!onboardingRecord?.publicAddress) {
       return
     }
 
@@ -84,25 +67,26 @@ const AddGatewayTxn = () => {
       throw new Error('Error signing gateway txn')
     }
 
-    const onboardTxn = await postPaymentTransaction(
+    setHotspotAddress(txnOwnerSigned.gateway.b58)
+
+    const addGatewayResponse = await addGateway(
       txnOwnerSigned.gateway.b58,
       txnOwnerSigned.toString()
     )
 
-    if (onboardTxn?.transaction && solanaStatus === 'not_started') {
-      const pendingTxn = await submitPendingTxn(onboardTxn.transaction)
-      setHash(pendingTxn.hash)
-      setStatus(pendingTxn.status)
-      setFailedReason(pendingTxn.failedReason || '')
+    if (addGatewayResponse?.pendingTxn) {
+      setHash(addGatewayResponse.pendingTxn.hash)
+      setStatus(addGatewayResponse.pendingTxn.status)
+      setFailedReason(addGatewayResponse.pendingTxn.failedReason || '')
       return
     }
 
-    if (onboardTxn?.solanaResponses) {
-      const txIds = onboardTxn.solanaResponses.join(',')
+    if (addGatewayResponse?.solanaResponses) {
+      const txIds = addGatewayResponse.solanaResponses.join(',')
       setSolTxIds(txIds)
       setStatus(`${txIds.length} responses`)
     }
-  }, [hotspotOnChain, onboardingRecord, postPaymentTransaction, txnStr])
+  }, [addGateway, onboardingRecord?.publicAddress, txnStr])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
@@ -140,6 +124,13 @@ const AddGatewayTxn = () => {
         onPress={submitOnboardingTxns}
       />
 
+      <TouchableOpacity onPress={() => Clipboard.setString(hotspotAddress)}>
+        <View>
+          <Text style={styles.topMargin}>Hotspot Address:</Text>
+          <Text>{hotspotAddress}</Text>
+        </View>
+      </TouchableOpacity>
+
       <Text style={styles.topMargin}>Sol Tx Ids</Text>
       <Text style={styles.topMargin} selectable>
         {solTxIds}
@@ -162,7 +153,7 @@ const styles = StyleSheet.create({
   },
   wordInput: {
     borderRadius: 12,
-    fontSize: 19,
+    fontSize: 12,
     padding: 16,
     backgroundColor: 'white',
     minHeight: 200,

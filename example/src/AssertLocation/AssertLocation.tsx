@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
 import {
   AssertLocationV2,
+  getSolanaStatus,
   Location,
   useOnboarding,
 } from '@helium/react-native-sdk'
@@ -23,7 +24,6 @@ import type {
 import { OnboardingRecord } from '@helium/onboarding'
 import Input from '../Input'
 import animalName from 'angry-purple-tiger'
-import getSolanaStatus from '../../../src/utils/getSolanaStatus'
 
 const AssertLocation = () => {
   const { getOnboardingRecord, postPaymentTransaction, submitSolana } =

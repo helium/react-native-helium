@@ -3,6 +3,7 @@ import { OnboardingManager } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
 
 const initialState = {
+  addGateway: async (_hotspotAddress: string, _transaction: string) => null,
   baseUrl: '',
   getMinFirmware: async () => '',
   getMakers: async () => [],

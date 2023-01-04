@@ -3,6 +3,9 @@ import OnboardingClient from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
 import { Buffer } from 'buffer'
 import { sendAndConfirmWithRetry } from '@helium/spl-utils'
+import { getSolanaStatus, heliumHttpClient } from '@helium/react-native-sdk'
+import { Client, PendingTransaction } from '@helium/http'
+import { getSolanaVars, SolanaStatus } from '../utils/solanaSentinel'
 
 const useOnboarding = (
   baseUrl?: string,
@@ -116,7 +119,77 @@ const useOnboarding = (
     [handleError, submitAll]
   )
 
+  const hotspotOnChain = useCallback(
+    async (
+      hotspotAddress: string,
+      solanaStatus: SolanaStatus,
+      httpClient?: Client
+    ) => {
+      const client = httpClient || heliumHttpClient
+
+      if (solanaStatus === 'complete') {
+        const {
+          metadata_urls: { iot },
+        } = await getSolanaVars()
+        const response = await fetch(`${iot}/${hotspotAddress}`)
+        return response.status === 200
+      } else {
+        try {
+          const hotspot = await client.hotspots.get(hotspotAddress)
+          return !!hotspot
+        } catch (e) {
+          return false
+        }
+      }
+    },
+    []
+  )
+
+  const addGateway = useCallback(
+    async (
+      hotspotAddress: string,
+      transaction: string,
+      httpClient?: Client
+    ) => {
+      const client = httpClient || heliumHttpClient
+
+      const solanaStatus = await getSolanaStatus()
+      if (solanaStatus === 'in_progress') {
+        throw new Error('Chain transfer in progress')
+      }
+
+      const hotspotExists = await hotspotOnChain(
+        hotspotAddress,
+        solanaStatus,
+        client
+      )
+
+      if (hotspotExists) {
+        throw new Error('Hotspot already on chain')
+      }
+
+      let submitStatus: 'failure' | 'complete' | 'pending' = 'failure'
+
+      const response = await postPaymentTransaction(hotspotAddress, transaction)
+      if (!response) return null
+
+      if (solanaStatus === 'complete') {
+        submitStatus = 'complete'
+      }
+
+      let pendingTxn: null | PendingTransaction = null
+      if (response?.transaction && solanaStatus === 'not_started') {
+        pendingTxn = await client.transactions.submit(response.transaction)
+        submitStatus = 'pending'
+      }
+
+      return { pendingTxn, ...response, solanaStatus, submitStatus }
+    },
+    [hotspotOnChain, postPaymentTransaction]
+  )
+
   return {
+    addGateway,
     baseUrl,
     getMinFirmware,
     getMakers,

@@ -1,13 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Button, StyleSheet, Text, View, Alert } from 'react-native'
 import { useHotspotBle } from '../../../src'
-import { getPendingTxn, submitPendingTxn } from '../../appDataClient'
+import { getPendingTxn } from '../../appDataClient'
 import { getKeypair, getSecureItem } from '../Account/secureAccount'
 import { useOnboarding } from '@helium/react-native-sdk'
-import getSolanaStatus from '../../../src/utils/getSolanaStatus'
 
 const AddGatewayBle = () => {
-  const { postPaymentTransaction, getOnboardingRecord } = useOnboarding()
+  const { getOnboardingRecord, addGateway } = useOnboarding()
   const { createAndSignGatewayTxn, getOnboardingAddress } = useHotspotBle()
   const [hash, setHash] = useState('')
   const [solTxIds, setSolTxIds] = useState('')
@@ -16,11 +15,6 @@ const AddGatewayBle = () => {
   const [submitted, setSubmitted] = useState(false)
 
   const handleAddGateway = useCallback(async () => {
-    const solanaStatus = await getSolanaStatus()
-    if (solanaStatus === 'in_progress') {
-      throw new Error('Chain transfer in progress')
-    }
-
     setSubmitted(true)
     const accountAddress = await getSecureItem('address')
     const keypair = await getKeypair()
@@ -49,16 +43,15 @@ const AddGatewayBle = () => {
       throw new Error('Error signing gateway txn')
     }
 
-    const onboardTxn = await postPaymentTransaction(
+    const onboardTxn = await addGateway(
       txnOwnerSigned.gateway.b58,
       txnOwnerSigned.toString()
     )
 
-    if (onboardTxn?.transaction && solanaStatus === 'not_started') {
-      const pendingTxn = await submitPendingTxn(onboardTxn.transaction)
-      setHash(pendingTxn.hash)
-      setStatus(pendingTxn.status)
-      setFailedReason(pendingTxn.failedReason || '')
+    if (onboardTxn?.pendingTxn) {
+      setHash(onboardTxn.pendingTxn.hash)
+      setStatus(onboardTxn.pendingTxn.status)
+      setFailedReason(onboardTxn.pendingTxn.failedReason || '')
       return
     }
 
@@ -68,10 +61,10 @@ const AddGatewayBle = () => {
       setStatus(`${txIds.length} responses`)
     }
   }, [
+    addGateway,
     createAndSignGatewayTxn,
     getOnboardingAddress,
     getOnboardingRecord,
-    postPaymentTransaction,
   ])
 
   const updateTxnStatus = useCallback(async () => {

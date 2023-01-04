@@ -14,8 +14,22 @@
  * See the [example app](https://github.com/helium/react-native-helium/blob/main/example/src/HotspotBLE/ScanHotspots.tsx)
  * for a working demo of scanning for Hotspots.
  */
+import { PendingTransaction } from '@helium/http'
 import { OnboardingRecord, Maker } from '@helium/onboarding'
 export interface OnboardingManager {
+  /**
+   *  Post a payment transaction
+   */
+  addGateway: (
+    hotspotAddress: string,
+    transaction: string
+  ) => Promise<{
+    solanaStatus: 'complete' | 'not_started'
+    submitStatus: 'failure' | 'complete' | 'pending'
+    transaction: string
+    solanaResponses: string[]
+    pendingTxn: PendingTransaction | null
+  } | null>
   /**
    * Get the onboarding record from the Onboarding Server.
    */
@@ -40,8 +54,8 @@ export interface OnboardingManager {
     hotspotAddress: string,
     transaction: string
   ) => Promise<{
-    transaction: string
-    solanaResponses: string[]
+    transaction?: string
+    solanaResponses?: string[]
   } | null>
 
   submitAllSolana: (_txns: string[]) => Promise<string[]>
