@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import { AddGateway, useOnboarding } from '@helium/react-native-sdk'
 import { getPendingTxn } from '../../appDataClient'
-import { getKeypair } from '../Account/secureAccount'
+import { getKeypair, getSolanaPubKey } from '../Account/secureAccount'
 import { OnboardingRecord } from '@helium/onboarding'
 import Clipboard from '@react-native-community/clipboard'
 
@@ -69,10 +69,13 @@ const AddGatewayTxn = () => {
 
     setHotspotAddress(txnOwnerSigned.gateway.b58)
 
-    const addGatewayResponse = await addGateway(
-      txnOwnerSigned.gateway.b58,
-      txnOwnerSigned.toString()
-    )
+    const userSolPubKey = await getSolanaPubKey(keypair.sk)
+
+    const addGatewayResponse = await addGateway({
+      hotspotAddress: txnOwnerSigned.gateway.b58,
+      transaction: txnOwnerSigned.toString(),
+      userSolPubKey,
+    })
 
     if (addGatewayResponse?.pendingTxn) {
       setHash(addGatewayResponse.pendingTxn.hash)

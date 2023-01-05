@@ -14,22 +14,46 @@
  * See the [example app](https://github.com/helium/react-native-helium/blob/main/example/src/HotspotBLE/ScanHotspots.tsx)
  * for a working demo of scanning for Hotspots.
  */
-import { PendingTransaction } from '@helium/http'
+import Client, { PendingTransaction } from '@helium/http'
 import { OnboardingRecord, Maker } from '@helium/onboarding'
+import * as web3 from '@solana/web3.js'
+import { SolanaStatus } from '../utils/solanaSentinel'
+
+export type SolHotspot = {
+  asset: web3.PublicKey
+  bumpSeed: number
+  elevation: number
+  gain: number
+  hotspotKey: string
+  isFullHotspot: boolean
+  location: any
+  numLocationAsserts: number
+}
+
 export interface OnboardingManager {
-  /**
-   *  Post a payment transaction
-   */
-  addGateway: (
-    hotspotAddress: string,
+  addGateway: (_opts: {
+    hotspotAddress: string
     transaction: string
-  ) => Promise<{
+    userSolPubKey: web3.PublicKey
+    httpClient?: Client
+  }) => Promise<{
     solanaStatus: 'complete' | 'not_started'
     submitStatus: 'failure' | 'complete' | 'pending'
     transaction: string
     solanaResponses: string[]
     pendingTxn: PendingTransaction | null
   } | null>
+  getHotspotOnChain: (_opts: {
+    hotspotAddress: string
+    solanaStatus: SolanaStatus
+    userSolPubKey: web3.PublicKey
+    httpClient?: Client
+  }) => Promise<boolean>
+  getSolHotspotInfo: (_opts: {
+    iotMint: string
+    hotspotAddress: string
+    userSolPubKey: web3.PublicKey
+  }) => Promise<null | SolHotspot>
   /**
    * Get the onboarding record from the Onboarding Server.
    */

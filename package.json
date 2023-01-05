@@ -81,6 +81,7 @@
     "react-native": "0.63.4",
     "react-native-ble-plx": "^2.0.2",
     "react-native-builder-bob": "^0.18.1",
+    "react-native-crypto": "^2.2.0",
     "react-native-get-random-values": "^1.7.0",
     "react-native-sodium": "^0.3.9",
     "readable-stream": "^3.6.0",
@@ -106,6 +107,7 @@
     "react": "*",
     "react-native": "*",
     "react-native-ble-plx": "^2.0.2",
+    "react-native-crypto": "^2.2.0",
     "react-native-get-random-values": "^1.7.0",
     "react-native-sodium": "^0.3.9",
     "readable-stream": "^3.6.0",
@@ -189,14 +191,17 @@
     ]
   },
   "dependencies": {
-    "@helium/helium-entity-manager-sdk": "^0.0.10",
-    "@helium/helium-sub-daos-sdk": "^0.0.10",
+    "@helium/helium-entity-manager-sdk": "^0.0.12",
+    "@helium/helium-sub-daos-sdk": "^0.0.12",
     "@helium/spl-utils": "^0.0.10",
+    "@helium/voter-stake-registry-sdk": "^0.0.12",
     "@metaplex-foundation/beet": "^0.7.1",
     "@metaplex-foundation/beet-solana": "^0.4.0",
     "@metaplex-foundation/mpl-token-metadata": "^2.5.2",
     "@solana/spl-token": "^0.3.6",
     "@solana/web3.js": "^1.69.0",
-    "assert": "^2.0.0"
+    "assert": "^2.0.0",
+    "react-native-crypto": "^2.2.0",
+    "text-encoding-polyfill": "^0.6.7"
   }
 }

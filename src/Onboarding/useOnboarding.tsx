@@ -6,6 +6,14 @@ import { sendAndConfirmWithRetry } from '@helium/spl-utils'
 import { getSolanaStatus, heliumHttpClient } from '@helium/react-native-sdk'
 import { Client, PendingTransaction } from '@helium/http'
 import { getSolanaVars, SolanaStatus } from '../utils/solanaSentinel'
+import { subDaoKey } from '@helium/helium-sub-daos-sdk'
+import {
+  hotspotConfigKey,
+  init,
+  iotInfoKey,
+} from '@helium/helium-entity-manager-sdk'
+import { AnchorProvider, Wallet } from '@project-serum/anchor'
+import { SolHotspot } from './onboardingTypes'
 
 const useOnboarding = (
   baseUrl?: string,
@@ -119,38 +127,87 @@ const useOnboarding = (
     [handleError, submitAll]
   )
 
-  const hotspotOnChain = useCallback(
-    async (
-      hotspotAddress: string,
-      solanaStatus: SolanaStatus,
-      httpClient?: Client
-    ) => {
-      const client = httpClient || heliumHttpClient
+  const getSolHotspotInfo = useCallback(
+    async ({
+      iotMint,
+      hotspotAddress,
+      userSolPubKey,
+    }: {
+      iotMint: string
+      hotspotAddress: string
+      userSolPubKey: web3.PublicKey
+    }) => {
+      const provider = new AnchorProvider(
+        solConnection.current,
+        {
+          publicKey: userSolPubKey,
+        } as Wallet,
+        {}
+      )
 
-      if (solanaStatus === 'complete') {
-        const {
-          metadata_urls: { iot },
-        } = await getSolanaVars()
-        const response = await fetch(`${iot}/${hotspotAddress}`)
-        return response.status === 200
-      } else {
-        try {
-          const hotspot = await client.hotspots.get(hotspotAddress)
-          return !!hotspot
-        } catch (e) {
-          return false
-        }
+      const sdkey = subDaoKey(new web3.PublicKey(iotMint))[0]
+      const hckey = hotspotConfigKey(sdkey, 'IOT')[0]
+      const infoKey = iotInfoKey(hckey, hotspotAddress)[0]
+      const hemProgram = await init(provider)
+      const info = await hemProgram.account.iotHotspotInfoV0.fetchNullable(
+        infoKey
+      )
+      if (info) {
+        return info as SolHotspot
       }
+      return null
     },
     []
   )
 
-  const addGateway = useCallback(
-    async (
-      hotspotAddress: string,
-      transaction: string,
+  const getHotspotOnChain = useCallback(
+    async ({
+      hotspotAddress,
+      solanaStatus,
+      userSolPubKey: userSolPubKey,
+      httpClient,
+    }: {
+      hotspotAddress: string
+      solanaStatus: SolanaStatus
+      userSolPubKey: web3.PublicKey
       httpClient?: Client
-    ) => {
+    }) => {
+      const client = httpClient || heliumHttpClient
+
+      if (solanaStatus === 'complete') {
+        const {
+          mints: { iot },
+        } = await getSolanaVars()
+        const hotspotInfo = await getSolHotspotInfo({
+          iotMint: iot,
+          hotspotAddress,
+          userSolPubKey,
+        })
+        return !!hotspotInfo
+      }
+
+      try {
+        const hotspot = await client.hotspots.get(hotspotAddress)
+        return !!hotspot
+      } catch (e) {
+        return false
+      }
+    },
+    [getSolHotspotInfo]
+  )
+
+  const addGateway = useCallback(
+    async ({
+      hotspotAddress,
+      transaction,
+      userSolPubKey,
+      httpClient,
+    }: {
+      hotspotAddress: string
+      transaction: string
+      userSolPubKey: web3.PublicKey
+      httpClient?: Client
+    }) => {
       const client = httpClient || heliumHttpClient
 
       const solanaStatus = await getSolanaStatus()
@@ -158,11 +215,12 @@ const useOnboarding = (
         throw new Error('Chain transfer in progress')
       }
 
-      const hotspotExists = await hotspotOnChain(
+      const hotspotExists = await getHotspotOnChain({
         hotspotAddress,
         solanaStatus,
-        client
-      )
+        userSolPubKey,
+        httpClient: client,
+      })
 
       if (hotspotExists) {
         throw new Error('Hotspot already on chain')
@@ -185,7 +243,7 @@ const useOnboarding = (
 
       return { pendingTxn, ...response, solanaStatus, submitStatus }
     },
-    [hotspotOnChain, postPaymentTransaction]
+    [getHotspotOnChain, postPaymentTransaction]
   )
 
   return {
@@ -195,6 +253,8 @@ const useOnboarding = (
     getMakers,
     getOnboardingRecord,
     postPaymentTransaction,
+    getSolHotspotInfo,
+    getHotspotOnChain,
     submitSolana: submit,
     submitAllSolana: submitAll,
   }

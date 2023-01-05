@@ -1,9 +1,28 @@
+import Client from '@helium/http'
 import React, { createContext, ReactNode, useContext } from 'react'
 import { OnboardingManager } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
+import * as web3 from '@solana/web3.js'
+import { SolanaStatus } from '../utils/solanaSentinel'
 
 const initialState = {
-  addGateway: async (_hotspotAddress: string, _transaction: string) => null,
+  addGateway: async (_opts: {
+    hotspotAddress: string
+    transaction: string
+    userSolPubKey: web3.PublicKey
+    httpClient?: Client
+  }) => null,
+  getSolHotspotInfo: async (_opts: {
+    iotMint: string
+    hotspotAddress: string
+    userSolPubKey: web3.PublicKey
+  }) => null,
+  getHotspotOnChain: async (_opts: {
+    hotspotAddress: string
+    solanaStatus: SolanaStatus
+    userSolPubKey: web3.PublicKey
+    httpClient?: Client
+  }) => false,
   baseUrl: '',
   getMinFirmware: async () => '',
   getMakers: async () => [],

@@ -2,7 +2,11 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Button, StyleSheet, Text, View, Alert } from 'react-native'
 import { useHotspotBle } from '../../../src'
 import { getPendingTxn } from '../../appDataClient'
-import { getKeypair, getSecureItem } from '../Account/secureAccount'
+import {
+  getKeypair,
+  getSecureItem,
+  getSolanaPubKey,
+} from '../Account/secureAccount'
 import { useOnboarding } from '@helium/react-native-sdk'
 
 const AddGatewayBle = () => {
@@ -43,10 +47,12 @@ const AddGatewayBle = () => {
       throw new Error('Error signing gateway txn')
     }
 
-    const onboardTxn = await addGateway(
-      txnOwnerSigned.gateway.b58,
-      txnOwnerSigned.toString()
-    )
+    const userSolPubKey = await getSolanaPubKey(keypair.sk)
+    const onboardTxn = await addGateway({
+      hotspotAddress: txnOwnerSigned.gateway.b58,
+      transaction: txnOwnerSigned.toString(),
+      userSolPubKey,
+    })
 
     if (onboardTxn?.pendingTxn) {
       setHash(onboardTxn.pendingTxn.hash)
