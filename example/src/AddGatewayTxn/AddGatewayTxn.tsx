@@ -7,9 +7,9 @@ import {
   Button,
   TouchableOpacity,
 } from 'react-native'
-import { AddGateway, useOnboarding } from '@helium/react-native-sdk'
+import { Account, AddGateway, useOnboarding } from '@helium/react-native-sdk'
 import { getPendingTxn } from '../../appDataClient'
-import { getKeypair, getSolanaPubKey } from '../Account/secureAccount'
+import { getAddressStr, getKeypair } from '../Account/secureAccount'
 import { OnboardingRecord } from '@helium/onboarding'
 import Clipboard from '@react-native-community/clipboard'
 
@@ -69,7 +69,12 @@ const AddGatewayTxn = () => {
 
     setHotspotAddress(txnOwnerSigned.gateway.b58)
 
-    const userSolPubKey = await getSolanaPubKey(keypair.sk)
+    const userAddress = await getAddressStr()
+    if (!userAddress) {
+      throw new Error('No user found')
+    }
+
+    const userSolPubKey = Account.heliumAddressToSolPublicKey(userAddress)
 
     const addGatewayResponse = await addGateway({
       hotspotAddress: txnOwnerSigned.gateway.b58,

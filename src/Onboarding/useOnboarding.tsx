@@ -4,7 +4,7 @@ import * as web3 from '@solana/web3.js'
 import { Buffer } from 'buffer'
 import { sendAndConfirmWithRetry } from '@helium/spl-utils'
 import { getSolanaStatus, heliumHttpClient } from '@helium/react-native-sdk'
-import { Client, PendingTransaction } from '@helium/http'
+import { Client, Hotspot, PendingTransaction } from '@helium/http'
 import { getSolanaVars, SolanaStatus } from '../utils/solanaSentinel'
 import { subDaoKey } from '@helium/helium-sub-daos-sdk'
 import {
@@ -14,6 +14,10 @@ import {
 } from '@helium/helium-entity-manager-sdk'
 import { AnchorProvider, Wallet } from '@project-serum/anchor'
 import { SolHotspot } from './onboardingTypes'
+
+export const isSolHotspot = (
+  hotspot: SolHotspot | Hotspot
+): hotspot is SolHotspot => Object.keys(hotspot).includes('numLocationAsserts')
 
 const useOnboarding = (
   baseUrl?: string,
@@ -97,7 +101,11 @@ const useOnboarding = (
   )
 
   const postPaymentTransaction = useCallback(
-    async (hotspotAddress: string, transaction: string) => {
+    async (
+      hotspotAddress: string,
+      transaction: string,
+      submitToSolana: boolean = true
+    ) => {
       const response = await onboardingClient.current.postPaymentTransaction(
         hotspotAddress,
         transaction
@@ -112,7 +120,7 @@ const useOnboarding = (
         return null
       }
 
-      if (response.data.solanaTransactions?.length) {
+      if (response.data.solanaTransactions?.length && submitToSolana) {
         const solanaResponses = await submitAll(
           response.data.solanaTransactions
         )
@@ -144,11 +152,12 @@ const useOnboarding = (
         } as Wallet,
         {}
       )
+      // TODO: This should not be re-inited every time
+      const hemProgram = await init(provider)
 
       const sdkey = subDaoKey(new web3.PublicKey(iotMint))[0]
       const hckey = hotspotConfigKey(sdkey, 'IOT')[0]
       const infoKey = iotInfoKey(hckey, hotspotAddress)[0]
-      const hemProgram = await init(provider)
       const info = await hemProgram.account.iotHotspotInfoV0.fetchNullable(
         infoKey
       )
@@ -160,40 +169,45 @@ const useOnboarding = (
     []
   )
 
-  const getHotspotOnChain = useCallback(
+  const getHotspotForCurrentChain = useCallback(
     async ({
       hotspotAddress,
       solanaStatus,
-      userSolPubKey: userSolPubKey,
+      userSolPubKey,
       httpClient,
     }: {
       hotspotAddress: string
-      solanaStatus: SolanaStatus
+      solanaStatus?: SolanaStatus
       userSolPubKey: web3.PublicKey
       httpClient?: Client
     }) => {
       const client = httpClient || heliumHttpClient
 
-      if (solanaStatus === 'complete') {
-        const {
-          mints: { iot },
-        } = await getSolanaVars()
-        const hotspotInfo = await getSolHotspotInfo({
-          iotMint: iot,
-          hotspotAddress,
-          userSolPubKey,
-        })
-        return !!hotspotInfo
-      }
-
       try {
+        let solStatus = solanaStatus
+        if (!solStatus) {
+          solStatus = await getSolanaStatus()
+        }
+
+        if (solanaStatus === 'complete') {
+          const {
+            iot: { mint: iotMint },
+          } = await getSolanaVars(solanaCluster)
+          const hotspotInfo = await getSolHotspotInfo({
+            iotMint,
+            hotspotAddress,
+            userSolPubKey,
+          })
+          return hotspotInfo
+        }
+
         const hotspot = await client.hotspots.get(hotspotAddress)
-        return !!hotspot
-      } catch (e) {
-        return false
+        return hotspot
+      } catch {
+        return null
       }
     },
-    [getSolHotspotInfo]
+    [getSolHotspotInfo, solanaCluster]
   )
 
   const addGateway = useCallback(
@@ -215,12 +229,12 @@ const useOnboarding = (
         throw new Error('Chain transfer in progress')
       }
 
-      const hotspotExists = await getHotspotOnChain({
+      const hotspotExists = !!(await getHotspotForCurrentChain({
         hotspotAddress,
         solanaStatus,
         userSolPubKey,
         httpClient: client,
-      })
+      }))
 
       if (hotspotExists) {
         throw new Error('Hotspot already on chain')
@@ -243,20 +257,114 @@ const useOnboarding = (
 
       return { pendingTxn, ...response, solanaStatus, submitStatus }
     },
-    [getHotspotOnChain, postPaymentTransaction]
+    [getHotspotForCurrentChain, postPaymentTransaction]
+  )
+
+  const hasFreeAssert = useCallback(
+    async ({ hotspot }: { hotspot?: Hotspot | SolHotspot | null }) => {
+      if (!hotspot) {
+        // TODO: Is this right?
+        // assume free as it hasn't been added the chain
+        return true
+      }
+      let address = ''
+      if (isSolHotspot(hotspot)) {
+        // TODO: Is this right?
+        if (!hotspot.isFullHotspot) return false
+
+        address = hotspot.hotspotKey
+      } else {
+        // TODO: Is this right?
+        if (hotspot.mode !== 'full') return false
+
+        address = hotspot.address
+      }
+
+      const onboardingRecord = await getOnboardingRecord(address)
+      if (!onboardingRecord) {
+        throw new Error('Onboarding record not found')
+      }
+
+      if (hotspot && isSolHotspot(hotspot)) {
+        return (
+          onboardingRecord.maker.locationNonceLimit > hotspot.numLocationAsserts
+        )
+      }
+
+      return (
+        onboardingRecord.maker.locationNonceLimit >
+        (hotspot?.speculativeNonce || 0)
+      )
+    },
+    [getOnboardingRecord]
+  )
+
+  const assertLocation = useCallback(
+    async ({
+      gatewayAddress,
+      transaction: originalTxn,
+      isFree,
+      httpClient,
+    }: {
+      gatewayAddress: string
+      isFree?: boolean
+      transaction: string
+      httpClient?: Client
+    }) => {
+      const solanaStatus = await getSolanaStatus()
+      if (solanaStatus === 'in_progress') {
+        throw new Error('Chain transfer in progress')
+      }
+
+      let transaction = originalTxn
+      const client = httpClient || heliumHttpClient
+
+      let submitStatus: 'failure' | 'complete' | 'pending' = 'failure'
+
+      if (isFree) {
+        // if assert is free, need to post to onboarding server to have the txn re-signed
+        const response = await postPaymentTransaction(
+          gatewayAddress,
+          transaction.toString(),
+          false
+        )
+        if (!response?.transaction) {
+          throw new Error('failed to fetch txn from onboarding server')
+        }
+        transaction = response.transaction
+      }
+
+      if (solanaStatus === 'complete') {
+        submitStatus = 'complete'
+      }
+
+      let pendingTxn: null | PendingTransaction = null
+      if (solanaStatus === 'not_started') {
+        // submit to helium if transition not started
+        submitStatus = 'pending'
+        pendingTxn = await client.transactions.submit(transaction)
+      }
+
+      // submit to solana
+      const solTxId = await submit(transaction)
+      return { solTxId, pendingTxn, submitStatus, solanaStatus }
+    },
+    [postPaymentTransaction, submit]
   )
 
   return {
     addGateway,
+    assertLocation,
     baseUrl,
-    getMinFirmware,
+    getHotspotForCurrentChain,
     getMakers,
+    getMinFirmware,
     getOnboardingRecord,
-    postPaymentTransaction,
     getSolHotspotInfo,
-    getHotspotOnChain,
-    submitSolana: submit,
+    hasFreeAssert,
+    postPaymentTransaction,
     submitAllSolana: submitAll,
+    submitSolana: submit,
   }
 }
 

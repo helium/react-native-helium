@@ -1,34 +1,29 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
 import {
-  AssertLocationV2,
-  getSolanaStatus,
+  Account as AccountUtil,
   Location,
   useOnboarding,
 } from '@helium/react-native-sdk'
 import Address from '@helium/address'
-import {
-  getAccount,
-  getHotspotDetails,
-  getPendingTxn,
-  submitPendingTxn,
-} from '../../appDataClient'
-import type { Account, Hotspot } from '@helium/http'
-import { getKeypair, getSecureItem } from '../Account/secureAccount'
+import { getPendingTxn } from '../../appDataClient'
+import { getAddressStr, getKeypair } from '../Account/secureAccount'
 import type {
   Balance,
   DataCredits,
   NetworkTokens,
   USDollars,
 } from '@helium/currency'
-import { OnboardingRecord } from '@helium/onboarding'
 import Input from '../Input'
 import animalName from 'angry-purple-tiger'
 
 const AssertLocation = () => {
-  const { getOnboardingRecord, postPaymentTransaction, submitSolana } =
-    useOnboarding()
-  const [account, setAccount] = useState<Account>()
+  const {
+    getOnboardingRecord,
+    hasFreeAssert,
+    getHotspotForCurrentChain,
+    assertLocation,
+  } = useOnboarding()
   const [gatewayAddress, setGatewayAddress] = useState('')
   const [gatewayName, setGatewayName] = useState('')
   const [lat, setLat] = useState('')
@@ -40,10 +35,6 @@ const AssertLocation = () => {
   const [solTxIds, setSolTxIds] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
-  const [ownerAddress, setOwnerAddress] = useState<string | null>(null)
-  const [hotspot, setHotspot] = useState<Hotspot>()
-  const [onboardingRecord, setOnboardingRecord] =
-    useState<OnboardingRecord | null>(null)
   const [feeData, setFeeData] = useState<{
     isFree: boolean
     hasSufficientBalance: boolean
@@ -52,15 +43,6 @@ const AssertLocation = () => {
     totalStakingAmountDC: Balance<DataCredits>
     totalStakingAmountUsd: Balance<USDollars>
   }>()
-
-  useEffect(() => {
-    getSecureItem('address').then(setOwnerAddress)
-  }, [])
-
-  useEffect(() => {
-    if (!ownerAddress) return
-    getAccount(ownerAddress).then(setAccount)
-  }, [ownerAddress])
 
   useEffect(() => {
     if (!Address.isValid(gatewayAddress)) {
@@ -73,121 +55,57 @@ const AssertLocation = () => {
     }
 
     setGatewayName(animalName(gatewayAddress))
-    getHotspotDetails(gatewayAddress)
-      .then(setHotspot)
-      .catch((e) => console.log(e))
-
-    getOnboardingRecord(gatewayAddress)
-      .then((d) => setOnboardingRecord(d))
-      .catch((e) => console.log(e))
   }, [gatewayAddress, getOnboardingRecord])
 
-  useEffect(() => {
-    if (!hotspot || !onboardingRecord || !ownerAddress || !account?.balance) {
-      return
-    }
-
-    Location.loadLocationFeeData({
-      nonce: 0,
-      accountIntegerBalance: account.balance.integerBalance,
-      dataOnly: false,
-      owner: ownerAddress,
-      locationNonceLimit: onboardingRecord.maker.locationNonceLimit,
-      makerAddress: onboardingRecord.maker.address,
-    }).then(setFeeData)
-  }, [hotspot, onboardingRecord, ownerAddress, account])
-
-  useEffect(() => {
-    if (!hotspot || !hotspot.lat || !hotspot.lng) {
-      return
-    }
-
-    setLat(hotspot.lat.toString())
-    setLng(hotspot.lng.toString())
-    setGain(hotspot.gain ? (hotspot.gain / 10).toString() : '')
-    setElevation(hotspot.elevation?.toString() || '')
-  }, [hotspot])
-
   const handleAssert = useCallback(async () => {
-    const solanaStatus = await getSolanaStatus()
-    if (solanaStatus === 'in_progress') {
-      throw new Error('Chain transfer in progress')
-    }
+    const userAddress = await getAddressStr()
+    const userSolPubKey = AccountUtil.heliumAddressToSolPublicKey(userAddress)
 
-    if (
-      !gatewayAddress ||
-      !ownerAddress ||
-      !lat ||
-      !lng ||
-      !gain ||
-      !elevation ||
-      !onboardingRecord
-    )
-      return
+    const hotspot = await getHotspotForCurrentChain({
+      userSolPubKey,
+      hotspotAddress: gatewayAddress,
+    })
+
+    const isFree = await hasFreeAssert({
+      hotspot,
+    })
+
+    const ownerKeypairRaw = await getKeypair()
+
+    const transaction = (
+      await Location.createAndSignAssertLocationTxn({
+        hotspot: null,
+        gateway: gatewayAddress,
+        owner: '',
+        lat: 0,
+        lng: 0,
+        decimalGain: 0,
+        elevation: 0,
+        dataOnly: false,
+        ownerKeypairRaw,
+        makerAddress: '',
+        isFree,
+      })
+    ).toString()
 
     setSubmitted(true)
-    const ownerKeypairRaw = await getKeypair()
-    const { isFree, signedTxn } = await Location.createAndSignAssertLocationTxn(
-      {
-        gateway: gatewayAddress,
-        owner: ownerAddress,
-        lat: parseFloat(lat),
-        lng: parseFloat(lng),
-        decimalGain: parseFloat(gain),
-        elevation: parseFloat(elevation),
-        locationNonceLimit: onboardingRecord.maker.locationNonceLimit,
-        makerAddress: onboardingRecord.maker.address,
-        ownerKeypairRaw,
-        currentLocation: hotspot?.location,
-      }
-    )
 
-    let finalTxn = signedTxn
-    let solanaResponses: string[] = []
-
-    if (isFree) {
-      // Note: This submits to solana 👇
-      const onboardResponse = await postPaymentTransaction(
+    const { solanaStatus, solTxId, pendingTxn, submitStatus } =
+      await assertLocation({
         gatewayAddress,
-        finalTxn.toString()
-      )
+        isFree,
+        transaction,
+      })
 
-      solanaResponses = onboardResponse?.solanaResponses || []
+    setSolTxIds(solTxId)
+    setStatus(submitStatus)
 
-      if (onboardResponse?.transaction) {
-        finalTxn = AssertLocationV2.fromString(onboardResponse.transaction)
-      }
-    } else {
-      // Need to submit to solana
-      const response = await submitSolana(finalTxn.toString())
-      solanaResponses = [response]
-    }
-
-    if (solanaStatus === 'not_started') {
-      const pendingTxn = await submitPendingTxn(finalTxn.toString())
+    if (solanaStatus === 'not_started' && pendingTxn) {
       setHash(pendingTxn.hash)
       setStatus(pendingTxn.status)
       setFailedReason(pendingTxn.failedReason || '')
-      return
     }
-
-    if (solanaResponses.length) {
-      const txIds = solanaResponses.join(',')
-      setSolTxIds(txIds)
-      setStatus(`${txIds.length} responses`)
-    }
-  }, [
-    elevation,
-    gain,
-    gatewayAddress,
-    hotspot?.location,
-    lat,
-    lng,
-    onboardingRecord,
-    ownerAddress,
-    postPaymentTransaction,
-    submitSolana,
-  ])
+  }, [assertLocation, gatewayAddress, getHotspotForCurrentChain, hasFreeAssert])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
@@ -204,47 +122,12 @@ const AssertLocation = () => {
     return () => clearInterval(interval)
   }, [updateTxnStatus])
 
-  const canAssert = useMemo(() => {
-    if (
-      !hotspot ||
-      !onboardingRecord ||
-      !lat ||
-      !lng ||
-      !feeData?.hasSufficientBalance ||
-      submitted
-    )
-      return false
-    const h3Location = Location.getH3Location(parseFloat(lat), parseFloat(lng))
-
-    // location hasn't changed, just update antenna info, no charge
-    if (h3Location === hotspot.location) return false
-    return true
-  }, [
-    feeData?.hasSufficientBalance,
-    hotspot,
-    lat,
-    lng,
-    onboardingRecord,
-    submitted,
-  ])
-
-  const canUpdateAntenna = useMemo(() => {
-    if (
-      !hotspot ||
-      !onboardingRecord ||
-      !feeData ||
-      !gain ||
-      !elevation ||
-      submitted
-    )
-      return false
-
-    const h3Location = Location.getH3Location(parseFloat(lat), parseFloat(lng))
-    // location has changed, assert will be charged
-    if (h3Location !== hotspot.location) return false
-
-    return true
-  }, [elevation, feeData, gain, hotspot, lat, lng, onboardingRecord, submitted])
+  const disabled = useMemo(() => {
+    if (!lat || !lng || !gatewayAddress || submitted) {
+      return true
+    }
+    return false
+  }, [gatewayAddress, lat, lng, submitted])
 
   return (
     <View style={styles.container}>
@@ -334,12 +217,7 @@ const AssertLocation = () => {
         <Button
           title="Assert Location"
           onPress={handleAssert}
-          disabled={!canAssert}
-        />
-        <Button
-          title="Update Antenna"
-          onPress={handleAssert}
-          disabled={!canUpdateAntenna}
+          disabled={disabled}
         />
       </View>
       <Text style={styles.topMargin}>Sol Tx Ids</Text>

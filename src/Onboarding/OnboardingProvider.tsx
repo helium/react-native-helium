@@ -1,9 +1,8 @@
-import Client from '@helium/http'
+import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import React, { createContext, ReactNode, useContext } from 'react'
-import { OnboardingManager } from './onboardingTypes'
+import { OnboardingManager, SolHotspot } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
 import * as web3 from '@solana/web3.js'
-import { SolanaStatus } from '../utils/solanaSentinel'
 
 const initialState = {
   addGateway: async (_opts: {
@@ -12,17 +11,37 @@ const initialState = {
     userSolPubKey: web3.PublicKey
     httpClient?: Client
   }) => null,
+  assertLocation: async (_opts: {
+    gatewayAddress: string
+    isFree?: boolean
+    transaction: string
+    httpClient?: Client
+  }) =>
+    new Promise<{
+      solTxId: string
+      pendingTxn: PendingTransaction | null
+      submitStatus: 'failure' | 'complete' | 'pending'
+      solanaStatus: 'complete' | 'not_started'
+    }>((resolve) =>
+      resolve({
+        solTxId: '',
+        pendingTxn: null,
+        submitStatus: 'failure',
+        solanaStatus: 'complete',
+      })
+    ),
   getSolHotspotInfo: async (_opts: {
     iotMint: string
     hotspotAddress: string
     userSolPubKey: web3.PublicKey
   }) => null,
-  getHotspotOnChain: async (_opts: {
+  getHotspotForCurrentChain: async (_opts: {
     hotspotAddress: string
-    solanaStatus: SolanaStatus
     userSolPubKey: web3.PublicKey
     httpClient?: Client
-  }) => false,
+  }) => null,
+  hasFreeAssert: async (_opts: { hotspot?: Hotspot | SolHotspot | null }) =>
+    false,
   baseUrl: '',
   getMinFirmware: async () => '',
   getMakers: async () => [],

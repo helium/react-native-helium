@@ -8,6 +8,7 @@ import { Keypair, Mnemonic } from '@helium/crypto-react-native'
 import Address, { NetTypes } from '@helium/address'
 import wordlist from './Wordlists/english.json'
 import { shuffle, uniq, take, sampleSize } from 'lodash'
+import * as web3 from '@solana/web3.js'
 
 /**
  * A libsodium keypair.
@@ -83,3 +84,13 @@ export const generateChallengeWords = (targetWord: string) =>
       ).concat(targetWord)
     )
   )
+
+export const heliumAddressToSolPublicKey = (heliumAddress: string) => {
+  const heliumPK = Address.fromB58(heliumAddress).publicKey
+  return new web3.PublicKey(heliumPK)
+}
+
+export const heliumAddressToSolAddress = (heliumAddress: string) => {
+  const pk = heliumAddressToSolPublicKey(heliumAddress)
+  return pk.toBase58()
+}

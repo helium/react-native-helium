@@ -38,7 +38,7 @@ export const makeKeypair = async (
 
 export const getAddress = async () => {
   const addressB58 = await getSecureItem('address')
-  if (!addressB58) return
+  if (!addressB58) throw new Error('No user address found')
 
   return Account.getAddress(addressB58)
 }
