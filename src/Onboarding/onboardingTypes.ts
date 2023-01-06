@@ -17,6 +17,7 @@
 import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import { OnboardingRecord, Maker } from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
+import BN from 'bn.js'
 import { SolanaStatus } from '../utils/solanaSentinel'
 
 export type SolHotspot = {
@@ -26,7 +27,7 @@ export type SolHotspot = {
   gain: number
   hotspotKey: string
   isFullHotspot: boolean
-  location: any
+  location: BN | null
   numLocationAsserts: number
 }
 

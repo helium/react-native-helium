@@ -160,12 +160,11 @@ export const createLocationTxn = async ({
   let updatingLocation = !hotspot
   if (hotspot) {
     if (!isSol) {
-      updatingLocation = hotspot?.location !== nextLocation
-    } else {
-      // TODO: Figure out how to get location
-      // from noah: location is the u64 of the hex string
-      // bn.js
-      console.log('sol hotspot location is: ', hotspot.location)
+      updatingLocation = hotspot.location !== nextLocation
+    } else if (hotspot.location) {
+      // TODO: Not sure if this is correct
+      const loc = hotspot.location.toString('hex')
+      updatingLocation = loc !== nextLocation
     }
   }
 
