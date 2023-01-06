@@ -101,4 +101,14 @@ export interface OnboardingManager {
   submitSolana: (_txn: string) => Promise<string>
 
   baseUrl?: string
+
+  transferHotspot: (_opts: {
+    transaction: string
+    httpClient?: Client
+  }) => Promise<{
+    solTxId: string
+    pendingTxn: PendingTransaction | null
+    submitStatus: 'complete' | 'failure' | 'pending'
+    solanaStatus?: SolanaStatus
+  }>
 }

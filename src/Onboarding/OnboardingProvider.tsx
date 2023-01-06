@@ -30,29 +30,43 @@ const initialState = {
         solanaStatus: 'complete',
       })
     ),
-  getSolHotspotInfo: async (_opts: {
-    iotMint: string
-    hotspotAddress: string
-    userSolPubKey: web3.PublicKey
-  }) => null,
+  baseUrl: '',
   getHotspotForCurrentChain: async (_opts: {
     hotspotAddress: string
     userSolPubKey: web3.PublicKey
     httpClient?: Client
   }) => null,
+  getMakers: async () => [],
+  getMinFirmware: async () => '',
+  getOnboardingRecord: async (_hotspotAddress: string) => null,
+  getSolHotspotInfo: async (_opts: {
+    iotMint: string
+    hotspotAddress: string
+    userSolPubKey: web3.PublicKey
+  }) => null,
   hasFreeAssert: async (_opts: { hotspot?: Hotspot | SolHotspot | null }) =>
     false,
-  baseUrl: '',
-  getMinFirmware: async () => '',
-  getMakers: async () => [],
-  getOnboardingRecord: async (_hotspotAddress: string) => null,
   postPaymentTransaction: async (
     _hotspotAddress: string,
     _transaction: string
   ) => null,
-  submitSolana: (_txn: string) => new Promise<string>((resolve) => resolve('')),
   submitAllSolana: (_txns: string[]) =>
     new Promise<string[]>((resolve) => resolve([''])),
+  submitSolana: (_txn: string) => new Promise<string>((resolve) => resolve('')),
+  transferHotspot: (_opts: { transaction: string; httpClient?: Client }) =>
+    new Promise<{
+      solTxId: string
+      pendingTxn: PendingTransaction | null
+      submitStatus: 'failure' | 'complete' | 'pending'
+      solanaStatus: 'complete' | 'not_started'
+    }>((resolve) =>
+      resolve({
+        solTxId: '',
+        pendingTxn: null,
+        submitStatus: 'failure',
+        solanaStatus: 'complete',
+      })
+    ),
 }
 
 const OnboardingContext =

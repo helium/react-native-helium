@@ -60,7 +60,7 @@ const useOnboarding = (
     []
   )
 
-  const submit = useCallback(async (txn: string) => {
+  const submitSolana = useCallback(async (txn: string) => {
     const { txid } = await sendAndConfirmWithRetry(
       solConnection.current,
       Buffer.from(txn),
@@ -71,11 +71,11 @@ const useOnboarding = (
     return txid
   }, [])
 
-  const submitAll = useCallback(
+  const submitAllSolana = useCallback(
     (txns: string[]) => {
-      return Promise.all(txns.map(submit))
+      return Promise.all(txns.map(submitSolana))
     },
-    [submit]
+    [submitSolana]
   )
 
   const handleError = useCallback(
@@ -153,7 +153,7 @@ const useOnboarding = (
       }
 
       if (response.data.solanaTransactions?.length && submitToSolana) {
-        const solanaResponses = await submitAll(
+        const solanaResponses = await submitAllSolana(
           response.data.solanaTransactions
         )
         return {
@@ -164,7 +164,7 @@ const useOnboarding = (
 
       return { transaction: response.data.transaction, solanaResponses: [] }
     },
-    [handleError, submitAll]
+    [handleError, submitAllSolana]
   )
 
   const getSolHotspotInfo = useCallback(
@@ -369,7 +369,7 @@ const useOnboarding = (
       }
 
       // submit to solana
-      const solTxId = await submit(transaction)
+      const solTxId = await submitSolana(transaction)
       return {
         solTxId,
         pendingTxn,
@@ -377,7 +377,47 @@ const useOnboarding = (
         solanaStatus: solanaStatus?.migrationStatus,
       }
     },
-    [postPaymentTransaction, solanaStatus, submit]
+    [postPaymentTransaction, solanaStatus, submitSolana]
+  )
+
+  const transferHotspot = useCallback(
+    async ({
+      transaction,
+      httpClient,
+    }: {
+      transaction: string
+      httpClient?: Client
+    }) => {
+      const migrationStatus = solanaStatus?.migrationStatus
+      if (migrationStatus === 'in_progress') {
+        throw new Error('Chain transfer in progress')
+      }
+
+      const client = httpClient || heliumHttpClient
+
+      let submitStatus: 'failure' | 'complete' | 'pending' = 'failure'
+
+      if (migrationStatus === 'complete') {
+        submitStatus = 'complete'
+      }
+
+      let pendingTxn: null | PendingTransaction = null
+      if (migrationStatus === 'not_started') {
+        // submit to helium if transition not started
+        submitStatus = 'pending'
+        pendingTxn = await client.transactions.submit(transaction)
+      }
+
+      // submit to solana
+      const solTxId = await submitSolana(transaction)
+      return {
+        solTxId,
+        pendingTxn,
+        submitStatus,
+        solanaStatus: solanaStatus?.migrationStatus,
+      }
+    },
+    [solanaStatus, submitSolana]
   )
 
   return {
@@ -391,8 +431,9 @@ const useOnboarding = (
     getSolHotspotInfo,
     hasFreeAssert,
     postPaymentTransaction,
-    submitAllSolana: submitAll,
-    submitSolana: submit,
+    submitAllSolana,
+    submitSolana,
+    transferHotspot,
   }
 }
 

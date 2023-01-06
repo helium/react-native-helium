@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { View, TextInput, StyleSheet, Text, Button } from 'react-native'
-import { Transfer } from '@helium/react-native-sdk'
-import { getPendingTxn, submitPendingTxn } from '../../appDataClient'
+import { Transfer, useOnboarding } from '@helium/react-native-sdk'
+import { getPendingTxn } from '../../appDataClient'
 import { getKeypair } from '../Account/secureAccount'
 
 const TransferHotspot = () => {
@@ -11,8 +11,10 @@ const TransferHotspot = () => {
   const [newOwnerAddress, setNewOwnerAddress] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [hash, setHash] = useState('')
+  const [solTxId, setSolTxId] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
+  const { transferHotspot } = useOnboarding()
 
   useEffect(() => {
     if (!txnStr) return
@@ -38,11 +40,19 @@ const TransferHotspot = () => {
       throw new Error('Error signing transfer txn')
     }
 
-    const pendingTxn = await submitPendingTxn(signedTxn.toString())
-    setHash(pendingTxn.hash)
-    setStatus(pendingTxn.status)
-    setFailedReason(pendingTxn.failedReason || '')
-  }, [txnStr])
+    const response = await transferHotspot({
+      transaction: signedTxn.toString(),
+    })
+
+    if (response?.pendingTxn) {
+      setHash(response.pendingTxn.hash)
+      setStatus(response.pendingTxn.status)
+      setFailedReason(response.pendingTxn.failedReason || '')
+      return
+    }
+
+    setSolTxId(response.solTxId)
+  }, [transferHotspot, txnStr])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
@@ -80,6 +90,10 @@ const TransferHotspot = () => {
         disabled={!txnStr || submitted}
         onPress={submitTxn}
       />
+      <Text style={styles.topMargin}>Sol Tx Id</Text>
+      <Text style={styles.topMargin} selectable>
+        {solTxId}
+      </Text>
       <Text style={styles.topMargin}>Pending Txn Hash:</Text>
       <Text style={styles.topMargin} selectable>
         {hash}
