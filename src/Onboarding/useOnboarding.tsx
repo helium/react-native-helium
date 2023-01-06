@@ -3,9 +3,8 @@ import OnboardingClient from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
 import { Buffer } from 'buffer'
 import { sendAndConfirmWithRetry } from '@helium/spl-utils'
-import { getSolanaStatus, heliumHttpClient } from '@helium/react-native-sdk'
 import { Client, Hotspot, PendingTransaction } from '@helium/http'
-import { getSolanaVars, SolanaStatus } from '../utils/solanaSentinel'
+import { useSolanaVars, useSolanaStatus } from '../utils/solanaSentinel'
 import { subDaoKey } from '@helium/helium-sub-daos-sdk'
 import {
   hotspotConfigKey,
@@ -15,6 +14,7 @@ import {
 import { AnchorProvider, Wallet, Program } from '@project-serum/anchor'
 import { SolHotspot } from './onboardingTypes'
 import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
+import { heliumHttpClient } from '../utils/httpClient'
 
 export const isSolHotspot = (
   hotspot: SolHotspot | Hotspot
@@ -24,6 +24,8 @@ const useOnboarding = (
   baseUrl?: string,
   solanaCluster?: 'mainnet-beta' | 'devnet' | 'testnet'
 ) => {
+  const { data: solanaStatus } = useSolanaStatus()
+  const { data: solanaVars } = useSolanaVars(solanaCluster)
   const onboardingClient = useRef(new OnboardingClient(baseUrl))
   const solPubKey = useRef<web3.PublicKey>()
   const hemProgram = useRef<Program<HeliumEntityManager>>()
@@ -192,42 +194,39 @@ const useOnboarding = (
   const getHotspotForCurrentChain = useCallback(
     async ({
       hotspotAddress,
-      solanaStatus,
       userSolPubKey,
       httpClient,
     }: {
       hotspotAddress: string
-      solanaStatus?: SolanaStatus
       userSolPubKey: web3.PublicKey
       httpClient?: Client
     }) => {
       const client = httpClient || heliumHttpClient
+      const migrationStatus = solanaStatus?.migrationStatus
+      if (migrationStatus === 'in_progress') {
+        throw new Error('Chain migration in progress')
+      }
+
+      if (!solanaVars?.iot.mint) {
+        throw new Error('Failed to fetch mint from solana vars')
+      }
 
       try {
-        let solStatus = solanaStatus
-        if (!solStatus) {
-          solStatus = await getSolanaStatus()
+        if (migrationStatus === 'not_started') {
+          return await client.hotspots.get(hotspotAddress)
         }
 
-        if (solanaStatus === 'complete') {
-          const {
-            iot: { mint: iotMint },
-          } = await getSolanaVars(solanaCluster)
-          const hotspotInfo = await getSolHotspotInfo({
-            iotMint,
-            hotspotAddress,
-            userSolPubKey,
-          })
-          return hotspotInfo
-        }
-
-        const hotspot = await client.hotspots.get(hotspotAddress)
-        return hotspot
+        const hotspotInfo = await getSolHotspotInfo({
+          iotMint: solanaVars.iot.mint,
+          hotspotAddress,
+          userSolPubKey,
+        })
+        return hotspotInfo
       } catch {
         return null
       }
     },
-    [getSolHotspotInfo, solanaCluster]
+    [getSolHotspotInfo, solanaStatus?.migrationStatus, solanaVars]
   )
 
   const addGateway = useCallback(
@@ -243,15 +242,14 @@ const useOnboarding = (
       httpClient?: Client
     }) => {
       const client = httpClient || heliumHttpClient
+      const migrationStatus = solanaStatus?.migrationStatus
 
-      const solanaStatus = await getSolanaStatus()
-      if (solanaStatus === 'in_progress') {
+      if (migrationStatus === 'in_progress') {
         throw new Error('Chain transfer in progress')
       }
 
       const hotspotExists = !!(await getHotspotForCurrentChain({
         hotspotAddress,
-        solanaStatus,
         userSolPubKey,
         httpClient: client,
       }))
@@ -265,19 +263,24 @@ const useOnboarding = (
       const response = await postPaymentTransaction(hotspotAddress, transaction)
       if (!response) return null
 
-      if (solanaStatus === 'complete') {
+      if (migrationStatus === 'complete') {
         submitStatus = 'complete'
       }
 
       let pendingTxn: null | PendingTransaction = null
-      if (response?.transaction && solanaStatus === 'not_started') {
+      if (response?.transaction && migrationStatus === 'not_started') {
         pendingTxn = await client.transactions.submit(response.transaction)
         submitStatus = 'pending'
       }
 
-      return { pendingTxn, ...response, solanaStatus, submitStatus }
+      return {
+        pendingTxn,
+        ...response,
+        solanaStatus: solanaStatus?.migrationStatus,
+        submitStatus,
+      }
     },
-    [getHotspotForCurrentChain, postPaymentTransaction]
+    [getHotspotForCurrentChain, postPaymentTransaction, solanaStatus]
   )
 
   const hasFreeAssert = useCallback(
@@ -331,8 +334,8 @@ const useOnboarding = (
       transaction: string
       httpClient?: Client
     }) => {
-      const solanaStatus = await getSolanaStatus()
-      if (solanaStatus === 'in_progress') {
+      const migrationStatus = solanaStatus?.migrationStatus
+      if (migrationStatus === 'in_progress') {
         throw new Error('Chain transfer in progress')
       }
 
@@ -354,12 +357,12 @@ const useOnboarding = (
         transaction = response.transaction
       }
 
-      if (solanaStatus === 'complete') {
+      if (migrationStatus === 'complete') {
         submitStatus = 'complete'
       }
 
       let pendingTxn: null | PendingTransaction = null
-      if (solanaStatus === 'not_started') {
+      if (migrationStatus === 'not_started') {
         // submit to helium if transition not started
         submitStatus = 'pending'
         pendingTxn = await client.transactions.submit(transaction)
@@ -367,9 +370,14 @@ const useOnboarding = (
 
       // submit to solana
       const solTxId = await submit(transaction)
-      return { solTxId, pendingTxn, submitStatus, solanaStatus }
+      return {
+        solTxId,
+        pendingTxn,
+        submitStatus,
+        solanaStatus: solanaStatus?.migrationStatus,
+      }
     },
-    [postPaymentTransaction, submit]
+    [postPaymentTransaction, solanaStatus, submit]
   )
 
   return {

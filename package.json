@@ -202,6 +202,7 @@
     "@solana/web3.js": "^1.69.0",
     "assert": "^2.0.0",
     "react-native-crypto": "^2.2.0",
+    "swr": "^2.0.0",
     "text-encoding-polyfill": "^0.6.7"
   }
 }
