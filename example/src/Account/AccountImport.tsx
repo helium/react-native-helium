@@ -1,8 +1,8 @@
 import { useNavigation } from '@react-navigation/core'
 import React, { useCallback, useState } from 'react'
 import { Button, StyleSheet, Text, TextInput, View } from 'react-native'
-import { getMatchingWords } from '../../../src/Account/account'
 import { makeKeypair } from './secureAccount'
+import { Account } from '@helium/react-native-sdk'
 
 const TOTAL_WORDS = 12
 const AccountImport = () => {
@@ -31,7 +31,7 @@ const AccountImport = () => {
 
   const handleChangeText = (text: string) => {
     setWord(text)
-    setMatchingWords(getMatchingWords(text))
+    setMatchingWords(Account.getMatchingWords(text))
   }
 
   const suggestionButton = (index: number) => {

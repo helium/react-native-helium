@@ -16,6 +16,7 @@ import type {
 } from '@helium/currency'
 import Input from '../Input'
 import animalName from 'angry-purple-tiger'
+import Config from 'react-native-config'
 
 const AssertLocation = () => {
   const {
@@ -74,16 +75,15 @@ const AssertLocation = () => {
 
     const transaction = (
       await Location.createAndSignAssertLocationTxn({
-        hotspot: null,
+        hotspot,
         gateway: gatewayAddress,
-        owner: '',
-        lat: 0,
-        lng: 0,
-        decimalGain: 0,
-        elevation: 0,
-        dataOnly: false,
+        owner: userAddress,
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        decimalGain: parseFloat(gain),
+        elevation: parseFloat(elevation),
         ownerKeypairRaw,
-        makerAddress: '',
+        makerAddress: Config.ONBOARDING_MAKER_ADDRESS || '',
         isFree,
       })
     ).toString()
@@ -105,7 +105,16 @@ const AssertLocation = () => {
       setStatus(pendingTxn.status)
       setFailedReason(pendingTxn.failedReason || '')
     }
-  }, [assertLocation, gatewayAddress, getHotspotForCurrentChain, hasFreeAssert])
+  }, [
+    assertLocation,
+    elevation,
+    gain,
+    gatewayAddress,
+    getHotspotForCurrentChain,
+    hasFreeAssert,
+    lat,
+    lng,
+  ])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return

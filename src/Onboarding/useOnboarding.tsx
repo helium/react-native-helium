@@ -12,8 +12,9 @@ import {
   init,
   iotInfoKey,
 } from '@helium/helium-entity-manager-sdk'
-import { AnchorProvider, Wallet } from '@project-serum/anchor'
+import { AnchorProvider, Wallet, Program } from '@project-serum/anchor'
 import { SolHotspot } from './onboardingTypes'
+import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
 
 export const isSolHotspot = (
   hotspot: SolHotspot | Hotspot
@@ -24,8 +25,37 @@ const useOnboarding = (
   solanaCluster?: 'mainnet-beta' | 'devnet' | 'testnet'
 ) => {
   const onboardingClient = useRef(new OnboardingClient(baseUrl))
+  const solPubKey = useRef<web3.PublicKey>()
+  const hemProgram = useRef<Program<HeliumEntityManager>>()
   const solConnection = useRef(
     new web3.Connection(web3.clusterApiUrl(solanaCluster))
+  )
+
+  const getHeliumEntityManagerProgram = useCallback(
+    async (publicKey: web3.PublicKey) => {
+      if (
+        hemProgram.current &&
+        solPubKey.current &&
+        publicKey.equals(solPubKey.current)
+      ) {
+        return hemProgram.current
+      }
+
+      const provider = new AnchorProvider(
+        solConnection.current,
+        {
+          publicKey,
+        } as Wallet,
+        {}
+      )
+      const nextHemProgram = await init(provider)
+
+      hemProgram.current = nextHemProgram
+      solPubKey.current = publicKey
+
+      return nextHemProgram
+    },
+    []
   )
 
   const submit = useCallback(async (txn: string) => {
@@ -145,28 +175,18 @@ const useOnboarding = (
       hotspotAddress: string
       userSolPubKey: web3.PublicKey
     }) => {
-      const provider = new AnchorProvider(
-        solConnection.current,
-        {
-          publicKey: userSolPubKey,
-        } as Wallet,
-        {}
-      )
-      // TODO: This should not be re-inited every time
-      const hemProgram = await init(provider)
+      const program = await getHeliumEntityManagerProgram(userSolPubKey)
 
       const sdkey = subDaoKey(new web3.PublicKey(iotMint))[0]
       const hckey = hotspotConfigKey(sdkey, 'IOT')[0]
       const infoKey = iotInfoKey(hckey, hotspotAddress)[0]
-      const info = await hemProgram.account.iotHotspotInfoV0.fetchNullable(
-        infoKey
-      )
+      const info = await program.account.iotHotspotInfoV0.fetchNullable(infoKey)
       if (info) {
         return info as SolHotspot
       }
       return null
     },
-    []
+    [getHeliumEntityManagerProgram]
   )
 
   const getHotspotForCurrentChain = useCallback(

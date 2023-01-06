@@ -5,10 +5,9 @@
  */
 
 import Address from '@helium/address'
-import { AssertLocationV2, Transaction } from '@helium/transactions'
+import { AssertLocationV2 } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
 import { geoToH3 } from 'h3-js'
-import { heliumHttpClient } from './httpClient'
 import { Hotspot } from '@helium/http'
 import { SolHotspot } from '../Onboarding/onboardingTypes'
 import { isSolHotspot } from '../Onboarding/useOnboarding'
@@ -71,7 +70,6 @@ export const makeAssertLocTxn = ({
  * @param decimalGain
  * @param elevation
  * @param currentLocation
- * @param dataOnly
  * @param ownerKeypairRaw
  * @param makerAddress
  * @param locationNonceLimit
@@ -83,7 +81,6 @@ export const createAndSignAssertLocationTxn = async ({
   lng,
   decimalGain = 1.2,
   elevation = 0,
-  dataOnly = false,
   ownerKeypairRaw,
   makerAddress,
   isFree,
@@ -112,13 +109,13 @@ export const createAndSignAssertLocationTxn = async ({
     lat,
     lng,
     decimalGain,
+    isFree,
     elevation,
-    dataOnly,
     makerAddress,
     hotspot,
   })
 
-  const keypair = await getKeypair(ownerKeypairRaw)
+  const keypair = getKeypair(ownerKeypairRaw)
   const ownerIsPayer = payer === owner
 
   return locTxn.sign({
@@ -134,7 +131,6 @@ export const createLocationTxn = async ({
   lng,
   decimalGain = 1.2,
   elevation = 0,
-  dataOnly = false,
   makerAddress,
   isFree,
   hotspot,
@@ -145,7 +141,6 @@ export const createLocationTxn = async ({
   lng: number
   decimalGain?: number
   elevation?: number
-  dataOnly?: boolean
   makerAddress: string
   isFree?: boolean
   hotspot?: Hotspot | SolHotspot | null
@@ -154,31 +149,18 @@ export const createLocationTxn = async ({
     throw new Error('Lat Lng invalid')
   }
 
+  const isSol = hotspot && isSolHotspot(hotspot)
+
   const nextLocation = getH3Location(lat, lng)
-  let nextNonce = 0
   let stakingFee = 0
   const antennaGain = decimalGain * 10
 
-  let previousLocation = ''
+  let nextNonce = isSol ? 0 : (hotspot?.speculativeNonce || 0) + 1
 
+  let updatingLocation = !hotspot
   if (hotspot) {
-    if (!isSolHotspot(hotspot)) {
-      previousLocation = hotspot.location || ''
-      const updatingLocation =
-        !previousLocation || previousLocation !== nextLocation
-
-      nextNonce = (hotspot.speculativeNonce || 0) + 1
-
-      if (updatingLocation) {
-        if (dataOnly) {
-          const chainVars = await heliumHttpClient.vars.get()
-          const { stakingFeeTxnAssertLocationDataonlyGatewayV1: fee } =
-            chainVars
-          stakingFee = fee
-        } else {
-          stakingFee = Transaction.stakingFeeTxnAssertLocationV1
-        }
-      }
+    if (!isSol) {
+      updatingLocation = hotspot?.location !== nextLocation
     } else {
       // TODO: Figure out how to get location
       // from noah: location is the u64 of the hex string
@@ -187,7 +169,13 @@ export const createLocationTxn = async ({
     }
   }
 
+  if (updatingLocation) {
+    // Hardcoding for now, will be dynamic at some point
+    stakingFee = 1000000
+  }
+
   const payer = isFree ? makerAddress : owner
+
   return makeAssertLocTxn({
     ownerB58: owner,
     gatewayB58: gateway,

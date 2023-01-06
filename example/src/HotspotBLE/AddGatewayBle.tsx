@@ -1,13 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Button, StyleSheet, Text, View, Alert } from 'react-native'
-import { useHotspotBle } from '../../../src'
 import { getPendingTxn } from '../../appDataClient'
 import {
   getKeypair,
   getSecureItem,
   getSolanaPubKey,
 } from '../Account/secureAccount'
-import { useOnboarding } from '@helium/react-native-sdk'
+import { useHotspotBle, useOnboarding } from '@helium/react-native-sdk'
 
 const AddGatewayBle = () => {
   const { getOnboardingRecord, addGateway } = useOnboarding()
