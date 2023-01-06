@@ -132,41 +132,6 @@ const useOnboarding = (
     [handleError]
   )
 
-  const postPaymentTransaction = useCallback(
-    async (
-      hotspotAddress: string,
-      transaction: string,
-      submitToSolana: boolean = true
-    ) => {
-      const response = await onboardingClient.current.postPaymentTransaction(
-        hotspotAddress,
-        transaction
-      )
-
-      handleError(
-        response,
-        `unable to post payment transaction for ${hotspotAddress}`
-      )
-
-      if (!response.data) {
-        return null
-      }
-
-      if (response.data.solanaTransactions?.length && submitToSolana) {
-        const solanaResponses = await submitAllSolana(
-          response.data.solanaTransactions
-        )
-        return {
-          transaction: response.data.transaction,
-          solanaResponses,
-        }
-      }
-
-      return { transaction: response.data.transaction, solanaResponses: [] }
-    },
-    [handleError, submitAllSolana]
-  )
-
   const getSolHotspotInfo = useCallback(
     async ({
       iotMint,
@@ -191,6 +156,24 @@ const useOnboarding = (
     [getHeliumEntityManagerProgram]
   )
 
+  const getHeliumHotspotInfo = useCallback(
+    async ({
+      hotspotAddress,
+      httpClient,
+    }: {
+      hotspotAddress: string
+      httpClient?: Client
+    }) => {
+      const client = httpClient || heliumHttpClient
+      try {
+        return await client.hotspots.get(hotspotAddress)
+      } catch {
+        return null
+      }
+    },
+    []
+  )
+
   const getHotspotForCurrentChain = useCallback(
     async ({
       hotspotAddress,
@@ -201,7 +184,6 @@ const useOnboarding = (
       userSolPubKey: web3.PublicKey
       httpClient?: Client
     }) => {
-      const client = httpClient || heliumHttpClient
       const migrationStatus = solanaStatus?.migrationStatus
       if (migrationStatus === 'in_progress') {
         throw new Error('Chain migration in progress')
@@ -211,22 +193,18 @@ const useOnboarding = (
         throw new Error('Failed to fetch mint from solana vars')
       }
 
-      try {
-        if (migrationStatus === 'not_started') {
-          return await client.hotspots.get(hotspotAddress)
-        }
-
-        const hotspotInfo = await getSolHotspotInfo({
-          iotMint: solanaVars.iot.mint,
-          hotspotAddress,
-          userSolPubKey,
-        })
-        return hotspotInfo
-      } catch {
-        return null
+      if (migrationStatus === 'not_started') {
+        return getHeliumHotspotInfo({ hotspotAddress, httpClient })
       }
+
+      const hotspotInfo = await getSolHotspotInfo({
+        iotMint: solanaVars.iot.mint,
+        hotspotAddress,
+        userSolPubKey,
+      })
+      return hotspotInfo
     },
-    [getSolHotspotInfo, solanaStatus?.migrationStatus, solanaVars]
+    [getHeliumHotspotInfo, getSolHotspotInfo, solanaStatus, solanaVars]
   )
 
   const addGateway = useCallback(
@@ -240,7 +218,10 @@ const useOnboarding = (
       transaction: string
       userSolPubKey: web3.PublicKey
       httpClient?: Client
-    }) => {
+    }): Promise<{
+      solanaResponses?: string[]
+      pendingTxn?: PendingTransaction
+    }> => {
       const client = httpClient || heliumHttpClient
       const migrationStatus = solanaStatus?.migrationStatus
 
@@ -258,29 +239,47 @@ const useOnboarding = (
         throw new Error('Hotspot already on chain')
       }
 
-      let submitStatus: 'failure' | 'complete' | 'pending' = 'failure'
+      const onboardResponse =
+        await onboardingClient.current.postPaymentTransaction(
+          hotspotAddress,
+          transaction
+        )
 
-      const response = await postPaymentTransaction(hotspotAddress, transaction)
-      if (!response) return null
+      handleError(
+        onboardResponse,
+        `unable to post payment transaction for ${hotspotAddress}`
+      )
 
-      if (migrationStatus === 'complete') {
-        submitStatus = 'complete'
+      if (migrationStatus === 'not_started') {
+        if (!onboardResponse.data?.transaction) {
+          throw new Error('Onboarding server failure - txn missing')
+        }
+        const pendingTxn = await client.transactions.submit(
+          onboardResponse.data?.transaction
+        )
+        return {
+          pendingTxn,
+        }
       }
 
-      let pendingTxn: null | PendingTransaction = null
-      if (response?.transaction && migrationStatus === 'not_started') {
-        pendingTxn = await client.transactions.submit(response.transaction)
-        submitStatus = 'pending'
+      if (!onboardResponse.data?.solanaTransactions) {
+        throw new Error('Onboarding server failure - sol txn missing')
       }
+
+      const solanaResponses = await submitAllSolana(
+        onboardResponse.data.solanaTransactions
+      )
 
       return {
-        pendingTxn,
-        ...response,
-        solanaStatus: solanaStatus?.migrationStatus,
-        submitStatus,
+        solanaResponses,
       }
     },
-    [getHotspotForCurrentChain, postPaymentTransaction, solanaStatus]
+    [
+      getHotspotForCurrentChain,
+      handleError,
+      solanaStatus?.migrationStatus,
+      submitAllSolana,
+    ]
   )
 
   const hasFreeAssert = useCallback(
@@ -333,7 +332,7 @@ const useOnboarding = (
       isFree?: boolean
       transaction: string
       httpClient?: Client
-    }) => {
+    }): Promise<{ solTxId?: string; pendingTxn?: PendingTransaction }> => {
       const migrationStatus = solanaStatus?.migrationStatus
       if (migrationStatus === 'in_progress') {
         throw new Error('Chain transfer in progress')
@@ -342,42 +341,39 @@ const useOnboarding = (
       let transaction = originalTxn
       const client = httpClient || heliumHttpClient
 
-      let submitStatus: 'failure' | 'complete' | 'pending' = 'failure'
-
       if (isFree) {
-        // if assert is free, need to post to onboarding server to have the txn re-signed
-        const response = await postPaymentTransaction(
-          gatewayAddress,
-          transaction.toString(),
-          false
+        const onboardResponse =
+          await onboardingClient.current.postPaymentTransaction(
+            gatewayAddress,
+            transaction
+          )
+
+        handleError(
+          onboardResponse,
+          `unable to post payment transaction for ${gatewayAddress}`
         )
-        if (!response?.transaction) {
+
+        if (!onboardResponse?.data?.transaction) {
           throw new Error('failed to fetch txn from onboarding server')
         }
-        transaction = response.transaction
+        transaction = onboardResponse.data?.transaction
       }
 
-      if (migrationStatus === 'complete') {
-        submitStatus = 'complete'
-      }
-
-      let pendingTxn: null | PendingTransaction = null
       if (migrationStatus === 'not_started') {
-        // submit to helium if transition not started
-        submitStatus = 'pending'
-        pendingTxn = await client.transactions.submit(transaction)
+        const pendingTxn = await client.transactions.submit(transaction)
+        return {
+          pendingTxn,
+        }
       }
 
       // submit to solana
+
       const solTxId = await submitSolana(transaction)
       return {
         solTxId,
-        pendingTxn,
-        submitStatus,
-        solanaStatus: solanaStatus?.migrationStatus,
       }
     },
-    [postPaymentTransaction, solanaStatus, submitSolana]
+    [handleError, solanaStatus?.migrationStatus, submitSolana]
   )
 
   const transferHotspot = useCallback(
@@ -387,7 +383,7 @@ const useOnboarding = (
     }: {
       transaction: string
       httpClient?: Client
-    }) => {
+    }): Promise<{ solTxId?: string; pendingTxn?: PendingTransaction }> => {
       const migrationStatus = solanaStatus?.migrationStatus
       if (migrationStatus === 'in_progress') {
         throw new Error('Chain transfer in progress')
@@ -395,26 +391,18 @@ const useOnboarding = (
 
       const client = httpClient || heliumHttpClient
 
-      let submitStatus: 'failure' | 'complete' | 'pending' = 'failure'
-
-      if (migrationStatus === 'complete') {
-        submitStatus = 'complete'
-      }
-
-      let pendingTxn: null | PendingTransaction = null
       if (migrationStatus === 'not_started') {
         // submit to helium if transition not started
-        submitStatus = 'pending'
-        pendingTxn = await client.transactions.submit(transaction)
+        const pendingTxn = await client.transactions.submit(transaction)
+        return {
+          pendingTxn,
+        }
       }
 
       // submit to solana
       const solTxId = await submitSolana(transaction)
       return {
         solTxId,
-        pendingTxn,
-        submitStatus,
-        solanaStatus: solanaStatus?.migrationStatus,
       }
     },
     [solanaStatus, submitSolana]
@@ -430,7 +418,6 @@ const useOnboarding = (
     getOnboardingRecord,
     getSolHotspotInfo,
     hasFreeAssert,
-    postPaymentTransaction,
     submitAllSolana,
     submitSolana,
     transferHotspot,

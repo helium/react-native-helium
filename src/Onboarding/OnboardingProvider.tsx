@@ -10,7 +10,11 @@ const initialState = {
     transaction: string
     userSolPubKey: web3.PublicKey
     httpClient?: Client
-  }) => null,
+  }) =>
+    new Promise<{
+      solanaResponses?: string[]
+      pendingTxn?: PendingTransaction
+    }>((resolve) => resolve({})),
   assertLocation: async (_opts: {
     gatewayAddress: string
     isFree?: boolean
@@ -18,18 +22,9 @@ const initialState = {
     httpClient?: Client
   }) =>
     new Promise<{
-      solTxId: string
-      pendingTxn: PendingTransaction | null
-      submitStatus: 'failure' | 'complete' | 'pending'
-      solanaStatus: 'complete' | 'not_started'
-    }>((resolve) =>
-      resolve({
-        solTxId: '',
-        pendingTxn: null,
-        submitStatus: 'failure',
-        solanaStatus: 'complete',
-      })
-    ),
+      solTxId?: string
+      pendingTxn?: PendingTransaction
+    }>((resolve) => resolve({})),
   baseUrl: '',
   getHotspotForCurrentChain: async (_opts: {
     hotspotAddress: string
@@ -55,18 +50,9 @@ const initialState = {
   submitSolana: (_txn: string) => new Promise<string>((resolve) => resolve('')),
   transferHotspot: (_opts: { transaction: string; httpClient?: Client }) =>
     new Promise<{
-      solTxId: string
-      pendingTxn: PendingTransaction | null
-      submitStatus: 'failure' | 'complete' | 'pending'
-      solanaStatus: 'complete' | 'not_started'
-    }>((resolve) =>
-      resolve({
-        solTxId: '',
-        pendingTxn: null,
-        submitStatus: 'failure',
-        solanaStatus: 'complete',
-      })
-    ),
+      solTxId?: string
+      pendingTxn?: PendingTransaction
+    }>((resolve) => resolve({})),
 }
 
 const OnboardingContext =

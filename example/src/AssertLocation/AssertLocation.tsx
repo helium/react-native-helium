@@ -33,7 +33,6 @@ const AssertLocation = () => {
   const [elevation, setElevation] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [hash, setHash] = useState('')
-  const [solTxIds, setSolTxIds] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
   const [feeData, setFeeData] = useState<{
@@ -90,20 +89,21 @@ const AssertLocation = () => {
 
     setSubmitted(true)
 
-    const { solanaStatus, solTxId, pendingTxn, submitStatus } =
-      await assertLocation({
-        gatewayAddress,
-        isFree,
-        transaction,
-      })
+    const { solTxId, pendingTxn } = await assertLocation({
+      gatewayAddress,
+      isFree,
+      transaction,
+    })
 
-    setSolTxIds(solTxId)
-    setStatus(submitStatus)
-
-    if (solanaStatus === 'not_started' && pendingTxn) {
+    if (pendingTxn) {
       setHash(pendingTxn.hash)
       setStatus(pendingTxn.status)
       setFailedReason(pendingTxn.failedReason || '')
+    } else if (solTxId) {
+      setHash(solTxId)
+      setStatus('complete')
+    } else {
+      setStatus('fail')
     }
   }, [
     assertLocation,
@@ -229,15 +229,11 @@ const AssertLocation = () => {
           disabled={disabled}
         />
       </View>
-      <Text style={styles.topMargin}>Sol Tx Ids</Text>
-      <Text style={styles.topMargin} selectable>
-        {solTxIds}
-      </Text>
-      <Text style={styles.topMargin}>Pending Txn Hash:</Text>
+      <Text style={styles.topMargin}>Txn</Text>
       <Text style={styles.topMargin} selectable>
         {hash}
       </Text>
-      <Text style={styles.topMargin}>{`Pending Txn Status: ${status}`}</Text>
+      <Text style={styles.topMargin}>{`Txn Status: ${status}`}</Text>
       <Text
         style={styles.topMargin}
       >{`Pending Txn Failed Reason: ${failedReason}`}</Text>

@@ -18,7 +18,6 @@ import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import { OnboardingRecord, Maker } from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
 import BN from 'bn.js'
-import { SolanaStatus } from '../utils/solanaSentinel'
 
 export type SolHotspot = {
   asset: web3.PublicKey
@@ -38,22 +37,17 @@ export interface OnboardingManager {
     userSolPubKey: web3.PublicKey
     httpClient?: Client
   }) => Promise<{
-    solanaStatus?: SolanaStatus
-    submitStatus: 'failure' | 'complete' | 'pending'
-    transaction: string
-    solanaResponses: string[]
-    pendingTxn: PendingTransaction | null
-  } | null>
+    solanaResponses?: string[]
+    pendingTxn?: PendingTransaction
+  }>
   assertLocation: (_opts: {
     gatewayAddress: string
     isFree?: boolean
     transaction: string
     httpClient?: Client
   }) => Promise<{
-    solanaStatus?: SolanaStatus
-    solTxId: string
-    pendingTxn: PendingTransaction | null
-    submitStatus: 'failure' | 'complete' | 'pending'
+    solTxId?: string
+    pendingTxn?: PendingTransaction
   }>
   getHotspotForCurrentChain: (_opts: {
     hotspotAddress: string
@@ -85,17 +79,6 @@ export interface OnboardingManager {
    */
   getMakers: () => Promise<Maker[] | null>
 
-  /**
-   *  Post a payment transaction
-   */
-  postPaymentTransaction: (
-    hotspotAddress: string,
-    transaction: string
-  ) => Promise<{
-    transaction?: string
-    solanaResponses?: string[]
-  } | null>
-
   submitAllSolana: (_txns: string[]) => Promise<string[]>
 
   submitSolana: (_txn: string) => Promise<string>
@@ -106,9 +89,7 @@ export interface OnboardingManager {
     transaction: string
     httpClient?: Client
   }) => Promise<{
-    solTxId: string
-    pendingTxn: PendingTransaction | null
-    submitStatus: 'complete' | 'failure' | 'pending'
-    solanaStatus?: SolanaStatus
+    solTxId?: string
+    pendingTxn?: PendingTransaction
   }>
 }

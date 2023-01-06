@@ -10,7 +10,6 @@ import {
 import { Account, AddGateway, useOnboarding } from '@helium/react-native-sdk'
 import { getPendingTxn } from '../../appDataClient'
 import { getAddressStr, getKeypair } from '../Account/secureAccount'
-import { OnboardingRecord } from '@helium/onboarding'
 import Clipboard from '@react-native-community/clipboard'
 
 const AddGatewayTxn = () => {
@@ -19,8 +18,6 @@ const AddGatewayTxn = () => {
   const [macAddress, setMacAddress] = useState('')
   const [ownerAddress, setOwnerAddress] = useState('')
   const [hotspotAddress, setHotspotAddress] = useState('')
-  const [onboardingRecord, setOnboardingRecord] =
-    useState<OnboardingRecord | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [hash, setHash] = useState('')
   const [solTxIds, setSolTxIds] = useState('')
@@ -31,13 +28,9 @@ const AddGatewayTxn = () => {
   useEffect(() => {
     if (!publicKey) return
 
-    const getRecord = async () => {
-      const record = await getOnboardingRecord(publicKey)
-      if (!record) return
-      setMacAddress(record.macEth0 || 'unknown')
-      setOnboardingRecord(record)
-    }
-    getRecord()
+    getOnboardingRecord(publicKey).then((r) =>
+      setMacAddress(r?.macEth0 || 'unknown')
+    )
   }, [getOnboardingRecord, publicKey])
 
   useEffect(() => {
@@ -55,10 +48,6 @@ const AddGatewayTxn = () => {
 
   const submitOnboardingTxns = useCallback(async () => {
     setSubmitted(true)
-
-    if (!onboardingRecord?.publicAddress) {
-      return
-    }
 
     // construct and publish add gateway
     const keypair = await getKeypair()
@@ -94,7 +83,7 @@ const AddGatewayTxn = () => {
       setSolTxIds(txIds)
       setStatus(`${addGatewayResponse.solanaResponses.length} responses`)
     }
-  }, [addGateway, onboardingRecord?.publicAddress, txnStr])
+  }, [addGateway, txnStr])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
@@ -143,7 +132,7 @@ const AddGatewayTxn = () => {
       <Text style={styles.topMargin} selectable>
         {solTxIds}
       </Text>
-      <Text style={styles.topMargin}>Pending Txn Hash:</Text>
+      <Text style={styles.topMargin}>Txn Hash:</Text>
       <Text style={styles.topMargin} selectable>
         {hash}
       </Text>

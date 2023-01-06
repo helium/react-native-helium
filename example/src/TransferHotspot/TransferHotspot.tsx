@@ -11,7 +11,6 @@ const TransferHotspot = () => {
   const [newOwnerAddress, setNewOwnerAddress] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [hash, setHash] = useState('')
-  const [solTxId, setSolTxId] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
   const { transferHotspot } = useOnboarding()
@@ -40,23 +39,25 @@ const TransferHotspot = () => {
       throw new Error('Error signing transfer txn')
     }
 
-    const response = await transferHotspot({
+    const { pendingTxn, solTxId } = await transferHotspot({
       transaction: signedTxn.toString(),
     })
 
-    if (response?.pendingTxn) {
-      setHash(response.pendingTxn.hash)
-      setStatus(response.pendingTxn.status)
-      setFailedReason(response.pendingTxn.failedReason || '')
-      return
+    if (pendingTxn) {
+      setHash(pendingTxn.hash)
+      setStatus(pendingTxn.status)
+      setFailedReason(pendingTxn.failedReason || '')
+    } else if (solTxId) {
+      setHash(solTxId)
+      setStatus('complete')
+    } else {
+      setStatus('fail')
     }
-
-    setSolTxId(response.solTxId)
   }, [transferHotspot, txnStr])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
-    const pendingTxns = await (await getPendingTxn(hash)).data
+    const pendingTxns = (await getPendingTxn(hash)).data
     if (!pendingTxns.length) return
     setStatus(pendingTxns[0].status)
     setFailedReason(pendingTxns[0].failedReason || '')
@@ -90,15 +91,11 @@ const TransferHotspot = () => {
         disabled={!txnStr || submitted}
         onPress={submitTxn}
       />
-      <Text style={styles.topMargin}>Sol Tx Id</Text>
-      <Text style={styles.topMargin} selectable>
-        {solTxId}
-      </Text>
-      <Text style={styles.topMargin}>Pending Txn Hash:</Text>
+      <Text style={styles.topMargin}>Txn:</Text>
       <Text style={styles.topMargin} selectable>
         {hash}
       </Text>
-      <Text style={styles.topMargin}>{`Pending Txn Status: ${status}`}</Text>
+      <Text style={styles.topMargin}>{`Txn Status: ${status}`}</Text>
       <Text
         style={styles.topMargin}
       >{`Pending Txn Failed Reason: ${failedReason}`}</Text>

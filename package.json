@@ -112,7 +112,8 @@
     "react-native-get-random-values": "^1.7.0",
     "react-native-sodium": "^0.3.9",
     "readable-stream": "^3.6.0",
-    "stream": "^0.0.2"
+    "stream": "^0.0.2",
+    "swr": "^2.0.0"
   },
   "jest": {
     "preset": "react-native",
