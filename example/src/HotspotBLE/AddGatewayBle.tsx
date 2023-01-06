@@ -64,7 +64,7 @@ const AddGatewayBle = () => {
     if (onboardTxn?.solanaResponses) {
       const txIds = onboardTxn.solanaResponses.join(',')
       setSolTxIds(txIds)
-      setStatus(`${txIds.length} responses`)
+      setStatus(`${onboardTxn.solanaResponses.length} responses`)
     }
   }, [
     addGateway,

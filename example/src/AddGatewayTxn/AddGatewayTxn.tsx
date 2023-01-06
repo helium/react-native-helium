@@ -92,7 +92,7 @@ const AddGatewayTxn = () => {
     if (addGatewayResponse?.solanaResponses) {
       const txIds = addGatewayResponse.solanaResponses.join(',')
       setSolTxIds(txIds)
-      setStatus(`${txIds.length} responses`)
+      setStatus(`${addGatewayResponse.solanaResponses.length} responses`)
     }
   }, [addGateway, onboardingRecord?.publicAddress, txnStr])
 
