@@ -17,7 +17,11 @@ import HotspotBleProvider, {
 import OnboardingProvider, {
   useOnboardingContext as useOnboarding,
 } from './Onboarding/OnboardingProvider'
-import { OnboardingManager } from './Onboarding/onboardingTypes'
+import {
+  AssertData,
+  OnboardingManager,
+  SolHotspot,
+} from './Onboarding/onboardingTypes'
 import { Keypair } from '@helium/crypto-react-native'
 import { HotspotBleManager } from './HotspotBle/bleTypes'
 import { State } from 'react-native-ble-plx'
@@ -47,6 +51,7 @@ export {
   AddGateway,
   AddGatewayV1,
   AssertLocationV2,
+  AssertData,
   Balance,
   createHttpClient,
   DataCredits,
@@ -63,6 +68,7 @@ export {
   OnboardingManager,
   OnboardingProvider,
   SecurityTokens,
+  SolHotspot,
   State,
   Transfer,
   TransferHotspotV2,

@@ -71,7 +71,7 @@ export const makeAssertLocTxn = ({
  * @param elevation
  * @param currentLocation
  * @param ownerKeypairRaw
- * @param makerAddress
+ * @param maker
  * @param locationNonceLimit
  */
 export const createAndSignAssertLocationTxn = async ({
@@ -82,9 +82,10 @@ export const createAndSignAssertLocationTxn = async ({
   decimalGain = 1.2,
   elevation = 0,
   ownerKeypairRaw,
-  makerAddress,
+  maker,
   isFree,
   hotspot,
+  dataOnly,
 }: {
   gateway: string
   owner: string
@@ -92,16 +93,16 @@ export const createAndSignAssertLocationTxn = async ({
   lng: number
   decimalGain?: number
   elevation?: number
-  dataOnly?: boolean
   ownerKeypairRaw: SodiumKeyPair
-  makerAddress: string
+  maker: string
   isFree?: boolean
   hotspot?: Hotspot | SolHotspot | null
+  dataOnly?: boolean
 }) => {
   if (!lat || !lng) {
     throw new Error('Lat Lng invalid')
   }
-  const payer = isFree ? makerAddress : owner
+  const payer = isFree ? maker : owner
 
   const locTxn = await createLocationTxn({
     gateway,
@@ -111,8 +112,9 @@ export const createAndSignAssertLocationTxn = async ({
     decimalGain,
     isFree,
     elevation,
-    makerAddress,
+    maker,
     hotspot,
+    dataOnly,
   })
 
   const keypair = getKeypair(ownerKeypairRaw)
@@ -131,9 +133,10 @@ export const createLocationTxn = async ({
   lng,
   decimalGain = 1.2,
   elevation = 0,
-  makerAddress,
+  maker,
   isFree,
   hotspot,
+  dataOnly,
 }: {
   gateway: string
   owner: string
@@ -141,9 +144,10 @@ export const createLocationTxn = async ({
   lng: number
   decimalGain?: number
   elevation?: number
-  makerAddress: string
+  maker: string
   isFree?: boolean
   hotspot?: Hotspot | SolHotspot | null
+  dataOnly?: boolean
 }) => {
   if (!lat || !lng) {
     throw new Error('Lat Lng invalid')
@@ -170,10 +174,14 @@ export const createLocationTxn = async ({
 
   if (updatingLocation) {
     // Hardcoding for now, will be dynamic at some point
-    stakingFee = 1000000
+    if (dataOnly) {
+      stakingFee = 500000
+    } else {
+      stakingFee = 1000000
+    }
   }
 
-  const payer = isFree ? makerAddress : owner
+  const payer = isFree ? maker : owner
 
   return makeAssertLocTxn({
     ownerB58: owner,

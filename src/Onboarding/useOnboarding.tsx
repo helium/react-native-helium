@@ -15,6 +15,20 @@ import { AnchorProvider, Wallet, Program } from '@project-serum/anchor'
 import { SolHotspot } from './onboardingTypes'
 import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
 import { heliumHttpClient } from '../utils/httpClient'
+import { heliumAddressToSolPublicKey, SodiumKeyPair } from '../Account/account'
+import { createAndSignAssertLocationTxn } from '../utils/assertLocation'
+import Balance, {
+  CurrencyType,
+  DataCredits,
+  NetworkTokens,
+  SolTokens,
+  TestNetworkTokens,
+  USDollars,
+} from '@helium/currency'
+import { AssertLocationV2 } from '@helium/transactions'
+
+export const TXN_FEE_IN_LAMPORTS = 5000
+export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
 
 export const isSolHotspot = (
   hotspot: SolHotspot | Hotspot
@@ -59,6 +73,15 @@ const useOnboarding = (
     },
     []
   )
+
+  const getMigrationStatus = useCallback(() => {
+    const migrationStatus = solanaStatus?.migrationStatus
+
+    if (migrationStatus === 'in_progress') {
+      throw new Error('Chain migration in progress')
+    }
+    return migrationStatus
+  }, [solanaStatus?.migrationStatus])
 
   const submitSolana = useCallback(async (txn: string) => {
     const { txid } = await sendAndConfirmWithRetry(
@@ -118,16 +141,19 @@ const useOnboarding = (
 
   const getOnboardingRecord = useCallback(
     async (hotspotAddress: string) => {
-      const response = await onboardingClient.current.getOnboardingRecord(
-        hotspotAddress
-      )
+      try {
+        const response = await onboardingClient.current.getOnboardingRecord(
+          hotspotAddress
+        )
 
-      handleError(
-        response,
-        `unable to get onboarding record for ${hotspotAddress}`
-      )
+        handleError(
+          response,
+          `unable to get onboarding record for ${hotspotAddress}`
+        )
 
-      return response.data
+        return response.data
+      } catch {}
+      return null
     },
     [handleError]
   )
@@ -177,17 +203,26 @@ const useOnboarding = (
   const getHotspotForCurrentChain = useCallback(
     async ({
       hotspotAddress,
+      userHeliumAddress,
       userSolPubKey,
       httpClient,
     }: {
       hotspotAddress: string
-      userSolPubKey: web3.PublicKey
+      userHeliumAddress?: string
+      userSolPubKey?: web3.PublicKey
       httpClient?: Client
     }) => {
-      const migrationStatus = solanaStatus?.migrationStatus
-      if (migrationStatus === 'in_progress') {
-        throw new Error('Chain migration in progress')
+      let pubKey = userSolPubKey
+
+      if (userHeliumAddress && !userSolPubKey) {
+        pubKey = heliumAddressToSolPublicKey(userHeliumAddress)
       }
+
+      if (!pubKey) {
+        throw new Error('User address is required')
+      }
+
+      const migrationStatus = getMigrationStatus()
 
       if (!solanaVars?.iot.mint) {
         throw new Error('Failed to fetch mint from solana vars')
@@ -200,11 +235,11 @@ const useOnboarding = (
       const hotspotInfo = await getSolHotspotInfo({
         iotMint: solanaVars.iot.mint,
         hotspotAddress,
-        userSolPubKey,
+        userSolPubKey: pubKey,
       })
       return hotspotInfo
     },
-    [getHeliumHotspotInfo, getSolHotspotInfo, solanaStatus, solanaVars]
+    [getHeliumHotspotInfo, getMigrationStatus, getSolHotspotInfo, solanaVars]
   )
 
   const addGateway = useCallback(
@@ -223,11 +258,7 @@ const useOnboarding = (
       pendingTxn?: PendingTransaction
     }> => {
       const client = httpClient || heliumHttpClient
-      const migrationStatus = solanaStatus?.migrationStatus
-
-      if (migrationStatus === 'in_progress') {
-        throw new Error('Chain transfer in progress')
-      }
+      const migrationStatus = getMigrationStatus()
 
       const hotspotExists = !!(await getHotspotForCurrentChain({
         hotspotAddress,
@@ -277,7 +308,7 @@ const useOnboarding = (
     [
       getHotspotForCurrentChain,
       handleError,
-      solanaStatus?.migrationStatus,
+      getMigrationStatus,
       submitAllSolana,
     ]
   )
@@ -321,6 +352,162 @@ const useOnboarding = (
     [getOnboardingRecord]
   )
 
+  const getBalances = useCallback(
+    async ({
+      address,
+      httpClient,
+    }: {
+      address: string
+      httpClient?: Client
+    }) => {
+      const key = heliumAddressToSolPublicKey(address)
+      const solBalance = await solConnection.current?.getBalance(key)
+
+      const migrationStatus = getMigrationStatus()
+
+      if (migrationStatus === 'complete') {
+        // GET hnt Balance from solana
+        //TODO: GET hnt Balance from solana
+        return {
+          hnt: undefined,
+          sol: new Balance(solBalance, CurrencyType.solTokens),
+        }
+      } else {
+        // GET hnt balance from helium
+        const client = httpClient || heliumHttpClient
+        const heliumBalances = await client.accounts.get(address)
+        return {
+          hnt: heliumBalances.balance,
+          sol: new Balance(solBalance, CurrencyType.solTokens),
+        }
+      }
+    },
+    [getMigrationStatus]
+  )
+
+  const getAssertData = useCallback(
+    async ({
+      gateway,
+      owner,
+      maker,
+      lat,
+      lng,
+      decimalGain,
+      elevation,
+      ownerKeypairRaw,
+      httpClient,
+      dataOnly,
+    }: {
+      gateway: string
+      owner: string
+      maker: string
+      lat: number
+      lng: number
+      decimalGain?: number
+      elevation?: number
+      ownerKeypairRaw: SodiumKeyPair
+      httpClient?: Client
+      dataOnly?: boolean
+    }): Promise<{
+      balances?: {
+        hnt: Balance<NetworkTokens | TestNetworkTokens> | undefined
+        sol: Balance<SolTokens>
+      }
+      hasSufficientBalance: boolean
+      hotspot: SolHotspot | Hotspot | null
+      isFree: boolean
+      totalStakingAmountDC?: Balance<DataCredits>
+      totalStakingAmountHnt?: Balance<NetworkTokens>
+      totalStakingAmountUsd?: Balance<USDollars>
+      transaction?: AssertLocationV2
+    }> => {
+      const client = httpClient || heliumHttpClient
+      const migrationStatus = getMigrationStatus()
+
+      const hotspot = await getHotspotForCurrentChain({
+        hotspotAddress: gateway,
+        userHeliumAddress: owner,
+      })
+      const isFree = await hasFreeAssert({ hotspot })
+      const transaction = await createAndSignAssertLocationTxn({
+        gateway,
+        owner,
+        lat,
+        lng,
+        decimalGain,
+        elevation,
+        ownerKeypairRaw,
+        maker,
+        hotspot,
+        isFree,
+        dataOnly,
+      })
+
+      const balances = await getBalances({ address: owner, httpClient })
+      let hasSufficientBalance = true
+
+      // TODO: Where does oracle price come from in solana world?
+      const oraclePrice = await client.oracle.getCurrentPrice()
+
+      if (migrationStatus === 'not_started') {
+        // if not free and we're still on helium the user needs hnt for fee and staking fee
+        const totalStakingAmountDC = new Balance(
+          (transaction.stakingFee || 0) + (transaction.fee || 0),
+          CurrencyType.dataCredit
+        )
+        const totalStakingAmountHnt = totalStakingAmountDC.toNetworkTokens(
+          oraclePrice.price
+        )
+        const totalStakingAmountUsd = totalStakingAmountDC.toUsd(
+          oraclePrice.price
+        )
+        hasSufficientBalance =
+          (balances.hnt?.integerBalance || 0) >=
+          totalStakingAmountHnt.integerBalance
+
+        return {
+          balances,
+          hasSufficientBalance,
+          hotspot,
+          isFree,
+          totalStakingAmountDC,
+          totalStakingAmountHnt,
+          totalStakingAmountUsd,
+          transaction,
+        }
+      }
+
+      // if not free and we're on solana the user needs sol for txn fee and hnt for staking fee
+      const hasSufficientSol = balances.sol.integerBalance > TXN_FEE_IN_SOL
+      const totalStakingAmountDC = new Balance(
+        transaction.stakingFee || 0,
+        CurrencyType.dataCredit
+      )
+      const totalStakingAmountHnt = totalStakingAmountDC.toNetworkTokens(
+        oraclePrice.price
+      )
+      const totalStakingAmountUsd = totalStakingAmountDC.toUsd(
+        oraclePrice.price
+      )
+      const hasSufficientHnt =
+        (balances.hnt?.integerBalance || 0) >=
+        totalStakingAmountHnt.integerBalance
+      hasSufficientBalance = hasSufficientHnt && hasSufficientSol
+
+      return {
+        balances,
+        hasSufficientBalance,
+        hotspot,
+        isFree,
+        totalStakingAmountDC,
+        totalStakingAmountHnt,
+        totalStakingAmountUsd,
+        transaction,
+      }
+    },
+    [getBalances, getHotspotForCurrentChain, hasFreeAssert, getMigrationStatus]
+  )
+
   const assertLocation = useCallback(
     async ({
       gatewayAddress,
@@ -333,10 +520,7 @@ const useOnboarding = (
       transaction: string
       httpClient?: Client
     }): Promise<{ solTxId?: string; pendingTxn?: PendingTransaction }> => {
-      const migrationStatus = solanaStatus?.migrationStatus
-      if (migrationStatus === 'in_progress') {
-        throw new Error('Chain transfer in progress')
-      }
+      const migrationStatus = getMigrationStatus()
 
       let transaction = originalTxn
       const client = httpClient || heliumHttpClient
@@ -373,7 +557,7 @@ const useOnboarding = (
         solTxId,
       }
     },
-    [handleError, solanaStatus?.migrationStatus, submitSolana]
+    [handleError, getMigrationStatus, submitSolana]
   )
 
   const transferHotspot = useCallback(
@@ -384,10 +568,7 @@ const useOnboarding = (
       transaction: string
       httpClient?: Client
     }): Promise<{ solTxId?: string; pendingTxn?: PendingTransaction }> => {
-      const migrationStatus = solanaStatus?.migrationStatus
-      if (migrationStatus === 'in_progress') {
-        throw new Error('Chain transfer in progress')
-      }
+      const migrationStatus = getMigrationStatus()
 
       const client = httpClient || heliumHttpClient
 
@@ -405,13 +586,14 @@ const useOnboarding = (
         solTxId,
       }
     },
-    [solanaStatus, submitSolana]
+    [getMigrationStatus, submitSolana]
   )
 
   return {
     addGateway,
     assertLocation,
     baseUrl,
+    getAssertData,
     getHotspotForCurrentChain,
     getMakers,
     getMinFirmware,

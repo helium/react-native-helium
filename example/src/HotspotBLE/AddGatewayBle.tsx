@@ -74,7 +74,7 @@ const AddGatewayBle = () => {
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
-    const pendingTxns = await (await getPendingTxn(hash)).data
+    const pendingTxns = (await getPendingTxn(hash)).data
     if (!pendingTxns.length) return
 
     setStatus(pendingTxns[0].status)

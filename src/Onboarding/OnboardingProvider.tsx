@@ -3,6 +3,15 @@ import React, { createContext, ReactNode, useContext } from 'react'
 import { OnboardingManager, SolHotspot } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
 import * as web3 from '@solana/web3.js'
+import { SodiumKeyPair } from '../Account/account'
+import Balance, {
+  DataCredits,
+  NetworkTokens,
+  SolTokens,
+  TestNetworkTokens,
+  USDollars,
+} from '@helium/currency'
+import { AssertLocationV2 } from '@helium/transactions'
 
 const initialState = {
   addGateway: async (_opts: {
@@ -26,9 +35,40 @@ const initialState = {
       pendingTxn?: PendingTransaction
     }>((resolve) => resolve({})),
   baseUrl: '',
+  getAssertData: (_opts: {
+    gateway: string
+    owner: string
+    maker: string
+    lat: number
+    lng: number
+    decimalGain?: number
+    elevation?: number
+    ownerKeypairRaw: SodiumKeyPair
+    httpClient?: Client
+  }) =>
+    new Promise<{
+      balances?: {
+        hnt: Balance<NetworkTokens | TestNetworkTokens> | undefined
+        sol: Balance<SolTokens>
+      }
+      hasSufficientBalance: boolean
+      hotspot: SolHotspot | Hotspot | null
+      isFree: boolean
+      totalStakingAmountDC?: Balance<DataCredits>
+      totalStakingAmountHnt?: Balance<NetworkTokens>
+      totalStakingAmountUsd?: Balance<USDollars>
+      transaction?: AssertLocationV2
+    }>((resolve) =>
+      resolve({
+        hasSufficientBalance: true,
+        isFree: true,
+        hotspot: null,
+      })
+    ),
   getHotspotForCurrentChain: async (_opts: {
     hotspotAddress: string
-    userSolPubKey: web3.PublicKey
+    userHeliumAddress?: string
+    userSolPubKey?: web3.PublicKey
     httpClient?: Client
   }) => null,
   getMakers: async () => [],

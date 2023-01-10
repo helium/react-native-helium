@@ -14,10 +14,19 @@
  * See the [example app](https://github.com/helium/react-native-helium/blob/main/example/src/HotspotBLE/ScanHotspots.tsx)
  * for a working demo of scanning for Hotspots.
  */
+import Balance, {
+  DataCredits,
+  NetworkTokens,
+  SolTokens,
+  TestNetworkTokens,
+  USDollars,
+} from '@helium/currency'
 import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import { OnboardingRecord, Maker } from '@helium/onboarding'
+import { AssertLocationV2 } from '@helium/transactions'
 import * as web3 from '@solana/web3.js'
 import BN from 'bn.js'
+import { SodiumKeyPair } from '../Account/account'
 
 export type SolHotspot = {
   asset: web3.PublicKey
@@ -28,6 +37,20 @@ export type SolHotspot = {
   isFullHotspot: boolean
   location: BN | null
   numLocationAsserts: number
+}
+
+export type AssertData = {
+  balances?: {
+    hnt: Balance<NetworkTokens | TestNetworkTokens> | undefined
+    sol: Balance<SolTokens>
+  }
+  hasSufficientBalance: boolean
+  hotspot: SolHotspot | Hotspot | null
+  isFree: boolean
+  totalStakingAmountDC?: Balance<DataCredits>
+  totalStakingAmountHnt?: Balance<NetworkTokens>
+  totalStakingAmountUsd?: Balance<USDollars>
+  transaction?: AssertLocationV2
 }
 
 export interface OnboardingManager {
@@ -49,9 +72,21 @@ export interface OnboardingManager {
     solTxId?: string
     pendingTxn?: PendingTransaction
   }>
+  getAssertData: (_opts: {
+    gateway: string
+    owner: string
+    maker: string
+    lat: number
+    lng: number
+    decimalGain?: number
+    elevation?: number
+    ownerKeypairRaw: SodiumKeyPair
+    httpClient?: Client
+  }) => Promise<AssertData>
   getHotspotForCurrentChain: (_opts: {
     hotspotAddress: string
-    userSolPubKey: web3.PublicKey
+    userHeliumAddress?: string
+    userSolPubKey?: web3.PublicKey
     httpClient?: Client
   }) => Promise<SolHotspot | Hotspot | null>
   getSolHotspotInfo: (_opts: {

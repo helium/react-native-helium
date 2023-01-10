@@ -1,56 +1,51 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
-import {
-  Account as AccountUtil,
-  Location,
-  useOnboarding,
-} from '@helium/react-native-sdk'
+import { AssertData, useOnboarding } from '@helium/react-native-sdk'
 import Address from '@helium/address'
 import { getPendingTxn } from '../../appDataClient'
 import { getAddressStr, getKeypair } from '../Account/secureAccount'
-import type {
-  Balance,
-  DataCredits,
-  NetworkTokens,
-  USDollars,
-} from '@helium/currency'
 import Input from '../Input'
 import animalName from 'angry-purple-tiger'
 import Config from 'react-native-config'
 
 const AssertLocation = () => {
-  const {
-    getOnboardingRecord,
-    hasFreeAssert,
-    getHotspotForCurrentChain,
-    assertLocation,
-  } = useOnboarding()
+  const { getOnboardingRecord, assertLocation, getAssertData } = useOnboarding()
   const [gatewayAddress, setGatewayAddress] = useState('')
   const [gatewayName, setGatewayName] = useState('')
-  const [lat, setLat] = useState('')
-  const [lng, setLng] = useState('')
-  const [gain, setGain] = useState('')
-  const [elevation, setElevation] = useState('')
+  const [lat, setLat] = useState<string>()
+  const [lng, setLng] = useState<string>()
+  const [gain, setGain] = useState<string>()
+  const [elevation, setElevation] = useState<string>()
   const [submitted, setSubmitted] = useState(false)
   const [hash, setHash] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
-  const [feeData, setFeeData] = useState<{
-    isFree: boolean
-    hasSufficientBalance: boolean
-    remainingFreeAsserts: number
-    totalStakingAmount: Balance<NetworkTokens>
-    totalStakingAmountDC: Balance<DataCredits>
-    totalStakingAmountUsd: Balance<USDollars>
-  }>()
+  const [assertData, setAssertData] = useState<AssertData>()
+
+  const updateAssertData = useCallback(async () => {
+    if (!gatewayAddress || !lat || !lng) {
+      setAssertData(undefined)
+      return
+    }
+
+    const userAddress = await getAddressStr()
+    const ownerKeypairRaw = await getKeypair()
+
+    const data = await getAssertData({
+      decimalGain: gain ? parseFloat(gain) : undefined,
+      elevation: elevation ? parseFloat(elevation) : undefined,
+      gateway: gatewayAddress,
+      lat: parseFloat(lat),
+      lng: parseFloat(lng),
+      maker: Config.ONBOARDING_MAKER_ADDRESS || '',
+      owner: userAddress,
+      ownerKeypairRaw,
+    })
+    setAssertData(data)
+  }, [elevation, gain, gatewayAddress, getAssertData, lat, lng])
 
   useEffect(() => {
     if (!Address.isValid(gatewayAddress)) {
-      setFeeData(undefined)
-      setLat('')
-      setLng('')
-      setGain('')
-      setElevation('')
       return
     }
 
@@ -58,41 +53,16 @@ const AssertLocation = () => {
   }, [gatewayAddress, getOnboardingRecord])
 
   const handleAssert = useCallback(async () => {
-    const userAddress = await getAddressStr()
-    const userSolPubKey = AccountUtil.heliumAddressToSolPublicKey(userAddress)
-
-    const hotspot = await getHotspotForCurrentChain({
-      userSolPubKey,
-      hotspotAddress: gatewayAddress,
-    })
-
-    const isFree = await hasFreeAssert({
-      hotspot,
-    })
-
-    const ownerKeypairRaw = await getKeypair()
-
-    const transaction = (
-      await Location.createAndSignAssertLocationTxn({
-        hotspot,
-        gateway: gatewayAddress,
-        owner: userAddress,
-        lat: parseFloat(lat),
-        lng: parseFloat(lng),
-        decimalGain: parseFloat(gain),
-        elevation: parseFloat(elevation),
-        ownerKeypairRaw,
-        makerAddress: Config.ONBOARDING_MAKER_ADDRESS || '',
-        isFree,
-      })
-    ).toString()
+    if (!assertData?.transaction) {
+      return
+    }
 
     setSubmitted(true)
 
     const { solTxId, pendingTxn } = await assertLocation({
       gatewayAddress,
-      isFree,
-      transaction,
+      isFree: assertData?.isFree,
+      transaction: assertData?.transaction?.toString(),
     })
 
     if (pendingTxn) {
@@ -105,16 +75,7 @@ const AssertLocation = () => {
     } else {
       setStatus('fail')
     }
-  }, [
-    assertLocation,
-    elevation,
-    gain,
-    gatewayAddress,
-    getHotspotForCurrentChain,
-    hasFreeAssert,
-    lat,
-    lng,
-  ])
+  }, [assertData, assertLocation, gatewayAddress])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
@@ -132,11 +93,11 @@ const AssertLocation = () => {
   }, [updateTxnStatus])
 
   const disabled = useMemo(() => {
-    if (!lat || !lng || !gatewayAddress || submitted) {
+    if (!assertData || submitted) {
       return true
     }
     return false
-  }, [gatewayAddress, lat, lng, submitted])
+  }, [assertData, submitted])
 
   return (
     <View style={styles.container}>
@@ -144,7 +105,10 @@ const AssertLocation = () => {
         title={`Gateway${gatewayName ? `: ${gatewayName}` : ''}`}
         inputProps={{
           editable: !submitted,
-          onChangeText: setGatewayAddress,
+          onChangeText: (t) => {
+            setAssertData(undefined)
+            setGatewayAddress(t)
+          },
           value: gatewayAddress,
           placeholder: 'Enter Gateway Address',
           style: styles.input,
@@ -157,7 +121,10 @@ const AssertLocation = () => {
           title="Lat"
           inputProps={{
             editable: !submitted,
-            onChangeText: setLat,
+            onChangeText: (t) => {
+              setAssertData(undefined)
+              setLat(t)
+            },
             value: lat,
             placeholder: 'Lat',
             style: styles.input,
@@ -169,7 +136,10 @@ const AssertLocation = () => {
           title="Lng"
           inputProps={{
             editable: !submitted,
-            onChangeText: setLng,
+            onChangeText: (t) => {
+              setAssertData(undefined)
+              setLng(t)
+            },
             value: lng,
             placeholder: 'Lng',
             style: styles.input,
@@ -183,7 +153,10 @@ const AssertLocation = () => {
           title="Gain"
           inputProps={{
             editable: !submitted,
-            onChangeText: setGain,
+            onChangeText: (t) => {
+              setAssertData(undefined)
+              setGain(t)
+            },
             value: gain,
             placeholder: 'Gain',
             style: styles.input,
@@ -195,7 +168,10 @@ const AssertLocation = () => {
           title="Elevation"
           inputProps={{
             editable: !submitted,
-            onChangeText: setElevation,
+            onChangeText: (t) => {
+              setAssertData(undefined)
+              setElevation(t)
+            },
             value: elevation,
             placeholder: 'Elevation',
             style: styles.input,
@@ -204,24 +180,27 @@ const AssertLocation = () => {
         />
       </View>
 
-      {feeData && (
+      {assertData && (
         <>
           <Text style={styles.heading}>Amount to assert hotspot location</Text>
-          <Text style={styles.text}>{`isFree: ${feeData.isFree}`}</Text>
+          <Text style={styles.text}>{`isFree: ${assertData.isFree}`}</Text>
           <Text
             style={styles.text}
-          >{`hasSufficientBalance: ${feeData.hasSufficientBalance}`}</Text>
+          >{`hasSufficientBalance: ${assertData.hasSufficientBalance}`}</Text>
           <Text
             style={styles.text}
-          >{`totalStakingAmount: ${feeData.totalStakingAmount.toString()}`}</Text>
+          >{`totalStakingAmount: ${assertData.totalStakingAmountHnt?.toString()}`}</Text>
           <Text
             style={styles.text}
-          >{`totalStakingAmountDC: ${feeData.totalStakingAmountDC.toString()}`}</Text>
+          >{`totalStakingAmountDC: ${assertData.totalStakingAmountDC?.toString()}`}</Text>
           <Text
             style={styles.text}
-          >{`totalStakingAmountUSD: ${feeData.totalStakingAmountUsd.toString()}`}</Text>
+          >{`totalStakingAmountUSD: ${assertData.totalStakingAmountUsd?.toString()}`}</Text>
         </>
       )}
+      <View style={styles.buttonRow}>
+        <Button title="Update Assert Data" onPress={updateAssertData} />
+      </View>
       <View style={styles.buttonRow}>
         <Button
           title="Assert Location"
