@@ -23,7 +23,7 @@ const AddGatewayTxn = () => {
   const [solTxIds, setSolTxIds] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
-  const { getOnboardingRecord, addGateway } = useOnboarding()
+  const { getOnboardingRecord, submitAddGateway } = useOnboarding()
 
   useEffect(() => {
     if (!publicKey) return
@@ -65,7 +65,7 @@ const AddGatewayTxn = () => {
 
     const userSolPubKey = Account.heliumAddressToSolPublicKey(userAddress)
 
-    const addGatewayResponse = await addGateway({
+    const addGatewayResponse = await submitAddGateway({
       hotspotAddress: txnOwnerSigned.gateway.b58,
       transaction: txnOwnerSigned.toString(),
       userSolPubKey,
@@ -83,7 +83,7 @@ const AddGatewayTxn = () => {
       setSolTxIds(txIds)
       setStatus(`${addGatewayResponse.solanaResponses.length} responses`)
     }
-  }, [addGateway, txnStr])
+  }, [submitAddGateway, txnStr])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return

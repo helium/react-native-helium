@@ -9,7 +9,7 @@ import {
 import { useHotspotBle, useOnboarding } from '@helium/react-native-sdk'
 
 const AddGatewayBle = () => {
-  const { getOnboardingRecord, addGateway } = useOnboarding()
+  const { getOnboardingRecord, submitAddGateway } = useOnboarding()
   const { createAndSignGatewayTxn, getOnboardingAddress } = useHotspotBle()
   const [hash, setHash] = useState('')
   const [solTxIds, setSolTxIds] = useState('')
@@ -47,7 +47,7 @@ const AddGatewayBle = () => {
     }
 
     const userSolPubKey = await getSolanaPubKey(keypair.sk)
-    const onboardTxn = await addGateway({
+    const onboardTxn = await submitAddGateway({
       hotspotAddress: txnOwnerSigned.gateway.b58,
       transaction: txnOwnerSigned.toString(),
       userSolPubKey,
@@ -66,7 +66,7 @@ const AddGatewayBle = () => {
       setStatus(`${onboardTxn.solanaResponses.length} responses`)
     }
   }, [
-    addGateway,
+    submitAddGateway,
     createAndSignGatewayTxn,
     getOnboardingAddress,
     getOnboardingRecord,

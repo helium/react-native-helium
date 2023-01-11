@@ -7,7 +7,7 @@ import { SodiumKeyPair } from '../Account/account'
 import Balance, { CurrencyType } from '@helium/currency'
 
 const initialState = {
-  addGateway: async (_opts: {
+  submitAddGateway: async (_opts: {
     hotspotAddress: string
     transaction: string
     userSolPubKey?: web3.PublicKey
@@ -70,7 +70,10 @@ const initialState = {
       pendingTxn?: PendingTransaction
     }>((resolve) => resolve({})),
   submitSolana: (_txn: string) => new Promise<string>((resolve) => resolve('')),
-  transferHotspot: (_opts: { transaction: string; httpClient?: Client }) =>
+  submitTransferHotspot: (_opts: {
+    transaction: string
+    httpClient?: Client
+  }) =>
     new Promise<{
       solTxId?: string
       pendingTxn?: PendingTransaction

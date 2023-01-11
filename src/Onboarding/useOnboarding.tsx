@@ -238,7 +238,7 @@ const useOnboarding = (
     [getHeliumHotspotInfo, getMigrationStatus, getSolHotspotInfo, solanaVars]
   )
 
-  const addGateway = useCallback(
+  const submitAddGateway = useCallback(
     async ({
       hotspotAddress,
       transaction,
@@ -269,21 +269,21 @@ const useOnboarding = (
         throw new Error('Hotspot already on chain')
       }
 
-      const onboardResponse =
-        await onboardingClient.current.postPaymentTransaction(
-          hotspotAddress,
-          transaction
-        )
-
-      handleError(
-        onboardResponse,
-        `unable to post payment transaction for ${hotspotAddress}`
-      )
-
       if (migrationStatus === 'not_started') {
+        const onboardResponse =
+          await onboardingClient.current.postPaymentTransaction(
+            hotspotAddress,
+            transaction
+          )
+        handleError(
+          onboardResponse,
+          `unable to post payment transaction for ${hotspotAddress}`
+        )
         if (!onboardResponse.data?.transaction) {
           throw new Error('Onboarding server failure - txn missing')
         }
+
+        // txn is now payerSignature is now signed by the maker, time to submit
         const pendingTxn = await client.transactions.submit(
           onboardResponse.data?.transaction
         )
@@ -293,25 +293,14 @@ const useOnboarding = (
       }
 
       // TODO: Update to use onboard server v3
-
-      if (!onboardResponse.data?.solanaTransactions) {
-        throw new Error('Onboarding server failure - sol txn missing')
-      }
-
-      const solanaResponses = await submitAllSolana(
-        onboardResponse.data.solanaTransactions
-      )
-
+      // 1. submit txn (signed by gateway and owner) to v3 onboard server
+      // 2. submit to solana
+      // 3. Return txn id
       return {
-        solanaResponses,
+        solanaResponses: [],
       }
     },
-    [
-      getHotspotForCurrentChain,
-      handleError,
-      getMigrationStatus,
-      submitAllSolana,
-    ]
+    [getMigrationStatus, getHotspotForCurrentChain, handleError]
   )
 
   const hasFreeAssert = useCallback(
@@ -583,7 +572,7 @@ const useOnboarding = (
     ]
   )
 
-  const transferHotspot = useCallback(
+  const submitTransferHotspot = useCallback(
     async ({
       transaction,
       httpClient,
@@ -613,8 +602,6 @@ const useOnboarding = (
   )
 
   return {
-    addGateway,
-    submitAssertLocation,
     baseUrl,
     getAssertData,
     getHotspotForCurrentChain,
@@ -623,9 +610,11 @@ const useOnboarding = (
     getOnboardingRecord,
     getSolHotspotInfo,
     hasFreeAssert,
+    submitAddGateway,
     submitAllSolana,
+    submitAssertLocation,
     submitSolana,
-    transferHotspot,
+    submitTransferHotspot,
   }
 }
 

@@ -13,7 +13,7 @@ const TransferHotspot = () => {
   const [hash, setHash] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
-  const { transferHotspot } = useOnboarding()
+  const { submitTransferHotspot } = useOnboarding()
 
   useEffect(() => {
     if (!txnStr) return
@@ -39,7 +39,7 @@ const TransferHotspot = () => {
       throw new Error('Error signing transfer txn')
     }
 
-    const { pendingTxn, solTxId } = await transferHotspot({
+    const { pendingTxn, solTxId } = await submitTransferHotspot({
       transaction: signedTxn.toString(),
     })
 
@@ -53,7 +53,7 @@ const TransferHotspot = () => {
     } else {
       setStatus('fail')
     }
-  }, [transferHotspot, txnStr])
+  }, [submitTransferHotspot, txnStr])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return

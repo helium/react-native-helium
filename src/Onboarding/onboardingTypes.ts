@@ -56,7 +56,7 @@ export type AssertData = {
 }
 
 export interface OnboardingManager {
-  addGateway: (_opts: {
+  submitAddGateway: (_opts: {
     hotspotAddress: string
     transaction: string
     userSolPubKey?: web3.PublicKey
@@ -122,7 +122,7 @@ export interface OnboardingManager {
 
   baseUrl?: string
 
-  transferHotspot: (_opts: {
+  submitTransferHotspot: (_opts: {
     transaction: string
     httpClient?: Client
   }) => Promise<{
