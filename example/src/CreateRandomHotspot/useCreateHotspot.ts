@@ -53,6 +53,7 @@ const useCreateRandomHotspot = () => {
 
     await sleep(2000)
 
+    // TODO: Remove??
     await axios.get(`${baseUrl}/hotspots/${onboardingKey}`)
 
     await sleep(2000)

@@ -243,11 +243,13 @@ const useOnboarding = (
       hotspotAddress,
       transaction,
       userSolPubKey,
+      userHeliumAddress,
       httpClient,
     }: {
       hotspotAddress: string
+      userHeliumAddress?: string
       transaction: string
-      userSolPubKey: web3.PublicKey
+      userSolPubKey?: web3.PublicKey
       httpClient?: Client
     }): Promise<{
       solanaResponses?: string[]
@@ -260,6 +262,7 @@ const useOnboarding = (
         hotspotAddress,
         userSolPubKey,
         httpClient: client,
+        userHeliumAddress,
       }))
 
       if (hotspotExists) {
@@ -288,6 +291,8 @@ const useOnboarding = (
           pendingTxn,
         }
       }
+
+      // TODO: Update to use onboard server v3
 
       if (!onboardResponse.data?.solanaTransactions) {
         throw new Error('Onboarding server failure - sol txn missing')
@@ -408,14 +413,13 @@ const useOnboarding = (
       const client = httpClient || heliumHttpClient
       const migrationStatus = getMigrationStatus()
       const isSol = migrationStatus === 'complete'
-
-      // TODO: Why is this needed?
       const gain = decimalGain * 10
 
       const hotspot = await getHotspotForCurrentChain({
         hotspotAddress: gateway,
         userHeliumAddress: owner,
       })
+
       const isFree = await hasFreeAssert({ hotspot })
 
       const nextLocation = getH3Location(lat, lng)
@@ -468,24 +472,6 @@ const useOnboarding = (
           (balances.hnt?.integerBalance || 0) >=
           totalStakingAmountHnt.integerBalance
 
-        if (isFree) {
-          const onboardResponse =
-            await onboardingClient.current.postPaymentTransaction(
-              gateway,
-              transaction.toString()
-            )
-
-          handleError(
-            onboardResponse,
-            `unable to post payment transaction for ${gateway}`
-          )
-
-          if (!onboardResponse?.data?.transaction) {
-            throw new Error('failed to fetch txn from onboarding server')
-          }
-          txnStr = onboardResponse.data?.transaction
-        }
-
         return {
           balances,
           hasSufficientBalance,
@@ -533,29 +519,50 @@ const useOnboarding = (
         transaction: '', // TODO: Submit to onboarding server v3 to get solana txn, then sign it
       }
     },
-    [
-      getMigrationStatus,
-      getHotspotForCurrentChain,
-      hasFreeAssert,
-      getBalances,
-      handleError,
-    ]
+    [getMigrationStatus, getHotspotForCurrentChain, hasFreeAssert, getBalances]
   )
 
   const submitAssertLocation = useCallback(
     async ({
       transaction,
       httpClient,
+      gateway,
     }: {
       transaction: string
       httpClient?: Client
+      gateway: string
     }): Promise<{ solTxId?: string; pendingTxn?: PendingTransaction }> => {
       const migrationStatus = getMigrationStatus()
 
       const client = httpClient || heliumHttpClient
 
       if (migrationStatus === 'not_started') {
-        const pendingTxn = await client.transactions.submit(transaction)
+        let txnStr = transaction
+
+        const hotspot = await getHeliumHotspotInfo({
+          hotspotAddress: gateway,
+          httpClient,
+        })
+
+        const isFree = await hasFreeAssert({ hotspot })
+        if (isFree) {
+          const onboardResponse =
+            await onboardingClient.current.postPaymentTransaction(
+              gateway,
+              transaction.toString()
+            )
+
+          handleError(
+            onboardResponse,
+            `unable to post payment transaction for ${gateway}`
+          )
+
+          if (!onboardResponse?.data?.transaction) {
+            throw new Error('failed to fetch txn from onboarding server')
+          }
+          txnStr = onboardResponse.data?.transaction
+        }
+        const pendingTxn = await client.transactions.submit(txnStr)
         return {
           pendingTxn,
         }
@@ -567,7 +574,13 @@ const useOnboarding = (
         solTxId,
       }
     },
-    [getMigrationStatus, submitSolana]
+    [
+      getHeliumHotspotInfo,
+      getMigrationStatus,
+      handleError,
+      hasFreeAssert,
+      submitSolana,
+    ]
   )
 
   const transferHotspot = useCallback(

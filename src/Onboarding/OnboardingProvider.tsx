@@ -10,7 +10,8 @@ const initialState = {
   addGateway: async (_opts: {
     hotspotAddress: string
     transaction: string
-    userSolPubKey: web3.PublicKey
+    userSolPubKey?: web3.PublicKey
+    userHeliumAddress?: string
     httpClient?: Client
   }) =>
     new Promise<{
@@ -61,6 +62,7 @@ const initialState = {
     new Promise<string[]>((resolve) => resolve([''])),
   submitAssertLocation: async (_opts: {
     transaction: string
+    gateway: string
     httpClient?: Client
   }) =>
     new Promise<{

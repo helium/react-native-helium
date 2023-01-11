@@ -62,6 +62,7 @@ const AssertLocation = () => {
 
     const { solTxId, pendingTxn } = await submitAssertLocation({
       transaction: assertData.transaction,
+      gateway: gatewayAddress,
     })
 
     if (pendingTxn) {
@@ -74,7 +75,7 @@ const AssertLocation = () => {
     } else {
       setStatus('fail')
     }
-  }, [assertData, submitAssertLocation])
+  }, [assertData, gatewayAddress, submitAssertLocation])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
