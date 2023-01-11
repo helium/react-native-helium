@@ -9,7 +9,8 @@ import animalName from 'angry-purple-tiger'
 import Config from 'react-native-config'
 
 const AssertLocation = () => {
-  const { getOnboardingRecord, assertLocation, getAssertData } = useOnboarding()
+  const { getOnboardingRecord, submitAssertLocation, getAssertData } =
+    useOnboarding()
   const [gatewayAddress, setGatewayAddress] = useState('')
   const [gatewayName, setGatewayName] = useState('')
   const [lat, setLat] = useState<string>()
@@ -59,10 +60,8 @@ const AssertLocation = () => {
 
     setSubmitted(true)
 
-    const { solTxId, pendingTxn } = await assertLocation({
-      gatewayAddress,
-      isFree: assertData?.isFree,
-      transaction: assertData?.transaction?.toString(),
+    const { solTxId, pendingTxn } = await submitAssertLocation({
+      transaction: assertData.transaction,
     })
 
     if (pendingTxn) {
@@ -75,7 +74,7 @@ const AssertLocation = () => {
     } else {
       setStatus('fail')
     }
-  }, [assertData, assertLocation, gatewayAddress])
+  }, [assertData, submitAssertLocation])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
@@ -189,13 +188,16 @@ const AssertLocation = () => {
           >{`hasSufficientBalance: ${assertData.hasSufficientBalance}`}</Text>
           <Text
             style={styles.text}
-          >{`totalStakingAmount: ${assertData.totalStakingAmountHnt?.toString()}`}</Text>
+          >{`Helium Fees as HNT: ${assertData.heliumFee?.hnt?.toString()}`}</Text>
           <Text
             style={styles.text}
-          >{`totalStakingAmountDC: ${assertData.totalStakingAmountDC?.toString()}`}</Text>
+          >{`Helium Fees as DC: ${assertData.heliumFee?.dc.toString()}`}</Text>
           <Text
             style={styles.text}
-          >{`totalStakingAmountUSD: ${assertData.totalStakingAmountUsd?.toString()}`}</Text>
+          >{`Helium Fees as USD: ${assertData.heliumFee?.usd?.toString()}`}</Text>
+          <Text
+            style={styles.text}
+          >{`Sol Fee: ${assertData.solFee?.toString()}`}</Text>
         </>
       )}
       <View style={styles.buttonRow}>

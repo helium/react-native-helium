@@ -1,17 +1,10 @@
 import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import React, { createContext, ReactNode, useContext } from 'react'
-import { OnboardingManager, SolHotspot } from './onboardingTypes'
+import { AssertData, OnboardingManager, SolHotspot } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
 import * as web3 from '@solana/web3.js'
 import { SodiumKeyPair } from '../Account/account'
-import Balance, {
-  DataCredits,
-  NetworkTokens,
-  SolTokens,
-  TestNetworkTokens,
-  USDollars,
-} from '@helium/currency'
-import { AssertLocationV2 } from '@helium/transactions'
+import Balance, { CurrencyType } from '@helium/currency'
 
 const initialState = {
   addGateway: async (_opts: {
@@ -24,16 +17,6 @@ const initialState = {
       solanaResponses?: string[]
       pendingTxn?: PendingTransaction
     }>((resolve) => resolve({})),
-  assertLocation: async (_opts: {
-    gatewayAddress: string
-    isFree?: boolean
-    transaction: string
-    httpClient?: Client
-  }) =>
-    new Promise<{
-      solTxId?: string
-      pendingTxn?: PendingTransaction
-    }>((resolve) => resolve({})),
   baseUrl: '',
   getAssertData: (_opts: {
     gateway: string
@@ -43,26 +26,15 @@ const initialState = {
     lng: number
     decimalGain?: number
     elevation?: number
-    ownerKeypairRaw: SodiumKeyPair
+    ownerKeypairRaw?: SodiumKeyPair
     httpClient?: Client
   }) =>
-    new Promise<{
-      balances?: {
-        hnt: Balance<NetworkTokens | TestNetworkTokens> | undefined
-        sol: Balance<SolTokens>
-      }
-      hasSufficientBalance: boolean
-      hotspot: SolHotspot | Hotspot | null
-      isFree: boolean
-      totalStakingAmountDC?: Balance<DataCredits>
-      totalStakingAmountHnt?: Balance<NetworkTokens>
-      totalStakingAmountUsd?: Balance<USDollars>
-      transaction?: AssertLocationV2
-    }>((resolve) =>
+    new Promise<AssertData>((resolve) =>
       resolve({
         hasSufficientBalance: true,
         isFree: true,
         hotspot: null,
+        solFee: new Balance(0, CurrencyType.solTokens),
       })
     ),
   getHotspotForCurrentChain: async (_opts: {
@@ -87,6 +59,14 @@ const initialState = {
   ) => null,
   submitAllSolana: (_txns: string[]) =>
     new Promise<string[]>((resolve) => resolve([''])),
+  submitAssertLocation: async (_opts: {
+    transaction: string
+    httpClient?: Client
+  }) =>
+    new Promise<{
+      solTxId?: string
+      pendingTxn?: PendingTransaction
+    }>((resolve) => resolve({})),
   submitSolana: (_txn: string) => new Promise<string>((resolve) => resolve('')),
   transferHotspot: (_opts: { transaction: string; httpClient?: Client }) =>
     new Promise<{
@@ -94,7 +74,6 @@ const initialState = {
       pendingTxn?: PendingTransaction
     }>((resolve) => resolve({})),
 }
-
 const OnboardingContext =
   createContext<ReturnType<typeof useOnboarding>>(initialState)
 const { Provider } = OnboardingContext

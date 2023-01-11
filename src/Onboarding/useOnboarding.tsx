@@ -12,20 +12,16 @@ import {
   iotInfoKey,
 } from '@helium/helium-entity-manager-sdk'
 import { AnchorProvider, Wallet, Program } from '@project-serum/anchor'
-import { SolHotspot } from './onboardingTypes'
+import { AssertData, SolHotspot } from './onboardingTypes'
 import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
 import { heliumHttpClient } from '../utils/httpClient'
 import { heliumAddressToSolPublicKey, SodiumKeyPair } from '../Account/account'
-import { createAndSignAssertLocationTxn } from '../utils/assertLocation'
-import Balance, {
-  CurrencyType,
-  DataCredits,
-  NetworkTokens,
-  SolTokens,
-  TestNetworkTokens,
-  USDollars,
-} from '@helium/currency'
-import { AssertLocationV2 } from '@helium/transactions'
+import {
+  createLocationTxn,
+  getH3Location,
+  getStakingFee,
+} from '../utils/assertLocation'
+import Balance, { CurrencyType } from '@helium/currency'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
@@ -392,7 +388,7 @@ const useOnboarding = (
       maker,
       lat,
       lng,
-      decimalGain,
+      decimalGain = 1.2,
       elevation,
       ownerKeypairRaw,
       httpClient,
@@ -405,43 +401,34 @@ const useOnboarding = (
       lng: number
       decimalGain?: number
       elevation?: number
-      ownerKeypairRaw: SodiumKeyPair
+      ownerKeypairRaw?: SodiumKeyPair
       httpClient?: Client
       dataOnly?: boolean
-    }): Promise<{
-      balances?: {
-        hnt: Balance<NetworkTokens | TestNetworkTokens> | undefined
-        sol: Balance<SolTokens>
-      }
-      hasSufficientBalance: boolean
-      hotspot: SolHotspot | Hotspot | null
-      isFree: boolean
-      totalStakingAmountDC?: Balance<DataCredits>
-      totalStakingAmountHnt?: Balance<NetworkTokens>
-      totalStakingAmountUsd?: Balance<USDollars>
-      transaction?: AssertLocationV2
-    }> => {
+    }): Promise<AssertData> => {
       const client = httpClient || heliumHttpClient
       const migrationStatus = getMigrationStatus()
+      const isSol = migrationStatus === 'complete'
+
+      // TODO: Why is this needed?
+      const gain = decimalGain * 10
 
       const hotspot = await getHotspotForCurrentChain({
         hotspotAddress: gateway,
         userHeliumAddress: owner,
       })
       const isFree = await hasFreeAssert({ hotspot })
-      const transaction = await createAndSignAssertLocationTxn({
-        gateway,
-        owner,
-        lat,
-        lng,
-        decimalGain,
-        elevation,
-        ownerKeypairRaw,
-        maker,
-        hotspot,
-        isFree,
-        dataOnly,
-      })
+
+      const nextLocation = getH3Location(lat, lng)
+      let updatingLocation = !hotspot
+      if (hotspot) {
+        if (!isSol) {
+          updatingLocation = hotspot.location !== nextLocation
+        } else if (hotspot.location) {
+          // TODO: Not sure if this is correct
+          const loc = hotspot.location.toString('hex')
+          updatingLocation = loc !== nextLocation
+        }
+      }
 
       const balances = await getBalances({ address: owner, httpClient })
       let hasSufficientBalance = true
@@ -449,7 +436,23 @@ const useOnboarding = (
       // TODO: Where does oracle price come from in solana world?
       const oraclePrice = await client.oracle.getCurrentPrice()
 
-      if (migrationStatus === 'not_started') {
+      if (!isSol) {
+        const transaction = await createLocationTxn({
+          gateway,
+          owner,
+          lat,
+          lng,
+          gain,
+          elevation,
+          ownerKeypairRaw,
+          maker,
+          hotspot,
+          isFree,
+          dataOnly,
+          nextLocation,
+          updatingLocation,
+        })
+        let txnStr = transaction.toString()
         // if not free and we're still on helium the user needs hnt for fee and staking fee
         const totalStakingAmountDC = new Balance(
           (transaction.stakingFee || 0) + (transaction.fee || 0),
@@ -465,22 +468,44 @@ const useOnboarding = (
           (balances.hnt?.integerBalance || 0) >=
           totalStakingAmountHnt.integerBalance
 
+        if (isFree) {
+          const onboardResponse =
+            await onboardingClient.current.postPaymentTransaction(
+              gateway,
+              transaction.toString()
+            )
+
+          handleError(
+            onboardResponse,
+            `unable to post payment transaction for ${gateway}`
+          )
+
+          if (!onboardResponse?.data?.transaction) {
+            throw new Error('failed to fetch txn from onboarding server')
+          }
+          txnStr = onboardResponse.data?.transaction
+        }
+
         return {
           balances,
           hasSufficientBalance,
           hotspot,
           isFree,
-          totalStakingAmountDC,
-          totalStakingAmountHnt,
-          totalStakingAmountUsd,
-          transaction,
+          heliumFee: {
+            dc: totalStakingAmountDC,
+            hnt: totalStakingAmountHnt,
+            usd: totalStakingAmountUsd,
+          },
+          solFee: new Balance(0, CurrencyType.solTokens),
+          transaction: txnStr,
         }
       }
 
       // if not free and we're on solana the user needs sol for txn fee and hnt for staking fee
       const hasSufficientSol = balances.sol.integerBalance > TXN_FEE_IN_SOL
+      const stakingFee = getStakingFee({ dataOnly, updatingLocation })
       const totalStakingAmountDC = new Balance(
-        transaction.stakingFee || 0,
+        stakingFee,
         CurrencyType.dataCredit
       )
       const totalStakingAmountHnt = totalStakingAmountDC.toNetworkTokens(
@@ -499,49 +524,35 @@ const useOnboarding = (
         hasSufficientBalance,
         hotspot,
         isFree,
-        totalStakingAmountDC,
-        totalStakingAmountHnt,
-        totalStakingAmountUsd,
-        transaction,
+        heliumFee: {
+          dc: totalStakingAmountDC,
+          hnt: totalStakingAmountHnt,
+          usd: totalStakingAmountUsd,
+        },
+        solFee: new Balance(TXN_FEE_IN_SOL, CurrencyType.solTokens),
+        transaction: '', // TODO: Submit to onboarding server v3 to get solana txn, then sign it
       }
     },
-    [getBalances, getHotspotForCurrentChain, hasFreeAssert, getMigrationStatus]
+    [
+      getMigrationStatus,
+      getHotspotForCurrentChain,
+      hasFreeAssert,
+      getBalances,
+      handleError,
+    ]
   )
 
-  const assertLocation = useCallback(
+  const submitAssertLocation = useCallback(
     async ({
-      gatewayAddress,
-      transaction: originalTxn,
-      isFree,
+      transaction,
       httpClient,
     }: {
-      gatewayAddress: string
-      isFree?: boolean
       transaction: string
       httpClient?: Client
     }): Promise<{ solTxId?: string; pendingTxn?: PendingTransaction }> => {
       const migrationStatus = getMigrationStatus()
 
-      let transaction = originalTxn
       const client = httpClient || heliumHttpClient
-
-      if (isFree) {
-        const onboardResponse =
-          await onboardingClient.current.postPaymentTransaction(
-            gatewayAddress,
-            transaction
-          )
-
-        handleError(
-          onboardResponse,
-          `unable to post payment transaction for ${gatewayAddress}`
-        )
-
-        if (!onboardResponse?.data?.transaction) {
-          throw new Error('failed to fetch txn from onboarding server')
-        }
-        transaction = onboardResponse.data?.transaction
-      }
 
       if (migrationStatus === 'not_started') {
         const pendingTxn = await client.transactions.submit(transaction)
@@ -551,13 +562,12 @@ const useOnboarding = (
       }
 
       // submit to solana
-
       const solTxId = await submitSolana(transaction)
       return {
         solTxId,
       }
     },
-    [handleError, getMigrationStatus, submitSolana]
+    [getMigrationStatus, submitSolana]
   )
 
   const transferHotspot = useCallback(
@@ -591,7 +601,7 @@ const useOnboarding = (
 
   return {
     addGateway,
-    assertLocation,
+    submitAssertLocation,
     baseUrl,
     getAssertData,
     getHotspotForCurrentChain,

@@ -23,7 +23,6 @@ import Balance, {
 } from '@helium/currency'
 import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import { OnboardingRecord, Maker } from '@helium/onboarding'
-import { AssertLocationV2 } from '@helium/transactions'
 import * as web3 from '@solana/web3.js'
 import BN from 'bn.js'
 import { SodiumKeyPair } from '../Account/account'
@@ -47,10 +46,13 @@ export type AssertData = {
   hasSufficientBalance: boolean
   hotspot: SolHotspot | Hotspot | null
   isFree: boolean
-  totalStakingAmountDC?: Balance<DataCredits>
-  totalStakingAmountHnt?: Balance<NetworkTokens>
-  totalStakingAmountUsd?: Balance<USDollars>
-  transaction?: AssertLocationV2
+  heliumFee?: {
+    dc: Balance<DataCredits>
+    hnt: Balance<NetworkTokens>
+    usd: Balance<USDollars>
+  }
+  solFee: Balance<SolTokens>
+  transaction?: string
 }
 
 export interface OnboardingManager {
@@ -63,9 +65,7 @@ export interface OnboardingManager {
     solanaResponses?: string[]
     pendingTxn?: PendingTransaction
   }>
-  assertLocation: (_opts: {
-    gatewayAddress: string
-    isFree?: boolean
+  submitAssertLocation: (_opts: {
     transaction: string
     httpClient?: Client
   }) => Promise<{
@@ -80,7 +80,7 @@ export interface OnboardingManager {
     lng: number
     decimalGain?: number
     elevation?: number
-    ownerKeypairRaw: SodiumKeyPair
+    ownerKeypairRaw?: SodiumKeyPair
     httpClient?: Client
   }) => Promise<AssertData>
   getHotspotForCurrentChain: (_opts: {

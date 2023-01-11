@@ -25,105 +25,21 @@ const DEFAULT_H3_RES = 12
 export const getH3Location = (lat: number, lng: number, res = DEFAULT_H3_RES) =>
   geoToH3(lat, lng, res)
 
-export const makeAssertLocTxn = ({
-  ownerB58,
-  gatewayB58,
-  payerB58,
-  location,
-  nonce,
-  gain,
-  elevation,
-  stakingFee,
-}: {
-  ownerB58: string
-  gatewayB58: string
-  payerB58: string
-  location: string
-  nonce: number
-  gain: number
-  elevation: number
-  stakingFee: number
-}) => {
-  const owner = Address.fromB58(ownerB58)
-  const gateway = Address.fromB58(gatewayB58)
-  const payer = Address.fromB58(payerB58)
-
-  return new AssertLocationV2({
-    owner,
-    gateway,
-    payer,
-    nonce,
-    gain,
-    elevation,
-    location,
-    stakingFee,
-  })
-}
-
-/**
- * Create a signed [AddGatewayV1](https://helium.github.io/helium-js/classes/transactions.AddGatewayV1.html)
- * transaction string which can be submit to the blockchain using {@link heliumHttpClient}
- * @param gateway
- * @param owner
- * @param lat
- * @param lng
- * @param decimalGain
- * @param elevation
- * @param currentLocation
- * @param ownerKeypairRaw
- * @param maker
- * @param locationNonceLimit
- */
-export const createAndSignAssertLocationTxn = async ({
-  gateway,
-  owner,
-  lat,
-  lng,
-  decimalGain = 1.2,
-  elevation = 0,
-  ownerKeypairRaw,
-  maker,
-  isFree,
-  hotspot,
+export const getStakingFee = ({
+  updatingLocation,
   dataOnly,
 }: {
-  gateway: string
-  owner: string
-  lat: number
-  lng: number
-  decimalGain?: number
-  elevation?: number
-  ownerKeypairRaw: SodiumKeyPair
-  maker: string
-  isFree?: boolean
-  hotspot?: Hotspot | SolHotspot | null
+  updatingLocation?: boolean
   dataOnly?: boolean
 }) => {
-  if (!lat || !lng) {
-    throw new Error('Lat Lng invalid')
+  if (!updatingLocation) return 0
+
+  // Hardcoding for now, will be dynamic at some point
+  if (dataOnly) {
+    return 500000
   }
-  const payer = isFree ? maker : owner
 
-  const locTxn = await createLocationTxn({
-    gateway,
-    owner,
-    lat,
-    lng,
-    decimalGain,
-    isFree,
-    elevation,
-    maker,
-    hotspot,
-    dataOnly,
-  })
-
-  const keypair = getKeypair(ownerKeypairRaw)
-  const ownerIsPayer = payer === owner
-
-  return locTxn.sign({
-    owner: keypair,
-    payer: ownerIsPayer ? keypair : undefined,
-  })
+  return 1000000
 }
 
 export const createLocationTxn = async ({
@@ -131,23 +47,29 @@ export const createLocationTxn = async ({
   owner,
   lat,
   lng,
-  decimalGain = 1.2,
+  gain,
   elevation = 0,
   maker,
   isFree,
   hotspot,
   dataOnly,
+  updatingLocation,
+  nextLocation,
+  ownerKeypairRaw,
 }: {
   gateway: string
   owner: string
   lat: number
   lng: number
-  decimalGain?: number
+  gain?: number
   elevation?: number
   maker: string
   isFree?: boolean
   hotspot?: Hotspot | SolHotspot | null
   dataOnly?: boolean
+  updatingLocation: boolean
+  nextLocation: string
+  ownerKeypairRaw?: SodiumKeyPair
 }) => {
   if (!lat || !lng) {
     throw new Error('Lat Lng invalid')
@@ -155,42 +77,31 @@ export const createLocationTxn = async ({
 
   const isSol = hotspot && isSolHotspot(hotspot)
 
-  const nextLocation = getH3Location(lat, lng)
-  let stakingFee = 0
-  const antennaGain = decimalGain * 10
-
   let nextNonce = isSol ? 0 : (hotspot?.speculativeNonce || 0) + 1
 
-  let updatingLocation = !hotspot
-  if (hotspot) {
-    if (!isSol) {
-      updatingLocation = hotspot.location !== nextLocation
-    } else if (hotspot.location) {
-      // TODO: Not sure if this is correct
-      const loc = hotspot.location.toString('hex')
-      updatingLocation = loc !== nextLocation
-    }
-  }
-
-  if (updatingLocation) {
-    // Hardcoding for now, will be dynamic at some point
-    if (dataOnly) {
-      stakingFee = 500000
-    } else {
-      stakingFee = 1000000
-    }
-  }
-
+  const stakingFee = getStakingFee({ dataOnly, updatingLocation })
   const payer = isFree ? maker : owner
 
-  return makeAssertLocTxn({
-    ownerB58: owner,
-    gatewayB58: gateway,
-    payerB58: payer,
-    location: nextLocation,
+  const locTxn = new AssertLocationV2({
+    owner: Address.fromB58(owner),
+    gateway: Address.fromB58(gateway),
+    payer: Address.fromB58(payer),
     nonce: nextNonce,
-    gain: antennaGain,
+    gain,
     elevation,
+    location: nextLocation,
     stakingFee,
+  })
+
+  if (!ownerKeypairRaw) {
+    return locTxn
+  }
+
+  const keypair = getKeypair(ownerKeypairRaw)
+  const ownerIsPayer = payer === owner
+
+  return locTxn.sign({
+    owner: keypair,
+    payer: ownerIsPayer ? keypair : undefined,
   })
 }
