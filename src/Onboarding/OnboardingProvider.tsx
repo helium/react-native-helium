@@ -1,10 +1,11 @@
 import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import React, { createContext, ReactNode, useContext } from 'react'
-import { AssertData, OnboardingManager, SolHotspot } from './onboardingTypes'
+import { AssertData, OnboardingManager } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
 import * as web3 from '@solana/web3.js'
 import { SodiumKeyPair } from '../Account/account'
 import Balance, { CurrencyType } from '@helium/currency'
+import { SolHotspot } from '../utils/solanaUtils'
 
 const initialState = {
   createTransferTransaction: async (_opts: {
@@ -53,19 +54,12 @@ const initialState = {
   getMakers: async () => [],
   getMinFirmware: async () => '',
   getOnboardingRecord: async (_hotspotAddress: string) => null,
-  getSolHotspotInfo: async (_opts: {
-    iotMint: string
-    hotspotAddress: string
-    userSolPubKey: web3.PublicKey
-  }) => null,
   hasFreeAssert: async (_opts: { hotspot?: Hotspot | SolHotspot | null }) =>
     false,
   postPaymentTransaction: async (
     _hotspotAddress: string,
     _transaction: string
   ) => null,
-  submitAllSolana: (_txns: string[]) =>
-    new Promise<string[]>((resolve) => resolve([''])),
   submitAssertLocation: async (_opts: {
     transaction: string
     gateway: string
@@ -75,7 +69,6 @@ const initialState = {
       solTxId?: string
       pendingTxn?: PendingTransaction
     }>((resolve) => resolve({})),
-  submitSolana: (_txn: string) => new Promise<string>((resolve) => resolve('')),
   submitTransferHotspot: (_opts: {
     transaction: string
     httpClient?: Client

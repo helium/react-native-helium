@@ -21,7 +21,15 @@ export const useSolanaVars = (cluster?: Cluster) => {
   )
 }
 
-export const useSolanaStatus = () =>
-  useSWR<{
+export const useSolanaStatus = () => {
+  const { data: solanaStatus } = useSWR<{
     migrationStatus: SolanaStatus
   }>(BASE_URL, fetcher)
+
+  return {
+    isSolana: solanaStatus?.migrationStatus === 'complete',
+    isHelium: solanaStatus?.migrationStatus === 'not_started',
+    inProgress: solanaStatus?.migrationStatus === 'in_progress',
+    migrationStatus: solanaStatus?.migrationStatus,
+  }
+}

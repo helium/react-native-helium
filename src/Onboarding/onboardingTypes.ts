@@ -24,19 +24,8 @@ import Balance, {
 import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import { OnboardingRecord, Maker } from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
-import BN from 'bn.js'
 import { SodiumKeyPair } from '../Account/account'
-
-export type SolHotspot = {
-  asset: web3.PublicKey
-  bumpSeed: number
-  elevation: number
-  gain: number
-  hotspotKey: string
-  isFullHotspot: boolean
-  location: BN | null
-  numLocationAsserts: number
-}
+import { SolHotspot } from '../utils/solanaUtils'
 
 export type AssertData = {
   balances?: {
@@ -97,11 +86,6 @@ export interface OnboardingManager {
     userSolPubKey?: web3.PublicKey
     httpClient?: Client
   }) => Promise<SolHotspot | Hotspot | null>
-  getSolHotspotInfo: (_opts: {
-    iotMint: string
-    hotspotAddress: string
-    userSolPubKey: web3.PublicKey
-  }) => Promise<null | SolHotspot>
   hasFreeAssert: (_opts: {
     hotspot?: Hotspot | SolHotspot | null
   }) => Promise<boolean>
@@ -121,10 +105,6 @@ export interface OnboardingManager {
    * Get the makers from Onboarding Server.
    */
   getMakers: () => Promise<Maker[] | null>
-
-  submitAllSolana: (_txns: string[]) => Promise<string[]>
-
-  submitSolana: (_txn: string) => Promise<string>
 
   baseUrl?: string
 
