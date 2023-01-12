@@ -7,6 +7,12 @@ import { SodiumKeyPair } from '../Account/account'
 import Balance, { CurrencyType } from '@helium/currency'
 
 const initialState = {
+  createTransferTransaction: async (_opts: {
+    hotspotAddress: string
+    userAddress: string
+    newOwnerAddress: string
+    httpClient?: Client
+  }) => new Promise<string>((resolve) => resolve('')),
   submitAddGateway: async (_opts: {
     hotspotAddress: string
     transaction: string

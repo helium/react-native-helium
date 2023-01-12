@@ -56,6 +56,12 @@ export type AssertData = {
 }
 
 export interface OnboardingManager {
+  createTransferTransaction: (_opts: {
+    hotspotAddress: string
+    userAddress: string
+    newOwnerAddress: string
+    httpClient?: Client
+  }) => Promise<string>
   submitAddGateway: (_opts: {
     hotspotAddress: string
     transaction: string

@@ -7,6 +7,7 @@
 import { TransferHotspotV2 } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
 import Address from '@helium/address'
+import Client, { PocReceiptsV2 } from '@helium/http'
 
 /**
  * Create a  {@link TransferHotspotV2} transaction.
@@ -59,4 +60,76 @@ export const signTransferV2Txn = async (
     throw new Error('Failed to sign TransferHotspotV2 txn')
   }
   return txnOwnerSigned
+}
+
+const getLastChallenge = async (gatewayAddress: string, client: Client) => {
+  const hotspotActivityList = await client
+    .hotspot(gatewayAddress)
+    .activity.list({
+      filterTypes: [
+        'poc_receipts_v1',
+        'poc_receipts_v2',
+        'poc_request_v1',
+        'state_channel_close_v1',
+      ],
+    })
+  const [lastHotspotActivity] = hotspotActivityList
+    ? await hotspotActivityList?.take(1)
+    : []
+
+  if (!lastHotspotActivity) return
+
+  return (lastHotspotActivity as PocReceiptsV2).height
+}
+
+export const createTransferTransaction = async ({
+  hotspotAddress,
+  userAddress,
+  newOwnerAddress,
+  client,
+  ownerKeypairRaw,
+}: {
+  hotspotAddress: string
+  userAddress: string
+  newOwnerAddress: string
+  client: Client
+  ownerKeypairRaw?: SodiumKeyPair
+}) => {
+  const hotspot = await client.hotspots.get(hotspotAddress)
+  if (!hotspot) {
+    throw new Error('Hotspot not found')
+  }
+  const nonce = hotspot?.speculativeNonce ? hotspot?.speculativeNonce + 1 : 0
+
+  if (!hotspot.owner) throw new Error('Hotspot owner not found')
+  if (hotspot.owner !== userAddress) {
+    throw new Error('Hotspot does not belong to user')
+  }
+
+  // check hotspot for valid activity
+  const chainVars = await client.vars.get(['transfer_hotspot_stale_poc_blocks'])
+
+  const staleBlockCount = chainVars.transferHotspotStalePocBlocks as number
+  const blockHeight = await client.blocks.getHeight()
+  const reportedActivityBlock = await getLastChallenge(hotspotAddress, client)
+  const lastActiveBlock = reportedActivityBlock || 0
+  if (blockHeight - lastActiveBlock > staleBlockCount) {
+    throw new Error(
+      'Hotspot has no recent Proof-of-Coverage or Data Transfer activity'
+    )
+  }
+
+  const txn = new TransferHotspotV2({
+    owner: Address.fromB58(hotspot.owner),
+    gateway: Address.fromB58(hotspotAddress),
+    newOwner: Address.fromB58(newOwnerAddress),
+    nonce,
+  })
+
+  if (!ownerKeypairRaw) {
+    return txn
+  }
+  return txn.sign({
+    owner: getKeypair(ownerKeypairRaw),
+  })
 }

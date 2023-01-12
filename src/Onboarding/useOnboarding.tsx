@@ -22,6 +22,7 @@ import {
   getStakingFee,
 } from '../utils/assertLocation'
 import Balance, { CurrencyType } from '@helium/currency'
+import { Transfer } from '..'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
@@ -70,13 +71,13 @@ const useOnboarding = (
     []
   )
 
-  const getMigrationStatus = useCallback(() => {
+  const getIsSolana = useCallback(() => {
     const migrationStatus = solanaStatus?.migrationStatus
 
     if (migrationStatus === 'in_progress') {
       throw new Error('Chain migration in progress')
     }
-    return migrationStatus
+    return migrationStatus === 'complete'
   }, [solanaStatus?.migrationStatus])
 
   const submitSolana = useCallback(async (txn: string) => {
@@ -208,6 +209,7 @@ const useOnboarding = (
       userSolPubKey?: web3.PublicKey
       httpClient?: Client
     }) => {
+      const isSol = getIsSolana()
       let pubKey = userSolPubKey
 
       if (userHeliumAddress && !userSolPubKey) {
@@ -218,13 +220,11 @@ const useOnboarding = (
         throw new Error('User address is required')
       }
 
-      const migrationStatus = getMigrationStatus()
-
       if (!solanaVars?.iot.mint) {
         throw new Error('Failed to fetch mint from solana vars')
       }
 
-      if (migrationStatus === 'not_started') {
+      if (!isSol) {
         return getHeliumHotspotInfo({ hotspotAddress, httpClient })
       }
 
@@ -235,7 +235,7 @@ const useOnboarding = (
       })
       return hotspotInfo
     },
-    [getHeliumHotspotInfo, getMigrationStatus, getSolHotspotInfo, solanaVars]
+    [getHeliumHotspotInfo, getIsSolana, getSolHotspotInfo, solanaVars]
   )
 
   const submitAddGateway = useCallback(
@@ -255,8 +255,8 @@ const useOnboarding = (
       solanaResponses?: string[]
       pendingTxn?: PendingTransaction
     }> => {
+      const isSol = getIsSolana()
       const client = httpClient || heliumHttpClient
-      const migrationStatus = getMigrationStatus()
 
       const hotspotExists = !!(await getHotspotForCurrentChain({
         hotspotAddress,
@@ -269,7 +269,8 @@ const useOnboarding = (
         throw new Error('Hotspot already on chain')
       }
 
-      if (migrationStatus === 'not_started') {
+      if (!isSol) {
+        // If L1 is helium, must submit to onboard server for payer signature
         const onboardResponse =
           await onboardingClient.current.postPaymentTransaction(
             hotspotAddress,
@@ -300,7 +301,7 @@ const useOnboarding = (
         solanaResponses: [],
       }
     },
-    [getMigrationStatus, getHotspotForCurrentChain, handleError]
+    [getIsSolana, getHotspotForCurrentChain, handleError]
   )
 
   const hasFreeAssert = useCallback(
@@ -350,12 +351,11 @@ const useOnboarding = (
       address: string
       httpClient?: Client
     }) => {
+      const isSol = getIsSolana()
       const key = heliumAddressToSolPublicKey(address)
       const solBalance = await solConnection.current?.getBalance(key)
 
-      const migrationStatus = getMigrationStatus()
-
-      if (migrationStatus === 'complete') {
+      if (isSol) {
         // GET hnt Balance from solana
         //TODO: GET hnt Balance from solana
         return {
@@ -372,7 +372,7 @@ const useOnboarding = (
         }
       }
     },
-    [getMigrationStatus]
+    [getIsSolana]
   )
 
   const getAssertData = useCallback(
@@ -399,9 +399,8 @@ const useOnboarding = (
       httpClient?: Client
       dataOnly?: boolean
     }): Promise<AssertData> => {
+      const isSol = getIsSolana()
       const client = httpClient || heliumHttpClient
-      const migrationStatus = getMigrationStatus()
-      const isSol = migrationStatus === 'complete'
       const gain = decimalGain * 10
 
       const hotspot = await getHotspotForCurrentChain({
@@ -508,7 +507,7 @@ const useOnboarding = (
         transaction: '', // TODO: Submit to onboarding server v3 to get solana txn, then sign it
       }
     },
-    [getMigrationStatus, getHotspotForCurrentChain, hasFreeAssert, getBalances]
+    [getIsSolana, getHotspotForCurrentChain, hasFreeAssert, getBalances]
   )
 
   const submitAssertLocation = useCallback(
@@ -521,11 +520,11 @@ const useOnboarding = (
       httpClient?: Client
       gateway: string
     }): Promise<{ solTxId?: string; pendingTxn?: PendingTransaction }> => {
-      const migrationStatus = getMigrationStatus()
+      const isSol = getIsSolana()
 
       const client = httpClient || heliumHttpClient
 
-      if (migrationStatus === 'not_started') {
+      if (!isSol) {
         let txnStr = transaction
 
         const hotspot = await getHeliumHotspotInfo({
@@ -535,6 +534,7 @@ const useOnboarding = (
 
         const isFree = await hasFreeAssert({ hotspot })
         if (isFree) {
+          // If L1 is helium and txn is free, must submit to onboard server for payer signature
           const onboardResponse =
             await onboardingClient.current.postPaymentTransaction(
               gateway,
@@ -565,7 +565,7 @@ const useOnboarding = (
     },
     [
       getHeliumHotspotInfo,
-      getMigrationStatus,
+      getIsSolana,
       handleError,
       hasFreeAssert,
       submitSolana,
@@ -580,11 +580,11 @@ const useOnboarding = (
       transaction: string
       httpClient?: Client
     }): Promise<{ solTxId?: string; pendingTxn?: PendingTransaction }> => {
-      const migrationStatus = getMigrationStatus()
+      const isSol = getIsSolana()
 
       const client = httpClient || heliumHttpClient
 
-      if (migrationStatus === 'not_started') {
+      if (!isSol) {
         // submit to helium if transition not started
         const pendingTxn = await client.transactions.submit(transaction)
         return {
@@ -598,11 +598,50 @@ const useOnboarding = (
         solTxId,
       }
     },
-    [getMigrationStatus, submitSolana]
+    [getIsSolana, submitSolana]
+  )
+
+  const createTransferTransaction = useCallback(
+    async ({
+      hotspotAddress,
+      userAddress,
+      newOwnerAddress,
+      ownerKeypairRaw,
+      httpClient,
+    }: {
+      hotspotAddress: string
+      userAddress: string
+      newOwnerAddress: string
+      ownerKeypairRaw?: SodiumKeyPair
+      httpClient?: Client
+    }) => {
+      const isSol = getIsSolana()
+
+      const client = httpClient || heliumHttpClient
+
+      if (!isSol) {
+        const txn = await Transfer.createTransferTransaction({
+          hotspotAddress,
+          userAddress,
+          newOwnerAddress,
+          client,
+          ownerKeypairRaw,
+        })
+        return txn.toString()
+      }
+
+      // TODO: Handle Solana
+      // 1. Somehow determine if the hotspot is stale
+      // 2. Fetch from onboarding v3
+      // 3. Return the txn
+      return ''
+    },
+    [getIsSolana]
   )
 
   return {
     baseUrl,
+    createTransferTransaction,
     getAssertData,
     getHotspotForCurrentChain,
     getMakers,
