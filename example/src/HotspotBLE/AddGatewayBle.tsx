@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Button, StyleSheet, Text, View, Alert } from 'react-native'
 import { getPendingTxn } from '../../appDataClient'
 import {
-  getKeypair,
+  getKeypairRaw,
   getSecureItem,
   getSolanaPubKey,
 } from '../Account/secureAccount'
@@ -20,7 +20,7 @@ const AddGatewayBle = () => {
   const handleAddGateway = useCallback(async () => {
     setSubmitted(true)
     const accountAddress = await getSecureItem('address')
-    const keypair = await getKeypair()
+    const keypair = await getKeypairRaw()
     if (!accountAddress) {
       Alert.alert(
         'Error',

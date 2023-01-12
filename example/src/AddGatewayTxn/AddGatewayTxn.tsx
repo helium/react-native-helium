@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import { Account, AddGateway, useOnboarding } from '@helium/react-native-sdk'
 import { getPendingTxn } from '../../appDataClient'
-import { getAddressStr, getKeypair } from '../Account/secureAccount'
+import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
 import Clipboard from '@react-native-community/clipboard'
 
 const AddGatewayTxn = () => {
@@ -50,7 +50,7 @@ const AddGatewayTxn = () => {
     setSubmitted(true)
 
     // construct and publish add gateway
-    const keypair = await getKeypair()
+    const keypair = await getKeypairRaw()
     const txnOwnerSigned = await AddGateway.signGatewayTxn(txnStr, keypair)
     if (!txnOwnerSigned.gateway?.b58) {
       throw new Error('Error signing gateway txn')

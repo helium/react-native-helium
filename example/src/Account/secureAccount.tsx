@@ -43,7 +43,7 @@ export const getAddress = async () => {
   return Account.getAddress(addressB58)
 }
 
-export const getKeypair = async () => {
+export const getKeypairRaw = async () => {
   const keypairStr = await getSecureItem('keypair')
   if (!keypairStr) throw new Error('Keypair not found')
 

@@ -1,18 +1,14 @@
 import Address from '@helium/address'
-import { Keypair } from '@helium/crypto'
-import { AddGatewayV1, useOnboarding } from '@helium/react-native-sdk'
+import { AddGatewayV1, Keypair, useOnboarding } from '@helium/react-native-sdk'
 import axios from 'axios'
 import { useState } from 'react'
+import { getKeypairRaw } from '../Account/secureAccount'
 
 function random(len: number): string {
   return new Array(len).join().replace(/(.|$)/g, function () {
     // eslint-disable-next-line no-bitwise
     return ((Math.random() * 36) | 0).toString(36)
   })
-}
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 const useCreateRandomHotspot = () => {
@@ -26,13 +22,10 @@ const useCreateRandomHotspot = () => {
     makerAddress: string
     authorization: string
   }) => {
-    let me: Keypair
-    let gateway: Keypair
+    const me = new Keypair(await getKeypairRaw())
+    const gateway = await Keypair.makeRandom()
     const maker = Address.fromB58(makerAddress)
     const onboardingKey = random(10)
-
-    me = await Keypair.makeRandom()
-    gateway = await Keypair.makeRandom()
 
     await axios.post(
       `${baseUrl}/hotspots`,
@@ -50,13 +43,6 @@ const useCreateRandomHotspot = () => {
         },
       }
     )
-
-    await sleep(2000)
-
-    // TODO: Remove??
-    await axios.get(`${baseUrl}/hotspots/${onboardingKey}`)
-
-    await sleep(2000)
 
     const nextTxn = new AddGatewayV1({
       owner: me.address,

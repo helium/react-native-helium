@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { View, TextInput, StyleSheet, Text, Button } from 'react-native'
 import { Transfer, useOnboarding } from '@helium/react-native-sdk'
 import { getPendingTxn } from '../../appDataClient'
-import { getKeypair } from '../Account/secureAccount'
+import { getKeypairRaw } from '../Account/secureAccount'
 
 const TransferHotspot = () => {
   const [txnStr, setTxnStr] = useState('')
@@ -33,7 +33,7 @@ const TransferHotspot = () => {
     setSubmitted(true)
 
     // construct and publish transfer v2
-    const keypair = await getKeypair()
+    const keypair = await getKeypairRaw()
     const signedTxn = await Transfer.signTransferV2Txn(txnStr, keypair)
     if (!signedTxn.gateway?.b58) {
       throw new Error('Error signing transfer txn')

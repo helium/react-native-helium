@@ -3,7 +3,7 @@ import { Button, StyleSheet, Text, View } from 'react-native'
 import { AssertData, useOnboarding } from '@helium/react-native-sdk'
 import Address from '@helium/address'
 import { getPendingTxn } from '../../appDataClient'
-import { getAddressStr, getKeypair } from '../Account/secureAccount'
+import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
 import Input from '../Input'
 import animalName from 'angry-purple-tiger'
 import Config from 'react-native-config'
@@ -30,7 +30,7 @@ const AssertLocation = () => {
     }
 
     const userAddress = await getAddressStr()
-    const ownerKeypairRaw = await getKeypair()
+    const ownerKeypairRaw = await getKeypairRaw()
 
     const data = await getAssertData({
       decimalGain: gain ? parseFloat(gain) : undefined,
