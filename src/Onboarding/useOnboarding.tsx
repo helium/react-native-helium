@@ -23,18 +23,28 @@ import {
   isSolHotspot,
   SolHotspot,
   submitSolana,
+  submitAllSolana,
 } from '../utils/solanaUtils'
+import sleep from '../utils/sleep'
+import { Buffer } from 'buffer'
+import OnboardingClientV3 from './onboardingV3'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
 
-const useOnboarding = (
-  baseUrl?: string,
+const useOnboarding = ({
+  baseUrl,
+  solanaCluster,
+  v3BaseUrl,
+}: {
+  v3BaseUrl?: string
+  baseUrl?: string
   solanaCluster?: 'mainnet-beta' | 'devnet' | 'testnet'
-) => {
+}) => {
   const { isHelium, isSolana, inProgress } = useSolanaStatus()
   const { data: solanaVars } = useSolanaVars(solanaCluster)
   const onboardingClient = useRef(new OnboardingClient(baseUrl))
+  const onboardingV3Client = useRef(new OnboardingClientV3(v3BaseUrl))
   const solPubKey = useRef<web3.PublicKey>()
   const hemProgram = useRef<Program<HeliumEntityManager>>()
   const solConnection = useRef(
@@ -192,6 +202,51 @@ const useOnboarding = (
     ]
   )
 
+  const getOnboardTransaction = useCallback(
+    async ({
+      txn,
+      hotspotAddress,
+    }: {
+      txn: string
+      hotspotAddress: string
+    }): Promise<string> => {
+      if (isHelium) {
+        return txn
+      }
+
+      const createTxns = await onboardingV3Client.current.createHotspot({
+        transaction: txn,
+      })
+      await submitAllSolana({
+        txns: createTxns.data.solanaTransactions.map((t) => Buffer.from(t)),
+        connection: solConnection.current,
+      })
+
+      let tries = 0
+      let onboardTxns: string[] | undefined
+      while (tries < 10 && !onboardTxns) {
+        try {
+          onboardTxns = (
+            await onboardingV3Client.current.onboardIot({
+              hotspotAddress,
+            })
+          ).data.solanaTransactions
+        } catch {
+          console.log(`Hotspot ${hotspotAddress} may not exist yet ${tries}`)
+          tries++
+          await sleep(2000) // Wait for hotspot to be indexed into asset api
+        }
+      }
+
+      if (!onboardTxns?.length) {
+        throw new Error('failed to create solana onboard txns')
+      }
+
+      return onboardTxns[0]
+    },
+    [isHelium]
+  )
+
   const submitAddGateway = useCallback(
     async ({
       hotspotAddress,
@@ -206,10 +261,11 @@ const useOnboarding = (
       userSolPubKey?: web3.PublicKey
       httpClient?: Client
     }): Promise<{
-      solanaResponses?: string[]
+      solanaTxId?: string
       pendingTxn?: PendingTransaction
     }> => {
       checkSolanaStatus()
+
       const client = httpClient || heliumHttpClient
 
       const hotspotExists = !!(await getHotspotForCurrentChain({
@@ -224,6 +280,9 @@ const useOnboarding = (
       }
 
       if (isHelium) {
+        if (!transaction) {
+          throw new Error('Transaction is missing')
+        }
         // If L1 is helium, must submit to onboard server for payer signature
         const onboardResponse =
           await onboardingClient.current.postPaymentTransaction(
@@ -247,12 +306,15 @@ const useOnboarding = (
         }
       }
 
-      // TODO: Update to use onboard server v3
-      // 1. submit txn (signed by gateway and owner) to v3 onboard server
-      // 2. submit to solana
-      // 3. Return txn id
+      if (!transaction) {
+        throw new Error('No transaction to submit')
+      }
+      const solanaTxId = await submitSolana({
+        txn: Buffer.from(transaction, 'base64'),
+        connection: solConnection.current,
+      })
       return {
-        solanaResponses: [],
+        solanaTxId,
       }
     },
     [checkSolanaStatus, getHotspotForCurrentChain, handleError, isHelium]
@@ -530,7 +592,7 @@ const useOnboarding = (
 
       // submit to solana
       const solTxId = await submitSolana({
-        txn: transaction,
+        txn: Buffer.from(transaction),
         connection: solConnection.current,
       })
       return {
@@ -568,7 +630,7 @@ const useOnboarding = (
 
       // submit to solana
       const solTxId = await submitSolana({
-        txn: transaction,
+        txn: Buffer.from(transaction),
         connection: solConnection.current,
       })
       return {
@@ -624,10 +686,16 @@ const useOnboarding = (
     getMakers,
     getMinFirmware,
     getOnboardingRecord,
+    getOnboardTransaction,
     hasFreeAssert,
     submitAddGateway,
     submitAssertLocation,
     submitTransferHotspot,
+    solanaStatus: {
+      isHelium,
+      isSolana,
+      inProgress,
+    },
   }
 }
 

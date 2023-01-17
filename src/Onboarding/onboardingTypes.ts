@@ -45,6 +45,11 @@ export type AssertData = {
 }
 
 export interface OnboardingManager {
+  solanaStatus: {
+    isHelium: boolean
+    isSolana: boolean
+    inProgress: boolean
+  }
   createTransferTransaction: (_opts: {
     hotspotAddress: string
     userAddress: string
@@ -58,7 +63,7 @@ export interface OnboardingManager {
     userHeliumAddress?: string
     httpClient?: Client
   }) => Promise<{
-    solanaResponses?: string[]
+    solanaTxId?: string
     pendingTxn?: PendingTransaction
   }>
   submitAssertLocation: (_opts: {
@@ -69,6 +74,10 @@ export interface OnboardingManager {
     solTxId?: string
     pendingTxn?: PendingTransaction
   }>
+  getOnboardTransaction: (_opts: {
+    txn: string
+    hotspotAddress: string
+  }) => Promise<string>
   getAssertData: (_opts: {
     gateway: string
     owner: string

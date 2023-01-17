@@ -43,9 +43,15 @@ export const signGatewayTxn = async (
   txnStr: string,
   ownerKeypairRaw: SodiumKeyPair
 ) => {
-  const ownerKeypair = getKeypair(ownerKeypairRaw)
   const addGatewayTxn = txnFromString(txnStr)
+  return signGateway(addGatewayTxn, ownerKeypairRaw)
+}
 
+export const signGateway = async (
+  addGatewayTxn: AddGatewayV1,
+  ownerKeypairRaw: SodiumKeyPair
+) => {
+  const ownerKeypair = getKeypair(ownerKeypairRaw)
   const txnOwnerSigned = await addGatewayTxn.sign({
     owner: ownerKeypair,
   })

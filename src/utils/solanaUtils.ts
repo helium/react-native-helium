@@ -25,6 +25,10 @@ export type SolHotspot = {
   numLocationAsserts: number
 }
 
+export const getSolanaKeypair = (secretKey: string) => {
+  return web3.Keypair.fromSecretKey(Buffer.from(secretKey, 'base64'))
+}
+
 export const createHeliumEntityManagerProgram = async ({
   publicKey,
   connection,
@@ -100,12 +104,12 @@ export const submitSolana = async ({
   txn,
   connection,
 }: {
-  txn: string
+  txn: Buffer
   connection: web3.Connection
 }) => {
   const { txid } = await sendAndConfirmWithRetry(
     connection,
-    Buffer.from(txn),
+    txn,
     { skipPreflight: true },
     'confirmed'
   )
@@ -117,7 +121,7 @@ export const submitAllSolana = ({
   txns,
   connection,
 }: {
-  txns: string[]
+  txns: Buffer[]
   connection: web3.Connection
 }) => {
   return Promise.all(txns.map((txn) => submitSolana({ connection, txn })))
@@ -126,3 +130,6 @@ export const submitAllSolana = ({
 export const isSolHotspot = (
   hotspot: SolHotspot | Hotspot
 ): hotspot is SolHotspot => Object.keys(hotspot).includes('numLocationAsserts')
+
+export const stringToTransaction = (solanaTransaction: string) =>
+  web3.Transaction.from(Buffer.from(solanaTransaction))

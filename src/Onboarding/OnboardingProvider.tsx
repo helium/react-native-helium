@@ -8,11 +8,20 @@ import Balance, { CurrencyType } from '@helium/currency'
 import { SolHotspot } from '../utils/solanaUtils'
 
 const initialState = {
+  solanaStatus: {
+    isHelium: false,
+    isSolana: false,
+    inProgress: false,
+  },
   createTransferTransaction: async (_opts: {
     hotspotAddress: string
     userAddress: string
     newOwnerAddress: string
     httpClient?: Client
+  }) => new Promise<string>((resolve) => resolve('')),
+  getOnboardTransaction: async (_opts: {
+    txn: string
+    hotspotAddress: string
   }) => new Promise<string>((resolve) => resolve('')),
   submitAddGateway: async (_opts: {
     hotspotAddress: string
@@ -22,7 +31,7 @@ const initialState = {
     httpClient?: Client
   }) =>
     new Promise<{
-      solanaResponses?: string[]
+      solanaTxId?: string
       pendingTxn?: PendingTransaction
     }>((resolve) => resolve({})),
   baseUrl: '',
@@ -103,14 +112,16 @@ const { Provider } = OnboardingContext
 const OnboardingProvider = ({
   children,
   baseUrl,
+  v3BaseUrl,
   solanaCluster,
 }: {
   children: ReactNode
   baseUrl?: string
+  v3BaseUrl?: string
   solanaCluster?: 'devnet' | 'testnet' | 'mainnet-beta'
 }) => {
   return (
-    <Provider value={useOnboarding(baseUrl, solanaCluster)}>
+    <Provider value={useOnboarding({ baseUrl, v3BaseUrl, solanaCluster })}>
       {children}
     </Provider>
   )

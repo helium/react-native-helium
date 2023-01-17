@@ -6,13 +6,22 @@ import {
   getSecureItem,
   getSolanaPubKey,
 } from '../Account/secureAccount'
-import { useHotspotBle, useOnboarding } from '@helium/react-native-sdk'
+import {
+  SolUtils,
+  useHotspotBle,
+  useOnboarding,
+} from '@helium/react-native-sdk'
 
 const AddGatewayBle = () => {
-  const { getOnboardingRecord, submitAddGateway } = useOnboarding()
+  const {
+    getOnboardingRecord,
+    submitAddGateway,
+    getOnboardTransaction,
+    solanaStatus,
+  } = useOnboarding()
   const { createAndSignGatewayTxn, getOnboardingAddress } = useHotspotBle()
   const [hash, setHash] = useState('')
-  const [solTxIds, setSolTxIds] = useState('')
+  const [solTxId, setSolTxId] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -46,30 +55,48 @@ const AddGatewayBle = () => {
       throw new Error('Error signing gateway txn')
     }
 
+    const onboardTxn = await getOnboardTransaction({
+      txn: txnOwnerSigned.toString(),
+      hotspotAddress: onboardAddress,
+    })
+
+    let signedTransaction = ''
+
+    if (solanaStatus.isHelium) {
+      signedTransaction = txnOwnerSigned.toString()
+    } else if (solanaStatus.isSolana) {
+      const solanaKeypair = SolUtils.getSolanaKeypair(keypair.sk)
+      const tx = SolUtils.stringToTransaction(onboardTxn)
+      tx.partialSign(solanaKeypair)
+      signedTransaction = tx.serialize().toString()
+    }
+
     const userSolPubKey = await getSolanaPubKey(keypair.sk)
-    const onboardTxn = await submitAddGateway({
-      hotspotAddress: txnOwnerSigned.gateway.b58,
-      transaction: txnOwnerSigned.toString(),
+
+    const addGatewayResponse = await submitAddGateway({
+      hotspotAddress: onboardAddress,
+      transaction: signedTransaction,
       userSolPubKey,
     })
 
-    if (onboardTxn?.pendingTxn) {
-      setHash(onboardTxn.pendingTxn.hash)
-      setStatus(onboardTxn.pendingTxn.status)
-      setFailedReason(onboardTxn.pendingTxn.failedReason || '')
+    if (addGatewayResponse?.pendingTxn) {
+      setHash(addGatewayResponse.pendingTxn.hash)
+      setStatus(addGatewayResponse.pendingTxn.status)
+      setFailedReason(addGatewayResponse.pendingTxn.failedReason || '')
       return
     }
 
-    if (onboardTxn?.solanaResponses) {
-      const txIds = onboardTxn.solanaResponses.join(',')
-      setSolTxIds(txIds)
-      setStatus(`${onboardTxn.solanaResponses.length} responses`)
+    if (addGatewayResponse?.solanaTxId) {
+      setSolTxId(addGatewayResponse.solanaTxId)
+      setStatus('Solana Success')
     }
   }, [
-    submitAddGateway,
-    createAndSignGatewayTxn,
     getOnboardingAddress,
     getOnboardingRecord,
+    createAndSignGatewayTxn,
+    getOnboardTransaction,
+    solanaStatus,
+    submitAddGateway,
   ])
 
   const updateTxnStatus = useCallback(async () => {
@@ -95,9 +122,9 @@ const AddGatewayBle = () => {
         onPress={handleAddGateway}
         disabled={submitted}
       />
-      <Text style={styles.topMargin}>Sol Tx Ids</Text>
+      <Text style={styles.topMargin}>Sol Tx Id</Text>
       <Text style={styles.topMargin} selectable>
-        {solTxIds}
+        {solTxId}
       </Text>
       <Text style={styles.topMargin}>Pending Txn Hash:</Text>
       <Text style={styles.topMargin} selectable>

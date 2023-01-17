@@ -45,6 +45,9 @@ export default function App() {
       baseUrl={
         Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api/v2'
       }
+      v3BaseUrl={
+        Config.ONBOARDING_V3_BASE_URL || 'https://onboarding.dewi.org/api/v3'
+      }
       solanaCluster="devnet"
     >
       <HotspotBleProvider>
