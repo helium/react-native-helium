@@ -54,14 +54,18 @@ const AssertLocation = () => {
   }, [gatewayAddress, getOnboardingRecord])
 
   const handleAssert = useCallback(async () => {
-    if (!assertData?.transaction) {
+    if (
+      !assertData?.assertLocationTxn ||
+      !assertData.solanaTransactions?.length
+    ) {
       return
     }
 
     setSubmitted(true)
 
-    const { solTxId, pendingTxn } = await submitAssertLocation({
-      transaction: assertData.transaction,
+    const { solTxnIds, pendingTxn } = await submitAssertLocation({
+      assertLocationTxn: assertData.assertLocationTxn,
+      solanaTransactions: assertData.solanaTransactions,
       gateway: gatewayAddress,
     })
 
@@ -69,8 +73,8 @@ const AssertLocation = () => {
       setHash(pendingTxn.hash)
       setStatus(pendingTxn.status)
       setFailedReason(pendingTxn.failedReason || '')
-    } else if (solTxId) {
-      setHash(solTxId)
+    } else if (solTxnIds?.length) {
+      setHash(solTxnIds[0])
       setStatus('complete')
     } else {
       setStatus('fail')

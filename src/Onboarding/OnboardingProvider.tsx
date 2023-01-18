@@ -74,12 +74,13 @@ const initialState = {
     _transaction: string
   ) => null,
   submitAssertLocation: async (_opts: {
-    transaction: string
-    gateway: string
+    assertLocationTxn?: string
+    solanaTransactions?: string[]
     httpClient?: Client
+    gateway: string
   }) =>
     new Promise<{
-      solTxId?: string
+      solTxnIds?: string[]
       pendingTxn?: PendingTransaction
     }>((resolve) => resolve({})),
   submitTransferHotspot: (_opts: {

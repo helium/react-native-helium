@@ -91,6 +91,5 @@ export const heliumAddressToSolPublicKey = (heliumAddress: string) => {
 }
 
 export const heliumAddressToSolAddress = (heliumAddress: string) => {
-  const pk = heliumAddressToSolPublicKey(heliumAddress)
-  return pk.toBase58()
+  return heliumAddressToSolPublicKey(heliumAddress).toBase58()
 }

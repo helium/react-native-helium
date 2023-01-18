@@ -41,7 +41,8 @@ export type AssertData = {
     usd: Balance<USDollars>
   }
   solFee: Balance<SolTokens>
-  transaction?: string
+  assertLocationTxn?: string
+  solanaTransactions?: string[]
 }
 
 export interface OnboardingManager {
@@ -68,11 +69,12 @@ export interface OnboardingManager {
     pendingTxn?: PendingTransaction
   }>
   submitAssertLocation: (_opts: {
-    transaction: string
+    assertLocationTxn?: string
+    solanaTransactions?: string[]
     httpClient?: Client
     gateway: string
   }) => Promise<{
-    solTxId?: string
+    solTxnIds?: string[]
     pendingTxn?: PendingTransaction
   }>
   getOnboardTransaction: (_opts: {

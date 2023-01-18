@@ -7,7 +7,11 @@ import { Program } from '@project-serum/anchor'
 import { AssertData } from './onboardingTypes'
 import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
 import { heliumHttpClient } from '../utils/httpClient'
-import { heliumAddressToSolPublicKey, SodiumKeyPair } from '../Account/account'
+import {
+  heliumAddressToSolAddress,
+  heliumAddressToSolPublicKey,
+  SodiumKeyPair,
+} from '../Account/account'
 import {
   createLocationTxn,
   getH3Location,
@@ -365,17 +369,17 @@ const useOnboarding = ({
 
   const getBalances = useCallback(
     async ({
-      address,
+      heliumAddress,
       httpClient,
     }: {
-      address: string
+      heliumAddress: string
       httpClient?: Client
     }) => {
       checkSolanaStatus()
 
       const solBalance = await getSolBalance({
         connection: solConnection.current,
-        heliumAddress: address,
+        heliumAddress,
       })
 
       if (isSolana) {
@@ -386,7 +390,7 @@ const useOnboarding = ({
         const hntAmount = await getHeliumBalance({
           connection: solConnection.current,
           mint: solanaVars?.hnt.mint,
-          address: address,
+          heliumAddress,
         })
 
         return {
@@ -396,7 +400,7 @@ const useOnboarding = ({
       } else {
         // GET hnt balance from helium
         const client = httpClient || heliumHttpClient
-        const heliumBalances = await client.accounts.get(address)
+        const heliumBalances = await client.accounts.get(heliumAddress)
         return {
           hnt: heliumBalances.balance,
           sol: new Balance(solBalance, CurrencyType.solTokens),
@@ -414,7 +418,7 @@ const useOnboarding = ({
       lat,
       lng,
       decimalGain = 1.2,
-      elevation,
+      elevation = 0,
       ownerKeypairRaw,
       httpClient,
       dataOnly,
@@ -431,8 +435,9 @@ const useOnboarding = ({
       dataOnly?: boolean
     }): Promise<AssertData> => {
       checkSolanaStatus()
+
       const client = httpClient || heliumHttpClient
-      const gain = decimalGain * 10
+      const gain = decimalGain * 10.0
 
       const hotspot = await getHotspotForCurrentChain({
         hotspotAddress: gateway,
@@ -442,6 +447,7 @@ const useOnboarding = ({
       const isFree = await hasFreeAssert({ hotspot })
 
       const nextLocation = getH3Location(lat, lng)
+
       let updatingLocation = !hotspot
       if (hotspot) {
         if (isHelium) {
@@ -453,7 +459,7 @@ const useOnboarding = ({
         }
       }
 
-      const balances = await getBalances({ address: owner, httpClient })
+      const balances = await getBalances({ heliumAddress: owner, httpClient })
       let hasSufficientBalance = true
 
       // TODO: Where does oracle price come from in solana world?
@@ -502,7 +508,7 @@ const useOnboarding = ({
             usd: totalStakingAmountUsd,
           },
           solFee: new Balance(0, CurrencyType.solTokens),
-          transaction: txnStr,
+          assertLocationTxn: txnStr,
         }
       }
 
@@ -524,6 +530,18 @@ const useOnboarding = ({
         totalStakingAmountHnt.integerBalance
       hasSufficientBalance = hasSufficientHnt && hasSufficientSol
 
+      const solanaAddress = heliumAddressToSolAddress(owner)
+
+      const {
+        data: { solanaTransactions },
+      } = await onboardingV3Client.current.updateIotMetadata({
+        solanaAddress,
+        hotspotAddress: gateway,
+        location: nextLocation,
+        elevation,
+        gain,
+      })
+
       return {
         balances,
         hasSufficientBalance,
@@ -535,7 +553,7 @@ const useOnboarding = ({
           usd: totalStakingAmountUsd,
         },
         solFee: new Balance(TXN_FEE_IN_SOL, CurrencyType.solTokens),
-        transaction: '', // TODO: Submit to onboarding server v3 to get solana txn, then sign it
+        solanaTransactions,
       }
     },
     [
@@ -549,20 +567,25 @@ const useOnboarding = ({
 
   const submitAssertLocation = useCallback(
     async ({
-      transaction,
+      assertLocationTxn,
+      solanaTransactions,
       httpClient,
       gateway,
     }: {
-      transaction: string
+      assertLocationTxn?: string
+      solanaTransactions?: string[]
       httpClient?: Client
       gateway: string
-    }): Promise<{ solTxId?: string; pendingTxn?: PendingTransaction }> => {
+    }): Promise<{
+      solanaTxnIds?: string[]
+      pendingTxn?: PendingTransaction
+    }> => {
       checkSolanaStatus()
 
       const client = httpClient || heliumHttpClient
 
-      if (isHelium) {
-        let txnStr = transaction
+      if (assertLocationTxn) {
+        let txnStr = assertLocationTxn
 
         const hotspot = await getHeliumHotspotInfo({
           hotspotAddress: gateway,
@@ -575,7 +598,7 @@ const useOnboarding = ({
           const onboardResponse =
             await onboardingClient.current.postPaymentTransaction(
               gateway,
-              transaction.toString()
+              assertLocationTxn.toString()
             )
 
           handleError(
@@ -594,22 +617,20 @@ const useOnboarding = ({
         }
       }
 
+      if (!solanaTransactions?.length) {
+        throw new Error('No solana transactions to submit')
+      }
+
       // submit to solana
-      const solTxId = await submitSolana({
-        txn: Buffer.from(transaction),
+      const solanaTxnIds = await submitAllSolana({
+        txns: solanaTransactions.map((txn) => Buffer.from(txn, 'base64')),
         connection: solConnection.current,
       })
       return {
-        solTxId,
+        solanaTxnIds,
       }
     },
-    [
-      getHeliumHotspotInfo,
-      checkSolanaStatus,
-      handleError,
-      hasFreeAssert,
-      isHelium,
-    ]
+    [getHeliumHotspotInfo, checkSolanaStatus, handleError, hasFreeAssert]
   )
 
   const submitTransferHotspot = useCallback(

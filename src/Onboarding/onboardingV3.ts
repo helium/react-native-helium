@@ -3,6 +3,14 @@ export const DEWI_V3_ONBOARDING_API_BASE_URL =
   'https://onboarding.dewi.org/api/v3'
 
 type Response = { data: { solanaTransactions: string[] } }
+type Metadata = {
+  hotspotAddress: string
+  solanaAddress: string
+  location: string
+  elevation: number
+  gain: number
+}
+type HotspotType = 'iot' | 'mobile'
 
 export default class OnboardingClientV3 {
   private axios!: AxiosInstance
@@ -22,6 +30,7 @@ export default class OnboardingClientV3 {
       })
       return response.data
     } catch (err) {
+      console.error({ err })
       if (axios.isAxiosError(err)) {
         return err.response?.data as Response
       }
@@ -37,30 +46,51 @@ export default class OnboardingClientV3 {
     return this.post('transactions/create-hotspot', opts)
   }
 
-  async onboardIot({ hotspotAddress }: { hotspotAddress: string }) {
-    return this.post('transactions/iot/onboard', { entityKey: hotspotAddress })
+  async onboard({
+    hotspotAddress,
+    type,
+  }: {
+    hotspotAddress: string
+    type: HotspotType
+  }) {
+    return this.post(`transactions/${type}/onboard`, {
+      entityKey: hotspotAddress,
+    })
   }
 
-  async updateIotMetadata({
-    walletAddress,
+  async onboardIot({ hotspotAddress }: { hotspotAddress: string }) {
+    return this.onboard({ hotspotAddress, type: 'iot' })
+  }
+
+  async onboardMobile({ hotspotAddress }: { hotspotAddress: string }) {
+    return this.onboard({ hotspotAddress, type: 'mobile' })
+  }
+
+  async updateMetadata({
+    solanaAddress,
     location,
     elevation,
     gain,
     hotspotAddress,
-  }: {
-    hotspotAddress: string
-    walletAddress: string
-    location: string
-    elevation: number
-    gain: number
+    type,
+  }: Metadata & {
+    type: HotspotType
   }) {
     const body = {
       entityKey: hotspotAddress,
       location,
       elevation,
       gain,
-      wallet: walletAddress,
+      wallet: solanaAddress,
     }
-    return this.post('transactions/iot/update-metadata', body)
+    return this.post(`transactions/${type}/update-metadata`, body)
+  }
+
+  async updateIotMetadata(opts: Metadata) {
+    return this.updateMetadata({ ...opts, type: 'iot' })
+  }
+
+  async updateMobileMetadata(opts: Metadata) {
+    return this.updateMetadata({ ...opts, type: 'mobile' })
   }
 }

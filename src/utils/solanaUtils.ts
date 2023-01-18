@@ -47,17 +47,17 @@ export const createHeliumEntityManagerProgram = async ({
 }
 
 export const getHeliumBalance = async ({
-  address,
+  heliumAddress,
   mint,
   connection,
 }: {
-  address: string
+  heliumAddress: string
   mint: string
   connection: web3.Connection
 }) => {
-  const account = new web3.PublicKey(address)
+  const key = heliumAddressToSolPublicKey(heliumAddress)
 
-  const tokenAccounts = await connection.getTokenAccountsByOwner(account, {
+  const tokenAccounts = await connection.getTokenAccountsByOwner(key, {
     programId: TOKEN_PROGRAM_ID,
   })
 
@@ -70,7 +70,7 @@ export const getHeliumBalance = async ({
   return Number(AccountLayout.decode(tokenAcct.account.data).amount)
 }
 
-export const getSolBalance = ({
+export const getSolBalance = async ({
   connection,
   heliumAddress,
 }: {

@@ -4,7 +4,7 @@ import { Button, StyleSheet, Text, TextInput, View } from 'react-native'
 import { makeKeypair } from './secureAccount'
 import { Account } from '@helium/react-native-sdk'
 
-const TOTAL_WORDS = 12
+const TOTAL_WORDS = 24
 const AccountImport = () => {
   const navigation = useNavigation()
   const [word, setWord] = useState('')
