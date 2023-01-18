@@ -104,3 +104,42 @@ export const createLocationTxn = async ({
     payer: ownerIsPayer ? keypair : undefined,
   })
 }
+
+export const signAssert = async ({
+  ownerKeypairRaw,
+  payer,
+  owner,
+  assertLocationTxn,
+}: {
+  ownerKeypairRaw: SodiumKeyPair
+  payer: string
+  owner: string
+  assertLocationTxn: AssertLocationV2
+}) => {
+  const keypair = getKeypair(ownerKeypairRaw)
+  const ownerIsPayer = payer === owner
+  const txnOwnerSigned = await assertLocationTxn.sign({
+    owner: keypair,
+    payer: ownerIsPayer ? keypair : undefined,
+  })
+  if (!txnOwnerSigned.gateway?.b58) {
+    throw new Error('Failed to sign gateway txn')
+  }
+  return txnOwnerSigned
+}
+
+export const signAssertTxn = async ({
+  assertLocationTxn,
+  ...opts
+}: {
+  ownerKeypairRaw: SodiumKeyPair
+  payer: string
+  owner: string
+  assertLocationTxn: string
+}) => {
+  const assert = txnFromString(assertLocationTxn)
+  return signAssert({ ...opts, assertLocationTxn: assert })
+}
+
+export const txnFromString = (txnStr: string): AssertLocationV2 =>
+  AssertLocationV2.fromString(txnStr)

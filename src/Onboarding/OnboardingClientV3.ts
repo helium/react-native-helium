@@ -38,7 +38,6 @@ export default class OnboardingClientV3 {
       })
       return response.data
     } catch (err) {
-      console.error({ err })
       if (axios.isAxiosError(err)) {
         return err.response?.data as Response
       }

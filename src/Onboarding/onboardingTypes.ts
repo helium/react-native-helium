@@ -75,7 +75,7 @@ export interface OnboardingManager {
     httpClient?: Client
     gateway: string
   }) => Promise<{
-    solTxnIds?: string[]
+    solanaTxnIds?: string[]
     pendingTxn?: PendingTransaction
   }>
   getOnboardTransactions: (_opts: {
@@ -92,6 +92,7 @@ export interface OnboardingManager {
     decimalGain?: number
     elevation?: number
     ownerKeypairRaw?: SodiumKeyPair
+    hotspotTypes: HotspotType[]
     httpClient?: Client
   }) => Promise<AssertData>
   getHotspotForCurrentChain: (_opts: {

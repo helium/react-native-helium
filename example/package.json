@@ -28,6 +28,7 @@
     "angry-purple-tiger": "^1.0.5",
     "assert": "^2.0.0",
     "axios": "^1.2.1",
+    "axios-retry": "^3.3.1",
     "buffer": "^6.0.3",
     "events": "^3.3.0",
     "expo": "^47.0.0",

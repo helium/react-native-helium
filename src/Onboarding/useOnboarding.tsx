@@ -31,6 +31,7 @@ import {
 } from '../utils/solanaUtils'
 import { Buffer } from 'buffer'
 import OnboardingClientV3, { HotspotType } from './OnboardingClientV3'
+import { BN } from 'bn.js'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
@@ -416,6 +417,7 @@ const useOnboarding = ({
       ownerKeypairRaw,
       httpClient,
       dataOnly,
+      hotspotTypes,
     }: {
       gateway: string
       owner: string
@@ -427,11 +429,13 @@ const useOnboarding = ({
       ownerKeypairRaw?: SodiumKeyPair
       httpClient?: Client
       dataOnly?: boolean
+      hotspotTypes: HotspotType[]
     }): Promise<AssertData> => {
       checkSolanaStatus()
 
       const client = httpClient || heliumHttpClient
-      const gain = decimalGain * 10.0
+
+      const gain = Math.round(decimalGain * 10.0)
 
       const hotspot = await getHotspotForCurrentChain({
         hotspotAddress: gateway,
@@ -525,16 +529,22 @@ const useOnboarding = ({
       hasSufficientBalance = hasSufficientHnt && hasSufficientSol
 
       const solanaAddress = heliumAddressToSolAddress(owner)
+      const location = new BN(nextLocation, 'hex').toString()
 
-      const {
-        data: { solanaTransactions },
-      } = await onboardingV3Client.current.updateIotMetadata({
-        solanaAddress,
-        hotspotAddress: gateway,
-        location: nextLocation,
-        elevation,
-        gain,
-      })
+      const promises = hotspotTypes.map((type) =>
+        onboardingV3Client.current.updateMetadata({
+          type,
+          solanaAddress,
+          hotspotAddress: gateway,
+          location,
+          elevation,
+          gain,
+        })
+      )
+      const solResponses = await Promise.all(promises)
+      const solanaTransactions = solResponses.flatMap(
+        (r) => r.data.solanaTransactions
+      )
 
       return {
         balances,
@@ -615,7 +625,6 @@ const useOnboarding = ({
         throw new Error('No solana transactions to submit')
       }
 
-      // submit to solana
       const solanaTxnIds = await submitAllSolana({
         txns: solanaTransactions.map((txn) => Buffer.from(txn, 'base64')),
         connection: solConnection.current,

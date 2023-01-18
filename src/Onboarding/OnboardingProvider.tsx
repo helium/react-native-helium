@@ -51,6 +51,7 @@ const initialState = {
     elevation?: number
     ownerKeypairRaw?: SodiumKeyPair
     httpClient?: Client
+    hotspotTypes: HotspotType[]
   }) =>
     new Promise<AssertData>((resolve) =>
       resolve({

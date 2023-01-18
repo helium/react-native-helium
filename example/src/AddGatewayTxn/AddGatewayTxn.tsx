@@ -221,8 +221,8 @@ const styles = StyleSheet.create({
     minHeight: 200,
     marginTop: 16,
   },
-  leftMargin: { marginLeft: 8 },
   topMargin: { marginTop: 16 },
+  leftMargin: { marginLeft: 8 },
   switchRow: {
     flexDirection: 'row',
     marginTop: 16,
