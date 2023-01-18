@@ -2,23 +2,20 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Button, StyleSheet, Text, View, Alert } from 'react-native'
 import { getPendingTxn } from '../../appDataClient'
 import {
+  getAddressStr,
   getKeypairRaw,
   getSecureItem,
-  getSolanaPubKey,
 } from '../Account/secureAccount'
 import {
+  Account,
   SolUtils,
   useHotspotBle,
   useOnboarding,
 } from '@helium/react-native-sdk'
 
 const AddGatewayBle = () => {
-  const {
-    getOnboardingRecord,
-    submitAddGateway,
-    getOnboardTransaction,
-    solanaStatus,
-  } = useOnboarding()
+  const { getOnboardingRecord, submitAddGateway, getOnboardTransaction } =
+    useOnboarding()
   const { createAndSignGatewayTxn, getOnboardingAddress } = useHotspotBle()
   const [hash, setHash] = useState('')
   const [solTxId, setSolTxId] = useState('')
@@ -55,27 +52,36 @@ const AddGatewayBle = () => {
       throw new Error('Error signing gateway txn')
     }
 
-    const onboardTxn = await getOnboardTransaction({
+    const { addGatewayTxn, solanaTransactions } = await getOnboardTransaction({
       txn: txnOwnerSigned.toString(),
       hotspotAddress: onboardAddress,
     })
+    let addGatewaySignedTxn: string | undefined
+    let solanaSignedTransactions: string[] | undefined
 
-    let signedTransaction = ''
-
-    if (solanaStatus.isHelium) {
-      signedTransaction = txnOwnerSigned.toString()
-    } else if (solanaStatus.isSolana) {
+    if (addGatewayTxn) {
+      addGatewaySignedTxn = txnOwnerSigned.toString()
+    } else if (solanaTransactions) {
       const solanaKeypair = SolUtils.getSolanaKeypair(keypair.sk)
-      const tx = SolUtils.stringToTransaction(onboardTxn)
-      tx.partialSign(solanaKeypair)
-      signedTransaction = tx.serialize().toString()
+
+      solanaSignedTransactions = solanaTransactions.map((txn) => {
+        const tx = SolUtils.stringToTransaction(txn)
+        tx.partialSign(solanaKeypair)
+        return tx.serialize().toString('base64')
+      })
     }
 
-    const userSolPubKey = await getSolanaPubKey(keypair.sk)
+    const userAddress = await getAddressStr()
+    if (!userAddress) {
+      throw new Error('No user found')
+    }
+
+    const userSolPubKey = Account.heliumAddressToSolPublicKey(userAddress)
 
     const addGatewayResponse = await submitAddGateway({
       hotspotAddress: onboardAddress,
-      transaction: signedTransaction,
+      addGatewayTxn: addGatewaySignedTxn,
+      solanaTransactions: solanaSignedTransactions,
       userSolPubKey,
     })
 
@@ -86,8 +92,8 @@ const AddGatewayBle = () => {
       return
     }
 
-    if (addGatewayResponse?.solanaTxId) {
-      setSolTxId(addGatewayResponse.solanaTxId)
+    if (addGatewayResponse?.solanaTxnIds?.length) {
+      setSolTxId(addGatewayResponse.solanaTxnIds[0])
       setStatus('Solana Success')
     }
   }, [
@@ -95,7 +101,6 @@ const AddGatewayBle = () => {
     getOnboardingRecord,
     createAndSignGatewayTxn,
     getOnboardTransaction,
-    solanaStatus,
     submitAddGateway,
   ])
 

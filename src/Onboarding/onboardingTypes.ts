@@ -58,12 +58,13 @@ export interface OnboardingManager {
   }) => Promise<string>
   submitAddGateway: (_opts: {
     hotspotAddress: string
-    transaction: string
-    userSolPubKey?: web3.PublicKey
     userHeliumAddress?: string
+    addGatewayTxn?: string
+    solanaTransactions?: string[]
+    userSolPubKey?: web3.PublicKey
     httpClient?: Client
   }) => Promise<{
-    solanaTxId?: string
+    solanaTxnIds?: string[]
     pendingTxn?: PendingTransaction
   }>
   submitAssertLocation: (_opts: {
@@ -77,7 +78,7 @@ export interface OnboardingManager {
   getOnboardTransaction: (_opts: {
     txn: string
     hotspotAddress: string
-  }) => Promise<string>
+  }) => Promise<{ addGatewayTxn?: string; solanaTransactions?: string[] }>
   getAssertData: (_opts: {
     gateway: string
     owner: string

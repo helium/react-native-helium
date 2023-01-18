@@ -27,12 +27,8 @@ const AddGatewayTxn = () => {
   const [solTxId, setSolTxId] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
-  const {
-    getOnboardingRecord,
-    submitAddGateway,
-    getOnboardTransaction,
-    solanaStatus,
-  } = useOnboarding()
+  const { getOnboardingRecord, submitAddGateway, getOnboardTransaction } =
+    useOnboarding()
 
   useEffect(() => {
     if (!hotspotAddress) return
@@ -60,28 +56,32 @@ const AddGatewayTxn = () => {
 
     // construct and publish add gateway
     const keypair = await getKeypairRaw()
-    const onboardTxn = await getOnboardTransaction({
+    const { addGatewayTxn, solanaTransactions } = await getOnboardTransaction({
       txn: txnStr,
       hotspotAddress,
     })
 
-    let transaction = ''
+    let addGatewaySignedTxn: string | undefined
+    let solanaSignedTransactions: string[] | undefined
 
-    if (solanaStatus.isHelium) {
+    if (addGatewayTxn) {
       const txnOwnerSigned = await AddGateway.signGatewayTxn(
-        onboardTxn,
+        addGatewayTxn,
         keypair
       )
       if (!txnOwnerSigned.gateway?.b58) {
         throw new Error('Error signing gateway txn')
       }
 
-      transaction = txnOwnerSigned.toString()
-    } else if (solanaStatus.isSolana) {
+      addGatewaySignedTxn = txnOwnerSigned.toString()
+    } else if (solanaTransactions) {
       const solanaKeypair = SolUtils.getSolanaKeypair(keypair.sk)
-      const tx = SolUtils.stringToTransaction(onboardTxn)
-      tx.partialSign(solanaKeypair)
-      transaction = tx.serialize().toString('base64')
+
+      solanaSignedTransactions = solanaTransactions.map((txn) => {
+        const tx = SolUtils.stringToTransaction(txn)
+        tx.partialSign(solanaKeypair)
+        return tx.serialize().toString('base64')
+      })
     }
 
     const userAddress = await getAddressStr()
@@ -93,7 +93,8 @@ const AddGatewayTxn = () => {
 
     const addGatewayResponse = await submitAddGateway({
       hotspotAddress,
-      transaction,
+      addGatewayTxn: addGatewaySignedTxn,
+      solanaTransactions: solanaSignedTransactions,
       userSolPubKey,
     })
 
@@ -104,17 +105,11 @@ const AddGatewayTxn = () => {
       return
     }
 
-    if (addGatewayResponse?.solanaTxId) {
-      setSolTxId(addGatewayResponse.solanaTxId)
+    if (addGatewayResponse?.solanaTxnIds?.length) {
+      setSolTxId(addGatewayResponse.solanaTxnIds[0])
       setStatus('Solana Success')
     }
-  }, [
-    getOnboardTransaction,
-    hotspotAddress,
-    solanaStatus,
-    submitAddGateway,
-    txnStr,
-  ])
+  }, [getOnboardTransaction, hotspotAddress, submitAddGateway, txnStr])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
@@ -159,7 +154,7 @@ const AddGatewayTxn = () => {
         </View>
       </TouchableOpacity>
 
-      <Text style={styles.topMargin}>Sol Tx Ids</Text>
+      <Text style={styles.topMargin}>Sol Tx Id:</Text>
       <Text style={styles.topMargin} selectable>
         {solTxId}
       </Text>

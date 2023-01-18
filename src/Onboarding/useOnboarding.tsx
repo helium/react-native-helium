@@ -209,9 +209,9 @@ const useOnboarding = ({
     }: {
       txn: string
       hotspotAddress: string
-    }): Promise<string> => {
+    }): Promise<{ addGatewayTxn?: string; solanaTransactions?: string[] }> => {
       if (isHelium) {
-        return txn
+        return { addGatewayTxn: txn }
       }
 
       const createTxns = await onboardingV3Client.current.createHotspot({
@@ -242,7 +242,7 @@ const useOnboarding = ({
         throw new Error('failed to create solana onboard txns')
       }
 
-      return onboardTxns[0]
+      return { solanaTransactions: onboardTxns }
     },
     [isHelium]
   )
@@ -250,18 +250,20 @@ const useOnboarding = ({
   const submitAddGateway = useCallback(
     async ({
       hotspotAddress,
-      transaction,
+      addGatewayTxn,
+      solanaTransactions,
       userSolPubKey,
       userHeliumAddress,
       httpClient,
     }: {
       hotspotAddress: string
       userHeliumAddress?: string
-      transaction: string
+      addGatewayTxn?: string
+      solanaTransactions?: string[]
       userSolPubKey?: web3.PublicKey
       httpClient?: Client
     }): Promise<{
-      solanaTxId?: string
+      solanaTxnIds?: string[]
       pendingTxn?: PendingTransaction
     }> => {
       checkSolanaStatus()
@@ -280,14 +282,14 @@ const useOnboarding = ({
       }
 
       if (isHelium) {
-        if (!transaction) {
+        if (!addGatewayTxn) {
           throw new Error('Transaction is missing')
         }
         // If L1 is helium, must submit to onboard server for payer signature
         const onboardResponse =
           await onboardingClient.current.postPaymentTransaction(
             hotspotAddress,
-            transaction
+            addGatewayTxn
           )
         handleError(
           onboardResponse,
@@ -306,15 +308,17 @@ const useOnboarding = ({
         }
       }
 
-      if (!transaction) {
-        throw new Error('No transaction to submit')
+      if (!solanaTransactions?.length) {
+        throw new Error('No solana transactions to submit')
       }
-      const solanaTxId = await submitSolana({
-        txn: Buffer.from(transaction, 'base64'),
+
+      const solanaTxnIds = await submitAllSolana({
+        txns: solanaTransactions.map((txn) => Buffer.from(txn, 'base64')),
         connection: solConnection.current,
       })
+
       return {
-        solanaTxId,
+        solanaTxnIds,
       }
     },
     [checkSolanaStatus, getHotspotForCurrentChain, handleError, isHelium]

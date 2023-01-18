@@ -22,16 +22,20 @@ const initialState = {
   getOnboardTransaction: async (_opts: {
     txn: string
     hotspotAddress: string
-  }) => new Promise<string>((resolve) => resolve('')),
+  }) =>
+    new Promise<{ heliumTxn?: string; solanaTransactions?: string[] }>(
+      (resolve) => resolve({})
+    ),
   submitAddGateway: async (_opts: {
     hotspotAddress: string
-    transaction: string
-    userSolPubKey?: web3.PublicKey
     userHeliumAddress?: string
+    addGatewayTxn?: string
+    solanaTransactions?: string[]
+    userSolPubKey?: web3.PublicKey
     httpClient?: Client
   }) =>
     new Promise<{
-      solanaTxId?: string
+      solanaTxnIds?: string[]
       pendingTxn?: PendingTransaction
     }>((resolve) => resolve({})),
   baseUrl: '',
