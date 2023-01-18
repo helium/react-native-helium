@@ -6,6 +6,7 @@ import * as web3 from '@solana/web3.js'
 import { SodiumKeyPair } from '../Account/account'
 import Balance, { CurrencyType } from '@helium/currency'
 import { SolHotspot } from '../utils/solanaUtils'
+import { HotspotType } from './OnboardingClientV3'
 
 const initialState = {
   solanaStatus: {
@@ -19,9 +20,10 @@ const initialState = {
     newOwnerAddress: string
     httpClient?: Client
   }) => new Promise<string>((resolve) => resolve('')),
-  getOnboardTransaction: async (_opts: {
+  getOnboardTransactions: async (_opts: {
     txn: string
     hotspotAddress: string
+    hotspotTypes: HotspotType[]
   }) =>
     new Promise<{ heliumTxn?: string; solanaTransactions?: string[] }>(
       (resolve) => resolve({})

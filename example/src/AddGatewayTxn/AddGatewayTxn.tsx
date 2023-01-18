@@ -6,10 +6,12 @@ import {
   Text,
   Button,
   TouchableOpacity,
+  Switch,
 } from 'react-native'
 import {
   Account,
   AddGateway,
+  HotspotType,
   SolUtils,
   useOnboarding,
 } from '@helium/react-native-sdk'
@@ -27,7 +29,8 @@ const AddGatewayTxn = () => {
   const [solTxId, setSolTxId] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
-  const { getOnboardingRecord, submitAddGateway, getOnboardTransaction } =
+  const [hotspotTypes, setHotspotTypes] = useState<HotspotType[]>([])
+  const { getOnboardingRecord, submitAddGateway, getOnboardTransactions } =
     useOnboarding()
 
   useEffect(() => {
@@ -56,9 +59,10 @@ const AddGatewayTxn = () => {
 
     // construct and publish add gateway
     const keypair = await getKeypairRaw()
-    const { addGatewayTxn, solanaTransactions } = await getOnboardTransaction({
+    const { addGatewayTxn, solanaTransactions } = await getOnboardTransactions({
       txn: txnStr,
       hotspotAddress,
+      hotspotTypes,
     })
 
     let addGatewaySignedTxn: string | undefined
@@ -106,10 +110,16 @@ const AddGatewayTxn = () => {
     }
 
     if (addGatewayResponse?.solanaTxnIds?.length) {
-      setSolTxId(addGatewayResponse.solanaTxnIds[0])
+      setSolTxId(addGatewayResponse.solanaTxnIds.join(', '))
       setStatus('Solana Success')
     }
-  }, [getOnboardTransaction, hotspotAddress, submitAddGateway, txnStr])
+  }, [
+    getOnboardTransactions,
+    hotspotAddress,
+    hotspotTypes,
+    submitAddGateway,
+    txnStr,
+  ])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
@@ -126,6 +136,18 @@ const AddGatewayTxn = () => {
     return () => clearInterval(interval)
   }, [updateTxnStatus])
 
+  const handleHotspotTypeChange = useCallback(
+    (hotspotType: HotspotType) => (val: boolean) => {
+      const next = hotspotTypes.filter((t) => t !== hotspotType)
+      if (!val) {
+        setHotspotTypes(next)
+      } else {
+        setHotspotTypes([...next, hotspotType])
+      }
+    },
+    [hotspotTypes]
+  )
+
   return (
     <View style={styles.container}>
       <Text style={styles.topMargin}>{`mac: ${macAddress}`}</Text>
@@ -141,6 +163,23 @@ const AddGatewayTxn = () => {
         multiline
         autoCorrect={false}
       />
+
+      <View style={styles.switchRow}>
+        <Switch
+          onValueChange={handleHotspotTypeChange('iot')}
+          value={hotspotTypes.includes('iot')}
+        />
+        <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
+      </View>
+
+      <View style={styles.switchRow}>
+        <Switch
+          onValueChange={handleHotspotTypeChange('mobile')}
+          value={hotspotTypes.includes('mobile')}
+        />
+        <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
+      </View>
+
       <Button
         title="Submit Transaction"
         disabled={!txnStr || submitted}
@@ -154,7 +193,7 @@ const AddGatewayTxn = () => {
         </View>
       </TouchableOpacity>
 
-      <Text style={styles.topMargin}>Sol Tx Id:</Text>
+      <Text style={styles.topMargin}>Sol Tx Id(s):</Text>
       <Text style={styles.topMargin} selectable>
         {solTxId}
       </Text>
@@ -182,6 +221,12 @@ const styles = StyleSheet.create({
     minHeight: 200,
     marginTop: 16,
   },
+  leftMargin: { marginLeft: 8 },
   topMargin: { marginTop: 16 },
+  switchRow: {
+    flexDirection: 'row',
+    marginTop: 16,
+    alignItems: 'center',
+  },
 })
 export default AddGatewayTxn

@@ -1,4 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse, Method } from 'axios'
+import axiosRetry from 'axios-retry'
+
 export const DEWI_V3_ONBOARDING_API_BASE_URL =
   'https://onboarding.dewi.org/api/v3'
 
@@ -10,7 +12,7 @@ type Metadata = {
   elevation: number
   gain: number
 }
-type HotspotType = 'iot' | 'mobile'
+export type HotspotType = 'iot' | 'mobile'
 
 export default class OnboardingClientV3 {
   private axios!: AxiosInstance
@@ -18,6 +20,12 @@ export default class OnboardingClientV3 {
   constructor(baseURL: string = DEWI_V3_ONBOARDING_API_BASE_URL) {
     this.axios = axios.create({
       baseURL,
+    })
+
+    axiosRetry(this.axios, {
+      retries: 10,
+      retryDelay: axiosRetry.exponentialDelay,
+      retryCondition: (error) => error.response?.status === 404,
     })
   }
 

@@ -29,9 +29,8 @@ import {
   submitSolana,
   submitAllSolana,
 } from '../utils/solanaUtils'
-import sleep from '../utils/sleep'
 import { Buffer } from 'buffer'
-import OnboardingClientV3 from './onboardingV3'
+import OnboardingClientV3, { HotspotType } from './OnboardingClientV3'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
@@ -206,13 +205,15 @@ const useOnboarding = ({
     ]
   )
 
-  const getOnboardTransaction = useCallback(
+  const getOnboardTransactions = useCallback(
     async ({
       txn,
       hotspotAddress,
+      hotspotTypes,
     }: {
       txn: string
       hotspotAddress: string
+      hotspotTypes: HotspotType[]
     }): Promise<{ addGatewayTxn?: string; solanaTransactions?: string[] }> => {
       if (isHelium) {
         return { addGatewayTxn: txn }
@@ -221,32 +222,25 @@ const useOnboarding = ({
       const createTxns = await onboardingV3Client.current.createHotspot({
         transaction: txn,
       })
+
       await submitAllSolana({
         txns: createTxns.data.solanaTransactions.map((t) => Buffer.from(t)),
         connection: solConnection.current,
       })
 
-      let tries = 0
-      let onboardTxns: string[] | undefined
-      while (tries < 10 && !onboardTxns) {
-        try {
-          onboardTxns = (
-            await onboardingV3Client.current.onboardIot({
-              hotspotAddress,
-            })
-          ).data.solanaTransactions
-        } catch {
-          console.log(`Hotspot ${hotspotAddress} may not exist yet ${tries}`)
-          tries++
-          await sleep(2000) // Wait for hotspot to be indexed into asset api
-        }
-      }
+      const promises = hotspotTypes.map((type) =>
+        onboardingV3Client.current.onboard({ hotspotAddress, type })
+      )
+      const solResponses = await Promise.all(promises)
+      const solanaTransactions = solResponses.flatMap(
+        (r) => r.data.solanaTransactions
+      )
 
-      if (!onboardTxns?.length) {
+      if (!solanaTransactions?.length) {
         throw new Error('failed to create solana onboard txns')
       }
 
-      return { solanaTransactions: onboardTxns }
+      return { solanaTransactions }
     },
     [isHelium]
   )
@@ -711,7 +705,7 @@ const useOnboarding = ({
     getMakers,
     getMinFirmware,
     getOnboardingRecord,
-    getOnboardTransaction,
+    getOnboardTransactions,
     hasFreeAssert,
     submitAddGateway,
     submitAssertLocation,

@@ -26,6 +26,7 @@ import { OnboardingRecord, Maker } from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
 import { SodiumKeyPair } from '../Account/account'
 import { SolHotspot } from '../utils/solanaUtils'
+import { HotspotType } from './OnboardingClientV3'
 
 export type AssertData = {
   balances?: {
@@ -77,9 +78,10 @@ export interface OnboardingManager {
     solTxnIds?: string[]
     pendingTxn?: PendingTransaction
   }>
-  getOnboardTransaction: (_opts: {
+  getOnboardTransactions: (_opts: {
     txn: string
     hotspotAddress: string
+    hotspotTypes: HotspotType[]
   }) => Promise<{ addGatewayTxn?: string; solanaTransactions?: string[] }>
   getAssertData: (_opts: {
     gateway: string

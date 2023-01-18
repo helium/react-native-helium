@@ -203,6 +203,7 @@
     "@solana/spl-token": "^0.3.6",
     "@solana/web3.js": "^1.69.0",
     "assert": "^2.0.0",
+    "axios-retry": "^3.3.1",
     "bn.js": "^5.2.1",
     "react-native-crypto": "^2.2.0",
     "swr": "^2.0.0",

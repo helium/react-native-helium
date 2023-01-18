@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Button, StyleSheet, Text, View, Alert } from 'react-native'
+import { Button, StyleSheet, Text, View, Alert, Switch } from 'react-native'
 import { getPendingTxn } from '../../appDataClient'
 import {
   getAddressStr,
@@ -8,13 +8,14 @@ import {
 } from '../Account/secureAccount'
 import {
   Account,
+  HotspotType,
   SolUtils,
   useHotspotBle,
   useOnboarding,
 } from '@helium/react-native-sdk'
 
 const AddGatewayBle = () => {
-  const { getOnboardingRecord, submitAddGateway, getOnboardTransaction } =
+  const { getOnboardingRecord, submitAddGateway, getOnboardTransactions } =
     useOnboarding()
   const { createAndSignGatewayTxn, getOnboardingAddress } = useHotspotBle()
   const [hash, setHash] = useState('')
@@ -22,6 +23,7 @@ const AddGatewayBle = () => {
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [hotspotTypes, setHotspotTypes] = useState<HotspotType[]>([])
 
   const handleAddGateway = useCallback(async () => {
     setSubmitted(true)
@@ -52,9 +54,10 @@ const AddGatewayBle = () => {
       throw new Error('Error signing gateway txn')
     }
 
-    const { addGatewayTxn, solanaTransactions } = await getOnboardTransaction({
+    const { addGatewayTxn, solanaTransactions } = await getOnboardTransactions({
       txn: txnOwnerSigned.toString(),
       hotspotAddress: onboardAddress,
+      hotspotTypes,
     })
     let addGatewaySignedTxn: string | undefined
     let solanaSignedTransactions: string[] | undefined
@@ -100,7 +103,8 @@ const AddGatewayBle = () => {
     getOnboardingAddress,
     getOnboardingRecord,
     createAndSignGatewayTxn,
-    getOnboardTransaction,
+    getOnboardTransactions,
+    hotspotTypes,
     submitAddGateway,
   ])
 
@@ -120,8 +124,36 @@ const AddGatewayBle = () => {
     return () => clearInterval(interval)
   }, [updateTxnStatus])
 
+  const handleHotspotTypeChange = useCallback(
+    (hotspotType: HotspotType) => (val: boolean) => {
+      const next = hotspotTypes.filter((t) => t !== hotspotType)
+      if (!val) {
+        setHotspotTypes(next)
+      } else {
+        setHotspotTypes([...next, hotspotType])
+      }
+    },
+    [hotspotTypes]
+  )
+
   return (
     <View style={styles.container}>
+      <View style={styles.switchRow}>
+        <Switch
+          onValueChange={handleHotspotTypeChange('iot')}
+          value={hotspotTypes.includes('iot')}
+        />
+        <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
+      </View>
+
+      <View style={styles.switchRow}>
+        <Switch
+          onValueChange={handleHotspotTypeChange('mobile')}
+          value={hotspotTypes.includes('mobile')}
+        />
+        <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
+      </View>
+
       <Button
         title="Add Gateway"
         onPress={handleAddGateway}
@@ -146,6 +178,12 @@ const AddGatewayBle = () => {
 const styles = StyleSheet.create({
   container: { padding: 16 },
   topMargin: { marginTop: 16 },
+  switchRow: {
+    flexDirection: 'row',
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  leftMargin: { marginLeft: 8 },
 })
 
 export default AddGatewayBle
