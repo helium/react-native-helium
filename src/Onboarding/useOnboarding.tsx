@@ -216,6 +216,8 @@ const useOnboarding = ({
       hotspotAddress: string
       hotspotTypes: HotspotType[]
     }): Promise<{ addGatewayTxn?: string; solanaTransactions?: string[] }> => {
+      // TODO: check solana status, check if hotspot exists
+
       if (isHelium) {
         return { addGatewayTxn: txn }
       }
@@ -269,6 +271,7 @@ const useOnboarding = ({
 
       const client = httpClient || heliumHttpClient
 
+      // TODO: Remove this check?
       const hotspotExists = !!(await getHotspotForCurrentChain({
         hotspotAddress,
         userSolPubKey,
@@ -706,6 +709,16 @@ const useOnboarding = ({
     [isHelium, checkSolanaStatus]
   )
 
+  const submitSolanaTransactions = useCallback(
+    async ({ solanaTransactions }: { solanaTransactions: string[] }) => {
+      return submitAllSolana({
+        txns: solanaTransactions.map((txn) => Buffer.from(txn, 'base64')),
+        connection: solConnection.current,
+      })
+    },
+    []
+  )
+
   return {
     baseUrl,
     createTransferTransaction,
@@ -717,6 +730,7 @@ const useOnboarding = ({
     getOnboardTransactions,
     hasFreeAssert,
     submitAddGateway,
+    submitSolanaTransactions,
     submitAssertLocation,
     submitTransferHotspot,
     solanaStatus: {

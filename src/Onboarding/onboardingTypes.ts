@@ -78,6 +78,9 @@ export interface OnboardingManager {
     solanaTxnIds?: string[]
     pendingTxn?: PendingTransaction
   }>
+  submitSolanaTransactions: (_opts: {
+    solanaTransactions: string[]
+  }) => Promise<string[]>
   getOnboardTransactions: (_opts: {
     txn: string
     hotspotAddress: string

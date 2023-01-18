@@ -40,6 +40,8 @@ const initialState = {
       solanaTxnIds?: string[]
       pendingTxn?: PendingTransaction
     }>((resolve) => resolve({})),
+  submitSolanaTransactions: (_opts: { solanaTransactions: string[] }) =>
+    new Promise<string[]>((resolve) => resolve([])),
   baseUrl: '',
   getAssertData: (_opts: {
     gateway: string
