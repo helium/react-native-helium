@@ -44,6 +44,8 @@ export type AssertData = {
   solFee: Balance<SolTokens>
   assertLocationTxn?: string
   solanaTransactions?: Buffer[]
+  payer: string
+  maker?: Maker
 }
 
 export interface OnboardingManager {
@@ -89,7 +91,6 @@ export interface OnboardingManager {
   getAssertData: (_opts: {
     gateway: string
     owner: string
-    maker: string
     lat: number
     lng: number
     decimalGain?: number
@@ -97,6 +98,7 @@ export interface OnboardingManager {
     ownerKeypairRaw?: SodiumKeyPair
     hotspotTypes: HotspotType[]
     httpClient?: Client
+    onboardingRecord?: OnboardingRecord | null
   }) => Promise<AssertData>
   getHotspotForCurrentChain: (_opts: {
     hotspotAddress: string
@@ -106,6 +108,7 @@ export interface OnboardingManager {
   }) => Promise<SolHotspot | Hotspot | null>
   hasFreeAssert: (_opts: {
     hotspot?: Hotspot | SolHotspot | null
+    onboardingRecord?: OnboardingRecord | null
   }) => Promise<boolean>
   /**
    * Get the onboarding record from the Onboarding Server.

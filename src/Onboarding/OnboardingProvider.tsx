@@ -7,6 +7,7 @@ import { SodiumKeyPair } from '../Account/account'
 import Balance, { CurrencyType } from '@helium/currency'
 import { SolHotspot } from '../utils/solanaUtils'
 import { HotspotType } from './OnboardingClientV3'
+import { OnboardingRecord } from '@helium/onboarding'
 
 const initialState = {
   solanaStatus: {
@@ -46,7 +47,6 @@ const initialState = {
   getAssertData: (_opts: {
     gateway: string
     owner: string
-    maker: string
     lat: number
     lng: number
     decimalGain?: number
@@ -54,6 +54,7 @@ const initialState = {
     ownerKeypairRaw?: SodiumKeyPair
     httpClient?: Client
     hotspotTypes: HotspotType[]
+    onboardingRecord?: OnboardingRecord | null
   }) =>
     new Promise<AssertData>((resolve) =>
       resolve({
@@ -61,6 +62,7 @@ const initialState = {
         isFree: true,
         hotspot: null,
         solFee: new Balance(0, CurrencyType.solTokens),
+        payer: '',
       })
     ),
   getHotspotForCurrentChain: async (_opts: {
@@ -72,8 +74,10 @@ const initialState = {
   getMakers: async () => [],
   getMinFirmware: async () => '',
   getOnboardingRecord: async (_hotspotAddress: string) => null,
-  hasFreeAssert: async (_opts: { hotspot?: Hotspot | SolHotspot | null }) =>
-    false,
+  hasFreeAssert: async (_opts: {
+    hotspot?: Hotspot | SolHotspot | null
+    onboardingRecord?: OnboardingRecord | null
+  }) => false,
   postPaymentTransaction: async (
     _hotspotAddress: string,
     _transaction: string

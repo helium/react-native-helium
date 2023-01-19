@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react'
-import OnboardingClient from '@helium/onboarding'
+import OnboardingClient, { OnboardingRecord } from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
 import { Client, Hotspot, PendingTransaction } from '@helium/http'
 import { useSolanaVars, useSolanaStatus } from '../utils/solanaSentinel'
@@ -327,12 +327,20 @@ const useOnboarding = ({
   )
 
   const hasFreeAssert = useCallback(
-    async ({ hotspot }: { hotspot?: Hotspot | SolHotspot | null }) => {
+    async ({
+      hotspot,
+      onboardingRecord: paramsOnboardRecord,
+    }: {
+      hotspot?: Hotspot | SolHotspot | null
+      onboardingRecord?: OnboardingRecord | null
+    }) => {
       if (!hotspot) {
         // TODO: Is this right?
         // assume free as it hasn't been added the chain
         return true
       }
+      let onboardingRecord: OnboardingRecord | null | undefined =
+        paramsOnboardRecord
       let address = ''
       if (isSolHotspot(hotspot)) {
         // TODO: Is this right?
@@ -346,7 +354,10 @@ const useOnboarding = ({
         address = hotspot.address
       }
 
-      const onboardingRecord = await getOnboardingRecord(address)
+      if (!onboardingRecord) {
+        onboardingRecord = await getOnboardingRecord(address)
+      }
+
       if (!onboardingRecord) {
         throw new Error('Onboarding record not found')
       }
@@ -412,7 +423,6 @@ const useOnboarding = ({
     async ({
       gateway,
       owner,
-      maker,
       lat,
       lng,
       decimalGain = 1.2,
@@ -421,10 +431,10 @@ const useOnboarding = ({
       httpClient,
       dataOnly,
       hotspotTypes,
+      onboardingRecord: paramsOnboardRecord,
     }: {
       gateway: string
       owner: string
-      maker: string
       lat: number
       lng: number
       decimalGain?: number
@@ -433,10 +443,14 @@ const useOnboarding = ({
       httpClient?: Client
       dataOnly?: boolean
       hotspotTypes: HotspotType[]
+      onboardingRecord?: OnboardingRecord | null
     }): Promise<AssertData> => {
       checkSolanaStatus()
 
       const client = httpClient || heliumHttpClient
+
+      let onboardingRecord: OnboardingRecord | null | undefined =
+        paramsOnboardRecord
 
       const gain = Math.round(decimalGain * 10.0)
 
@@ -445,7 +459,18 @@ const useOnboarding = ({
         userHeliumAddress: owner,
       })
 
-      const isFree = await hasFreeAssert({ hotspot })
+      if (!onboardingRecord) {
+        onboardingRecord = await getOnboardingRecord(gateway)
+      }
+
+      if (!onboardingRecord) {
+        throw new Error('Onboarding record not found')
+      }
+
+      const isFree = await hasFreeAssert({ hotspot, onboardingRecord })
+
+      const maker = onboardingRecord.maker
+      const payer = isFree ? maker.address : owner
 
       const nextLocation = getH3Location(lat, lng)
 
@@ -475,7 +500,7 @@ const useOnboarding = ({
           gain,
           elevation,
           ownerKeypairRaw,
-          maker,
+          maker: onboardingRecord.maker.address,
           hotspot,
           isFree,
           dataOnly,
@@ -510,6 +535,8 @@ const useOnboarding = ({
           },
           solFee: new Balance(0, CurrencyType.solTokens),
           assertLocationTxn: txnStr,
+          payer,
+          maker,
         }
       }
 
@@ -561,11 +588,14 @@ const useOnboarding = ({
         },
         solFee: new Balance(TXN_FEE_IN_SOL, CurrencyType.solTokens),
         solanaTransactions,
+        payer,
+        maker,
       }
     },
     [
       checkSolanaStatus,
       getHotspotForCurrentChain,
+      getOnboardingRecord,
       hasFreeAssert,
       getBalances,
       isHelium,

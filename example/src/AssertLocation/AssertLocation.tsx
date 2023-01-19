@@ -52,7 +52,6 @@ const AssertLocation = () => {
       gateway: gatewayAddress,
       lat: parseFloat(lat),
       lng: parseFloat(lng),
-      maker: Config.ONBOARDING_MAKER_ADDRESS || '',
       owner: userAddress,
       ownerKeypairRaw,
       hotspotTypes,
