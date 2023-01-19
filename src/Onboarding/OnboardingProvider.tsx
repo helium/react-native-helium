@@ -25,14 +25,14 @@ const initialState = {
     hotspotAddress: string
     hotspotTypes: HotspotType[]
   }) =>
-    new Promise<{ heliumTxn?: string; solanaTransactions?: string[] }>(
+    new Promise<{ heliumTxn?: string; solanaTransactions?: Buffer[] }>(
       (resolve) => resolve({})
     ),
   submitAddGateway: async (_opts: {
     hotspotAddress: string
     userHeliumAddress?: string
     addGatewayTxn?: string
-    solanaTransactions?: string[]
+    solanaTransactions?: Buffer[]
     userSolPubKey?: web3.PublicKey
     httpClient?: Client
   }) =>
@@ -80,7 +80,7 @@ const initialState = {
   ) => null,
   submitAssertLocation: async (_opts: {
     assertLocationTxn?: string
-    solanaTransactions?: string[]
+    solanaTransactions?: Buffer[]
     httpClient?: Client
     gateway: string
   }) =>

@@ -81,7 +81,7 @@ const AssertLocation = () => {
     const userAddress = await getAddressStr()
 
     let assertLocationTxn = ''
-    let solanaTransactions: string[] | undefined
+    let solanaTransactions: Buffer[] | undefined
 
     if (assertData.assertLocationTxn) {
       const txnOwnerSigned = await Location.signAssertTxn({
@@ -102,9 +102,9 @@ const AssertLocation = () => {
       const solanaKeypair = SolUtils.getSolanaKeypair(ownerKeypairRaw.sk)
 
       solanaTransactions = assertData.solanaTransactions.map((txn) => {
-        const tx = SolUtils.stringToTransaction(txn)
+        const tx = SolUtils.bufferToTransaction(txn)
         tx.partialSign(solanaKeypair)
-        return tx.serialize().toString('base64')
+        return tx.serialize()
       })
     }
 
@@ -124,6 +124,7 @@ const AssertLocation = () => {
     } else {
       setStatus('fail')
     }
+    setSubmitted(false)
   }, [assertData, gatewayAddress, submitAssertLocation])
 
   const updateTxnStatus = useCallback(async () => {
@@ -162,7 +163,7 @@ const AssertLocation = () => {
 
   return (
     // eslint-disable-next-line react-native/no-inline-styles
-    <ScrollView style={{ marginTop: 24 }} canCancelContentTouches>
+    <ScrollView style={{ marginTop: 48 }} canCancelContentTouches>
       <View style={styles.container}>
         <Input
           title={`Gateway${gatewayName ? `: ${gatewayName}` : ''}`}

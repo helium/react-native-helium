@@ -60,7 +60,7 @@ const AddGatewayBle = () => {
       hotspotTypes,
     })
     let addGatewaySignedTxn: string | undefined
-    let solanaSignedTransactions: string[] | undefined
+    let solanaSignedTransactions: Buffer[] | undefined
 
     if (addGatewayTxn) {
       addGatewaySignedTxn = txnOwnerSigned.toString()
@@ -68,9 +68,9 @@ const AddGatewayBle = () => {
       const solanaKeypair = SolUtils.getSolanaKeypair(keypair.sk)
 
       solanaSignedTransactions = solanaTransactions.map((txn) => {
-        const tx = SolUtils.stringToTransaction(txn)
+        const tx = SolUtils.bufferToTransaction(txn)
         tx.partialSign(solanaKeypair)
-        return tx.serialize().toString('base64')
+        return tx.serialize()
       })
     }
 

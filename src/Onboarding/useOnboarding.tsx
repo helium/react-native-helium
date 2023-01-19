@@ -215,7 +215,7 @@ const useOnboarding = ({
       txn: string
       hotspotAddress: string
       hotspotTypes: HotspotType[]
-    }): Promise<{ addGatewayTxn?: string; solanaTransactions?: string[] }> => {
+    }): Promise<{ addGatewayTxn?: string; solanaTransactions?: Buffer[] }> => {
       // TODO: check solana status, check if hotspot exists
 
       if (isHelium) {
@@ -235,9 +235,9 @@ const useOnboarding = ({
         onboardingV3Client.current.onboard({ hotspotAddress, type })
       )
       const solResponses = await Promise.all(promises)
-      const solanaTransactions = solResponses.flatMap(
-        (r) => r.data.solanaTransactions
-      )
+      const solanaTransactions = solResponses
+        .flatMap((r) => r.data.solanaTransactions)
+        .map((tx) => Buffer.from(tx))
 
       if (!solanaTransactions?.length) {
         throw new Error('failed to create solana onboard txns')
@@ -260,7 +260,7 @@ const useOnboarding = ({
       hotspotAddress: string
       userHeliumAddress?: string
       addGatewayTxn?: string
-      solanaTransactions?: string[]
+      solanaTransactions?: Buffer[]
       userSolPubKey?: web3.PublicKey
       httpClient?: Client
     }): Promise<{
@@ -315,7 +315,7 @@ const useOnboarding = ({
       }
 
       const solanaTxnIds = await submitAllSolana({
-        txns: solanaTransactions.map((txn) => Buffer.from(txn, 'base64')),
+        txns: solanaTransactions,
         connection: solConnection.current,
       })
 
@@ -545,9 +545,9 @@ const useOnboarding = ({
         })
       )
       const solResponses = await Promise.all(promises)
-      const solanaTransactions = solResponses.flatMap(
-        (r) => r.data.solanaTransactions
-      )
+      const solanaTransactions = solResponses
+        .flatMap((r) => r.data.solanaTransactions)
+        .map((txn) => Buffer.from(txn))
 
       return {
         balances,
@@ -580,7 +580,7 @@ const useOnboarding = ({
       gateway,
     }: {
       assertLocationTxn?: string
-      solanaTransactions?: string[]
+      solanaTransactions?: Buffer[]
       httpClient?: Client
       gateway: string
     }): Promise<{
@@ -629,7 +629,7 @@ const useOnboarding = ({
       }
 
       const solanaTxnIds = await submitAllSolana({
-        txns: solanaTransactions.map((txn) => Buffer.from(txn, 'base64')),
+        txns: solanaTransactions,
         connection: solConnection.current,
       })
       return {
@@ -712,7 +712,7 @@ const useOnboarding = ({
   const submitSolanaTransactions = useCallback(
     async ({ solanaTransactions }: { solanaTransactions: string[] }) => {
       return submitAllSolana({
-        txns: solanaTransactions.map((txn) => Buffer.from(txn, 'base64')),
+        txns: solanaTransactions.map((txn) => Buffer.from(txn)),
         connection: solConnection.current,
       })
     },

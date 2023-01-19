@@ -133,3 +133,6 @@ export const isSolHotspot = (
 
 export const stringToTransaction = (solanaTransaction: string) =>
   web3.Transaction.from(Buffer.from(solanaTransaction))
+
+export const bufferToTransaction = (solanaTransaction: Buffer) =>
+  web3.Transaction.from(solanaTransaction)

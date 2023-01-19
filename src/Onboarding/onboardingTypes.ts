@@ -43,7 +43,7 @@ export type AssertData = {
   }
   solFee: Balance<SolTokens>
   assertLocationTxn?: string
-  solanaTransactions?: string[]
+  solanaTransactions?: Buffer[]
 }
 
 export interface OnboardingManager {
@@ -62,7 +62,7 @@ export interface OnboardingManager {
     hotspotAddress: string
     userHeliumAddress?: string
     addGatewayTxn?: string
-    solanaTransactions?: string[]
+    solanaTransactions?: Buffer[]
     userSolPubKey?: web3.PublicKey
     httpClient?: Client
   }) => Promise<{
@@ -71,7 +71,7 @@ export interface OnboardingManager {
   }>
   submitAssertLocation: (_opts: {
     assertLocationTxn?: string
-    solanaTransactions?: string[]
+    solanaTransactions?: Buffer[]
     httpClient?: Client
     gateway: string
   }) => Promise<{
@@ -85,7 +85,7 @@ export interface OnboardingManager {
     txn: string
     hotspotAddress: string
     hotspotTypes: HotspotType[]
-  }) => Promise<{ addGatewayTxn?: string; solanaTransactions?: string[] }>
+  }) => Promise<{ addGatewayTxn?: string; solanaTransactions?: Buffer[] }>
   getAssertData: (_opts: {
     gateway: string
     owner: string

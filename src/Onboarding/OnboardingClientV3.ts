@@ -4,7 +4,7 @@ import axiosRetry from 'axios-retry'
 export const DEWI_V3_ONBOARDING_API_BASE_URL =
   'https://onboarding.dewi.org/api/v3'
 
-type Response = { data: { solanaTransactions: string[] } }
+type Response = { data: { solanaTransactions: number[][] } }
 type Metadata = {
   hotspotAddress: string
   solanaAddress: string

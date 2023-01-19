@@ -1,5 +1,12 @@
 import React, { useCallback, useState } from 'react'
-import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import {
+  Button,
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native'
 import Input from '../Input'
 import useCreateRandomHotspot from './useCreateHotspot'
 import Clipboard from '@react-native-community/clipboard'
@@ -12,6 +19,7 @@ const CreateRandomHotspot = () => {
   const [authorization, setAuthorization] = useState(
     Config.ONBOARDING_AUTH_TOKEN || ''
   )
+  const [deepLinkScheme, setDeepLinkScheme] = useState('makerappscheme://')
   const [submitted, setSubmitted] = useState(false)
   const { txn, create } = useCreateRandomHotspot()
 
@@ -51,9 +59,27 @@ const CreateRandomHotspot = () => {
           style: styles.input,
         }}
       />
+      <Input
+        title="Deep Link Scheme"
+        style={styles.innnerContainer}
+        inputProps={{
+          editable: !submitted,
+          onChangeText: setDeepLinkScheme,
+          value: deepLinkScheme,
+          placeholder: 'Enter Deep Link Scheme',
+          style: styles.input,
+        }}
+      />
       <View style={styles.innnerContainer}>
         <Button title="Create" disabled={submitted} onPress={createHotspot} />
       </View>
+      <TouchableOpacity
+        style={styles.buttonContainer}
+        disabled={!deepLinkScheme.includes('://') || !txn}
+        onPress={() => Linking.openURL(`${deepLinkScheme}add_gateway/${txn}`)}
+      >
+        <Text style={styles.buttonText}>Open Url</Text>
+      </TouchableOpacity>
       <TouchableOpacity onPress={() => Clipboard.setString(txn)}>
         <View>
           <Text>{txn}</Text>
@@ -67,7 +93,13 @@ const styles = StyleSheet.create({
   container: {
     margin: 24,
   },
-  innnerContainer: { marginVertical: 16 },
+  innnerContainer: { marginTop: 16 },
+  buttonContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: { padding: 16, color: '#147EFB', fontSize: 17 },
   input: {
     borderRadius: 12,
     fontSize: 17,
