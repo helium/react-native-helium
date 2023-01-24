@@ -19,6 +19,7 @@ import AssertLocation from './AssertLocation/AssertLocation'
 import TransferHotspot from './TransferHotspot/TransferHotspot'
 import CreateRandomHotspot from './CreateRandomHotspot/CreateRandomHotspot'
 import Config from 'react-native-config'
+import OraclePrice from './OraclePrice/OraclePrice'
 
 const Stack = createNativeStackNavigator()
 
@@ -31,6 +32,7 @@ export type RootStackParamList = {
   AddGatewayTxn: undefined
   AssertLocation: undefined
   TransferHotspot: undefined
+  OraclePrice: undefined
 }
 
 export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>
@@ -69,6 +71,7 @@ export default function App() {
             />
             <Stack.Screen name="AssertLocation" component={AssertLocation} />
             <Stack.Screen name="TransferHotspot" component={TransferHotspot} />
+            <Stack.Screen name="OraclePrice" component={OraclePrice} />
           </Stack.Navigator>
         </NavigationContainer>
       </HotspotBleProvider>

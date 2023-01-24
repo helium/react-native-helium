@@ -13,6 +13,11 @@ import BN from 'bn.js'
 import { Hotspot } from '@helium/http'
 import { subDaoKey } from '@helium/helium-sub-daos-sdk'
 import { sendAndConfirmWithRetry } from '@helium/spl-utils'
+import {
+  getPythProgramKeyForCluster,
+  PriceStatus,
+  PythHttpClient,
+} from '@pythnetwork/client'
 
 export type SolHotspot = {
   asset: web3.PublicKey
@@ -136,3 +141,40 @@ export const stringToTransaction = (solanaTransaction: string) =>
 
 export const bufferToTransaction = (solanaTransaction: Buffer) =>
   web3.Transaction.from(solanaTransaction)
+
+export const getOraclePriceFromSolana = async ({
+  connection,
+  cluster,
+  tokenType,
+}: {
+  connection: web3.Connection
+  cluster: web3.Cluster
+  tokenType: 'HNT'
+}) => {
+  const pythPublicKey = getPythProgramKeyForCluster(cluster)
+  connection.getProgramAccounts
+  const pythClient = new PythHttpClient(connection, pythPublicKey)
+  const data = await pythClient.getData()
+
+  let symbol = ''
+  switch (tokenType) {
+    case 'HNT':
+      symbol = 'Crypto.HNT/USD'
+  }
+
+  const price = data.productPrice.get(symbol)
+
+  if (price?.price) {
+    console.log(`${symbol}: $${price.price} \xB1$${price.confidence}`)
+    return price.price
+  }
+
+  console.log(
+    `${symbol}: price currently unavailable. status is ${
+      PriceStatus[price?.status || 0]
+    }`
+  )
+
+  // TODO: Remove and throw an error
+  return 2.86
+}

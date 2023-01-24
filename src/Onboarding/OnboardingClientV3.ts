@@ -6,8 +6,6 @@ export const DEWI_V3_ONBOARDING_API_BASE_URL =
 
 type Response = { data: { solanaTransactions: number[][] } }
 type Metadata = {
-  hotspotAddress: string
-  solanaAddress: string
   location: string
   elevation: number
   gain: number
@@ -59,18 +57,18 @@ export default class OnboardingClientV3 {
   }: {
     hotspotAddress: string
     type: HotspotType
-  }) {
+  } & Partial<Metadata>) {
     return this.post(`transactions/${type}/onboard`, {
       entityKey: hotspotAddress,
     })
   }
 
-  async onboardIot({ hotspotAddress }: { hotspotAddress: string }) {
-    return this.onboard({ hotspotAddress, type: 'iot' })
+  async onboardIot(opts: { hotspotAddress: string } & Partial<Metadata>) {
+    return this.onboard({ ...opts, type: 'iot' })
   }
 
-  async onboardMobile({ hotspotAddress }: { hotspotAddress: string }) {
-    return this.onboard({ hotspotAddress, type: 'mobile' })
+  async onboardMobile(opts: { hotspotAddress: string } & Partial<Metadata>) {
+    return this.onboard({ ...opts, type: 'mobile' })
   }
 
   async updateMetadata({
@@ -82,6 +80,8 @@ export default class OnboardingClientV3 {
     type,
   }: Metadata & {
     type: HotspotType
+    hotspotAddress: string
+    solanaAddress: string
   }) {
     const body = {
       entityKey: hotspotAddress,
@@ -93,11 +93,21 @@ export default class OnboardingClientV3 {
     return this.post(`transactions/${type}/update-metadata`, body)
   }
 
-  async updateIotMetadata(opts: Metadata) {
+  async updateIotMetadata(
+    opts: Metadata & {
+      hotspotAddress: string
+      solanaAddress: string
+    }
+  ) {
     return this.updateMetadata({ ...opts, type: 'iot' })
   }
 
-  async updateMobileMetadata(opts: Metadata) {
+  async updateMobileMetadata(
+    opts: Metadata & {
+      hotspotAddress: string
+      solanaAddress: string
+    }
+  ) {
     return this.updateMetadata({ ...opts, type: 'mobile' })
   }
 }

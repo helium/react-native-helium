@@ -44,8 +44,6 @@ export const getStakingFee = ({
 export const createLocationTxn = async ({
   gateway,
   owner,
-  lat,
-  lng,
   gain,
   elevation = 0,
   maker,
@@ -58,8 +56,6 @@ export const createLocationTxn = async ({
 }: {
   gateway: string
   owner: string
-  lat: number
-  lng: number
   gain?: number
   elevation?: number
   maker: string
@@ -70,10 +66,6 @@ export const createLocationTxn = async ({
   nextLocation: string
   ownerKeypairRaw?: SodiumKeyPair
 }) => {
-  if (!lat || !lng) {
-    throw new Error('Lat Lng invalid')
-  }
-
   const isSol = hotspot && isSolHotspot(hotspot)
 
   let nextNonce = isSol ? 0 : (hotspot?.speculativeNonce || 0) + 1

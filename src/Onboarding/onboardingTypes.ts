@@ -80,6 +80,7 @@ export interface OnboardingManager {
     solanaTxnIds?: string[]
     pendingTxn?: PendingTransaction
   }>
+  getOraclePrice: (_httpClient?: Client) => Promise<Balance<USDollars>>
   submitSolanaTransactions: (_opts: {
     solanaTransactions: string[]
   }) => Promise<string[]>
@@ -87,6 +88,10 @@ export interface OnboardingManager {
     txn: string
     hotspotAddress: string
     hotspotTypes: HotspotType[]
+    lat?: number
+    lng?: number
+    decimalGain?: number
+    elevation?: number
   }) => Promise<{ addGatewayTxn?: string; solanaTransactions?: Buffer[] }>
   getAssertData: (_opts: {
     gateway: string
@@ -99,6 +104,7 @@ export interface OnboardingManager {
     hotspotTypes: HotspotType[]
     httpClient?: Client
     onboardingRecord?: OnboardingRecord | null
+    createSolanaTransactions?: boolean
   }) => Promise<AssertData>
   getHotspotForCurrentChain: (_opts: {
     hotspotAddress: string

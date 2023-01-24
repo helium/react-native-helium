@@ -26,6 +26,10 @@ const Home = () => {
         title: 'Transfer Hotspot from Transaction String',
         handler: () => navigation.push('TransferHotspot'),
       },
+      {
+        title: 'Get Oracle Price',
+        handler: () => navigation.push('OraclePrice'),
+      },
     ],
     [navigation]
   )

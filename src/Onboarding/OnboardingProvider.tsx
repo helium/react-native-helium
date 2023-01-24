@@ -4,7 +4,7 @@ import { AssertData, OnboardingManager } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
 import * as web3 from '@solana/web3.js'
 import { SodiumKeyPair } from '../Account/account'
-import Balance, { CurrencyType } from '@helium/currency'
+import Balance, { CurrencyType, USDollars } from '@helium/currency'
 import { SolHotspot } from '../utils/solanaUtils'
 import { HotspotType } from './OnboardingClientV3'
 import { OnboardingRecord } from '@helium/onboarding'
@@ -25,6 +25,10 @@ const initialState = {
     txn: string
     hotspotAddress: string
     hotspotTypes: HotspotType[]
+    lat?: number
+    lng?: number
+    decimalGain?: number
+    elevation?: number
   }) =>
     new Promise<{ heliumTxn?: string; solanaTransactions?: Buffer[] }>(
       (resolve) => resolve({})
@@ -41,6 +45,10 @@ const initialState = {
       solanaTxnIds?: string[]
       pendingTxn?: PendingTransaction
     }>((resolve) => resolve({})),
+  getOraclePrice: (_httpClient?: Client) =>
+    new Promise<Balance<USDollars>>((resolve) =>
+      resolve(new Balance(0, CurrencyType.usd))
+    ),
   submitSolanaTransactions: (_opts: { solanaTransactions: string[] }) =>
     new Promise<string[]>((resolve) => resolve([])),
   baseUrl: '',
@@ -55,6 +63,7 @@ const initialState = {
     httpClient?: Client
     hotspotTypes: HotspotType[]
     onboardingRecord?: OnboardingRecord | null
+    createSolanaTransactions?: boolean
   }) =>
     new Promise<AssertData>((resolve) =>
       resolve({
