@@ -35,7 +35,7 @@ import { HotspotErrorCode } from './HotspotBle/useHotspotBle'
 import { heliumHttpClient, createHttpClient } from './utils/httpClient'
 export { DiagnosticInfo } from './HotspotBle/bleParse'
 import { HotspotType } from './Onboarding/OnboardingClientV3'
-import { SolHotspot } from './Solana/solanaTypes'
+import { SolHotspot, CompressedNFT } from './Solana/solanaTypes'
 import { useSolanaStatus, useSolanaVars } from './Solana/solanaSentinel'
 
 type HeliumNativeType = {
@@ -56,6 +56,7 @@ export {
   AssertData,
   Balance,
   createHttpClient,
+  CompressedNFT,
   DataCredits,
   useSolanaStatus,
   useSolanaVars,
