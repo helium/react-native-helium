@@ -3,11 +3,12 @@ import useSWR from 'swr'
 
 export type SolanaStatus = 'not_started' | 'in_progress' | 'complete'
 
-const BASE_URL = 'https://solana-status.helium.com'
+// const BASE_URL = 'https://solana-status.helium.com'
+const BASE_URL = 'https://324d-135-135-19-28.ngrok.io'
 
 const fetcher = (url: RequestInfo) => fetch(url).then((res) => res.json())
 
-type TokenType = 'mobile' | 'iot' | 'hnt' | 'dc'
+export type TokenType = 'mobile' | 'iot' | 'hnt' | 'dc'
 
 export const useSolanaVars = (cluster?: Cluster) => {
   let url = `${BASE_URL}/vars`

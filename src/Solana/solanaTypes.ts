@@ -1,5 +1,70 @@
 import { PublicKey } from '@solana/web3.js'
 import BN from 'bn.js'
+import * as web3 from '@solana/web3.js'
+import { WrappedConnection } from './WrappedConnection'
+import { TokenType } from './solanaSentinel'
+
+export interface SolanaManager {
+  connection: WrappedConnection
+  createTransferCompressedCollectableTxn: ({
+    collectable,
+    ownerHeliumAddress,
+    newOwnerHeliumAddress,
+  }: {
+    collectable: CompressedNFT
+    ownerHeliumAddress: string
+    newOwnerHeliumAddress: string
+  }) => Promise<web3.VersionedTransaction | undefined>
+  getHeliumBalance: ({
+    heliumAddress,
+    mint,
+  }: {
+    heliumAddress: string
+    mint: string
+  }) => Promise<number | undefined>
+  getHotspots: ({
+    heliumAddress,
+    oldestCollectable,
+  }: {
+    heliumAddress: string
+    oldestCollectable?: string
+  }) => Promise<CompressedNFT[]>
+  getOraclePriceFromSolana: ({
+    tokenType,
+  }: {
+    tokenType: 'HNT'
+  }) => Promise<number>
+  getSolBalance: ({
+    heliumAddress,
+  }: {
+    heliumAddress: string
+  }) => Promise<number>
+  getSolHotspotInfo: ({
+    iotMint,
+    hotspotAddress,
+    pubKey,
+  }: {
+    iotMint: string
+    hotspotAddress: string
+    pubKey: web3.PublicKey
+  }) => Promise<SolHotspot | null>
+  status: {
+    inProgress: boolean
+    isHelium: boolean
+    isSolana: boolean
+  }
+  submitSolana: ({ txn }: { txn: Buffer }) => Promise<string>
+  submitAllSolana: ({ txns }: { txns: Buffer[] }) => Promise<string[]>
+  vars:
+    | Record<
+        TokenType,
+        {
+          metadata_url: string
+          mint: string
+        }
+      >
+    | undefined
+}
 
 export type SolHotspot = {
   asset: PublicKey

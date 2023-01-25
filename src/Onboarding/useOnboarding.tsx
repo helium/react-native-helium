@@ -2,10 +2,7 @@ import { useCallback, useRef } from 'react'
 import OnboardingClient, { OnboardingRecord } from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
 import { Client, Hotspot, PendingTransaction } from '@helium/http'
-import { useSolanaVars, useSolanaStatus } from '../utils/solanaSentinel'
-import { Program } from '@project-serum/anchor'
 import { AssertData } from './onboardingTypes'
-import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
 import { heliumHttpClient } from '../utils/httpClient'
 import {
   heliumAddressToSolAddress,
@@ -18,81 +15,33 @@ import {
   getStakingFee,
 } from '../utils/assertLocation'
 import Balance, { CurrencyType, USDollars } from '@helium/currency'
-// import { SolHotspot, Transfer } from '..'
-import { SolHotspot } from '../types/solTypes'
 import * as Transfer from '../utils/transferHotspot'
-import {
-  createHeliumEntityManagerProgram,
-  getHeliumBalance,
-  getSolBalance,
-  getSolHotspotInfo,
-  isSolHotspot,
-  submitSolana,
-  submitAllSolana,
-  getOraclePriceFromSolana,
-  getHotspots,
-  createTransferCompressedCollectableTxn,
-} from '../utils/solanaUtils'
 import { Buffer } from 'buffer'
 import OnboardingClientV3, { HotspotType } from './OnboardingClientV3'
 import { BN } from 'bn.js'
-import { WrappedConnection } from '../utils/WrappedConnection'
+import { SolHotspot } from '../Solana/solanaTypes'
+import { useSolanaContext } from '../Solana/SolanaProvider'
+import { isSolHotspot } from '../Solana/solanaUtils'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
 
-export const SolanaConnection = {
-  'devnet': new WrappedConnection('https://rpc-devnet.aws.metaplex.com/'),
-  'testnet': new WrappedConnection(web3.clusterApiUrl('testnet')),
-  'mainnet-beta': new WrappedConnection(web3.clusterApiUrl('mainnet-beta')),
-} as const
-
-// TODO: solana cluster / connection should be moved to it's own provider, so makers can reuse it in their apps
 const useOnboarding = ({
   baseUrl,
-  solanaCluster = 'devnet',
   v3BaseUrl,
 }: {
   v3BaseUrl?: string
   baseUrl?: string
-  solanaCluster?: 'mainnet-beta' | 'devnet' | 'testnet'
 }) => {
-  const { isHelium, isSolana, inProgress } = useSolanaStatus()
-  const { data: solanaVars } = useSolanaVars(solanaCluster)
   const onboardingClient = useRef(new OnboardingClient(baseUrl))
   const onboardingV3Client = useRef(new OnboardingClientV3(v3BaseUrl))
-  const solPubKey = useRef<web3.PublicKey>()
-  const hemProgram = useRef<Program<HeliumEntityManager>>()
-  const solConnection = useRef(SolanaConnection[solanaCluster])
-
-  const getHeliumEntityManagerProgram = useCallback(
-    async (publicKey: web3.PublicKey) => {
-      if (
-        hemProgram.current &&
-        solPubKey.current &&
-        publicKey.equals(solPubKey.current)
-      ) {
-        return hemProgram.current
-      }
-
-      const nextHemProgram = await createHeliumEntityManagerProgram({
-        connection: solConnection.current,
-        publicKey,
-      })
-
-      hemProgram.current = nextHemProgram
-      solPubKey.current = publicKey
-
-      return nextHemProgram
-    },
-    []
-  )
+  const solana = useSolanaContext()
 
   const checkSolanaStatus = useCallback(() => {
-    if (inProgress) {
+    if (solana.status.inProgress) {
       throw new Error('Chain migration in progress')
     }
-  }, [inProgress])
+  }, [solana.status.inProgress])
 
   const handleError = useCallback(
     (
@@ -192,28 +141,22 @@ const useOnboarding = ({
         throw new Error('User address is required')
       }
 
-      if (!solanaVars?.iot.mint) {
+      if (!solana.vars?.iot.mint) {
         throw new Error('Failed to fetch mint from solana vars')
       }
 
-      if (isHelium) {
+      if (solana.status.isHelium) {
         return getHeliumHotspotInfo({ hotspotAddress, httpClient })
       }
 
-      const hotspotInfo = await getSolHotspotInfo({
-        iotMint: solanaVars.iot.mint,
+      const hotspotInfo = await solana.getSolHotspotInfo({
+        iotMint: solana.vars.iot.mint,
         hotspotAddress,
-        program: await getHeliumEntityManagerProgram(pubKey),
+        pubKey,
       })
       return hotspotInfo
     },
-    [
-      checkSolanaStatus,
-      solanaVars,
-      isHelium,
-      getHeliumEntityManagerProgram,
-      getHeliumHotspotInfo,
-    ]
+    [checkSolanaStatus, solana, getHeliumHotspotInfo]
   )
 
   const getOnboardTransactions = useCallback(
@@ -236,7 +179,7 @@ const useOnboarding = ({
     }): Promise<{ addGatewayTxn?: string; solanaTransactions?: Buffer[] }> => {
       // TODO: check solana status, check if hotspot exists
 
-      if (isHelium) {
+      if (solana.status.isHelium) {
         return { addGatewayTxn: txn }
       }
 
@@ -244,9 +187,8 @@ const useOnboarding = ({
         transaction: txn,
       })
 
-      await submitAllSolana({
+      await solana.submitAllSolana({
         txns: createTxns.data.solanaTransactions.map((t) => Buffer.from(t)),
-        connection: solConnection.current,
       })
 
       const gain = decimalGain ? Math.round(decimalGain * 10.0) : undefined
@@ -277,7 +219,7 @@ const useOnboarding = ({
 
       return { solanaTransactions }
     },
-    [isHelium]
+    [solana]
   )
 
   const submitAddGateway = useCallback(
@@ -315,7 +257,7 @@ const useOnboarding = ({
         throw new Error('Hotspot already on chain')
       }
 
-      if (isHelium) {
+      if (solana.status.isHelium) {
         if (!addGatewayTxn) {
           throw new Error('Transaction is missing')
         }
@@ -346,16 +288,15 @@ const useOnboarding = ({
         throw new Error('No solana transactions to submit')
       }
 
-      const solanaTxnIds = await submitAllSolana({
+      const solanaTxnIds = await solana.submitAllSolana({
         txns: solanaTransactions,
-        connection: solConnection.current,
       })
 
       return {
         solanaTxnIds,
       }
     },
-    [checkSolanaStatus, getHotspotForCurrentChain, handleError, isHelium]
+    [checkSolanaStatus, getHotspotForCurrentChain, handleError, solana]
   )
 
   const hasFreeAssert = useCallback(
@@ -418,19 +359,17 @@ const useOnboarding = ({
     }) => {
       checkSolanaStatus()
 
-      const solBalance = await getSolBalance({
-        connection: solConnection.current,
+      const solBalance = await solana.getSolBalance({
         heliumAddress,
       })
 
-      if (isSolana) {
+      if (solana.status.isSolana) {
         // GET hnt Balance from solana
-        if (!solanaVars?.hnt.mint) {
+        if (!solana.vars?.hnt.mint) {
           throw new Error('Hnt mint not found')
         }
-        const hntAmount = await getHeliumBalance({
-          connection: solConnection.current,
-          mint: solanaVars?.hnt.mint,
+        const hntAmount = await solana.getHeliumBalance({
+          mint: solana.vars?.hnt.mint,
           heliumAddress,
         })
 
@@ -448,7 +387,7 @@ const useOnboarding = ({
         }
       }
     },
-    [checkSolanaStatus, isSolana, solanaVars?.hnt.mint]
+    [checkSolanaStatus, solana]
   )
 
   const getOraclePrice = useCallback(
@@ -456,7 +395,7 @@ const useOnboarding = ({
       checkSolanaStatus()
 
       const client = httpClient || heliumHttpClient
-      if (isHelium) {
+      if (solana.status.isHelium) {
         const oraclePrice = await client.oracle.getCurrentPrice()
         if (!oraclePrice.price) {
           throw new Error('Failed to fetch oracle price from helium blockchain')
@@ -464,15 +403,13 @@ const useOnboarding = ({
         return oraclePrice.price
       }
 
-      const hntPrice = await getOraclePriceFromSolana({
-        connection: solConnection.current,
-        cluster: solanaCluster,
+      const hntPrice = await solana.getOraclePriceFromSolana({
         tokenType: 'HNT',
       })
 
       return Balance.fromFloat(hntPrice, CurrencyType.usd)
     },
-    [checkSolanaStatus, isHelium, solanaCluster]
+    [checkSolanaStatus, solana]
   )
   const getAssertData = useCallback(
     async ({
@@ -533,7 +470,7 @@ const useOnboarding = ({
 
       let updatingLocation = !hotspot
       if (hotspot) {
-        if (isHelium) {
+        if (solana.status.isHelium) {
           updatingLocation = hotspot.location !== nextLocation
         } else if (hotspot.location) {
           // TODO: Not sure if this is correct
@@ -548,7 +485,7 @@ const useOnboarding = ({
       // TODO: Where does oracle price come from in solana world?
       const oraclePrice = await getOraclePrice(client)
 
-      if (isHelium) {
+      if (solana.status.isHelium) {
         const transaction = await createLocationTxn({
           gateway,
           owner,
@@ -666,7 +603,7 @@ const useOnboarding = ({
       hasFreeAssert,
       getBalances,
       getOraclePrice,
-      isHelium,
+      solana.status.isHelium,
       getOnboardingRecord,
     ]
   )
@@ -727,15 +664,20 @@ const useOnboarding = ({
         throw new Error('No solana transactions to submit')
       }
 
-      const solanaTxnIds = await submitAllSolana({
+      const solanaTxnIds = await solana.submitAllSolana({
         txns: solanaTransactions,
-        connection: solConnection.current,
       })
       return {
         solanaTxnIds,
       }
     },
-    [getHeliumHotspotInfo, checkSolanaStatus, handleError, hasFreeAssert]
+    [
+      checkSolanaStatus,
+      solana,
+      getHeliumHotspotInfo,
+      hasFreeAssert,
+      handleError,
+    ]
   )
 
   const submitTransferHotspot = useCallback(
@@ -763,15 +705,14 @@ const useOnboarding = ({
       }
 
       // submit to solana
-      const solTxId = await submitSolana({
+      const solTxId = await solana.submitSolana({
         txn: solanaTransaction!,
-        connection: solConnection.current,
       })
       return {
         solTxId,
       }
     },
-    []
+    [solana]
   )
 
   const createTransferTransaction = useCallback(
@@ -795,7 +736,7 @@ const useOnboarding = ({
 
       const client = httpClient || heliumHttpClient
 
-      if (isHelium) {
+      if (solana.status.isHelium) {
         const txn = await Transfer.createTransferTransaction({
           hotspotAddress,
           userAddress,
@@ -806,9 +747,9 @@ const useOnboarding = ({
         return { transferHotspotTxn: txn.toString() }
       }
 
-      const hotspots = await getHotspots({
+      // TODO: Page until you find it?
+      const hotspots = await solana.getHotspots({
         heliumAddress: userAddress,
-        connection: solConnection.current,
         oldestCollectable: '',
       })
 
@@ -821,15 +762,17 @@ const useOnboarding = ({
         throw new Error('Hotspot not found for user')
       }
 
-      const txn = await createTransferCompressedCollectableTxn({
+      const txn = await solana.createTransferCompressedCollectableTxn({
         ownerHeliumAddress: userAddress,
         newOwnerHeliumAddress: newOwnerAddress,
-        connection: solConnection.current,
         collectable: hotspot,
       })
+      if (!txn) {
+        throw new Error('Failed to create transfer transaction')
+      }
       return { solanaTransaction: Buffer.from(txn.serialize()) }
     },
-    [isHelium, checkSolanaStatus]
+    [checkSolanaStatus, solana]
   )
 
   const submitSolanaTransactions = useCallback(
@@ -840,12 +783,11 @@ const useOnboarding = ({
       solanaTransactions: string[]
       encoding?: BufferEncoding
     }) => {
-      return submitAllSolana({
+      return solana.submitAllSolana({
         txns: solanaTransactions.map((txn) => Buffer.from(txn, encoding)),
-        connection: solConnection.current,
       })
     },
-    []
+    [solana]
   )
 
   return {
@@ -863,11 +805,6 @@ const useOnboarding = ({
     submitSolanaTransactions,
     submitAssertLocation,
     submitTransferHotspot,
-    solanaStatus: {
-      isHelium,
-      isSolana,
-      inProgress,
-    },
   }
 }
 

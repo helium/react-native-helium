@@ -25,7 +25,7 @@ import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import { OnboardingRecord, Maker } from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
 import { SodiumKeyPair } from '../Account/account'
-import { SolHotspot } from '../types/solTypes'
+import { SolHotspot } from '../Solana/solanaTypes'
 import { HotspotType } from './OnboardingClientV3'
 
 export type AssertData = {
@@ -49,11 +49,6 @@ export type AssertData = {
 }
 
 export interface OnboardingManager {
-  solanaStatus: {
-    isHelium: boolean
-    isSolana: boolean
-    inProgress: boolean
-  }
   createTransferTransaction: (_opts: {
     hotspotAddress: string
     userAddress: string

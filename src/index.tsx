@@ -5,7 +5,7 @@ import * as Account from './Account/account'
 import * as AddGateway from './utils/addGateway'
 import * as Location from './utils/assertLocation'
 import * as Transfer from './utils/transferHotspot'
-import * as SolUtils from './utils/solanaUtils'
+import * as SolUtils from './Solana/solanaUtils'
 import './polyfill'
 import {
   AddGatewayV1,
@@ -18,6 +18,9 @@ import HotspotBleProvider, {
 import OnboardingProvider, {
   useOnboardingContext as useOnboarding,
 } from './Onboarding/OnboardingProvider'
+import SolanaProvider, {
+  useSolanaContext as useSolana,
+} from './Solana/SolanaProvider'
 import { AssertData, OnboardingManager } from './Onboarding/onboardingTypes'
 import { Keypair } from '@helium/crypto-react-native'
 import { HotspotBleManager } from './HotspotBle/bleTypes'
@@ -31,9 +34,9 @@ import Balance, {
 import { HotspotErrorCode } from './HotspotBle/useHotspotBle'
 import { heliumHttpClient, createHttpClient } from './utils/httpClient'
 export { DiagnosticInfo } from './HotspotBle/bleParse'
-import { useSolanaStatus, useSolanaVars } from './utils/solanaSentinel'
 import { HotspotType } from './Onboarding/OnboardingClientV3'
-import { SolHotspot } from './types/solTypes'
+import { SolHotspot } from './Solana/solanaTypes'
+import { useSolanaStatus, useSolanaVars } from './Solana/solanaSentinel'
 
 type HeliumNativeType = {
   multiply(a: number, b: number): Promise<number>
@@ -68,6 +71,7 @@ export {
   OnboardingManager,
   OnboardingProvider,
   SecurityTokens,
+  SolanaProvider,
   SolHotspot,
   SolUtils,
   State,
@@ -76,4 +80,5 @@ export {
   USDollars,
   useHotspotBle,
   useOnboarding,
+  useSolana,
 }

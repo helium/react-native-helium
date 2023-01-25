@@ -7,14 +7,9 @@ import { SodiumKeyPair } from '../Account/account'
 import Balance, { CurrencyType, USDollars } from '@helium/currency'
 import { HotspotType } from './OnboardingClientV3'
 import { OnboardingRecord } from '@helium/onboarding'
-import { SolHotspot } from '../types/solTypes'
+import { SolHotspot } from '../Solana/solanaTypes'
 
 const initialState = {
-  solanaStatus: {
-    isHelium: false,
-    isSolana: false,
-    inProgress: false,
-  },
   createTransferTransaction: async (_opts: {
     hotspotAddress: string
     userAddress: string
@@ -141,15 +136,13 @@ const OnboardingProvider = ({
   children,
   baseUrl,
   v3BaseUrl,
-  solanaCluster,
 }: {
   children: ReactNode
   baseUrl?: string
   v3BaseUrl?: string
-  solanaCluster?: 'devnet' | 'testnet' | 'mainnet-beta'
 }) => {
   return (
-    <Provider value={useOnboarding({ baseUrl, v3BaseUrl, solanaCluster })}>
+    <Provider value={useOnboarding({ baseUrl, v3BaseUrl })}>
       {children}
     </Provider>
   )

@@ -9,8 +9,8 @@ import { AssertLocationV2 } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
 import { geoToH3 } from 'h3-js'
 import { Hotspot } from '@helium/http'
-import { isSolHotspot } from './solanaUtils'
-import { SolHotspot } from '../types/solTypes'
+import { isSolHotspot } from '../Solana/solanaUtils'
+import { SolHotspot } from '../Solana/solanaTypes'
 
 const DEFAULT_H3_RES = 12
 

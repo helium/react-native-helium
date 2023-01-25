@@ -12,6 +12,7 @@ import HotspotBLENav from './HotspotBLE/HotspotBLENav'
 import {
   HotspotBleProvider,
   OnboardingProvider,
+  SolanaProvider,
 } from '@helium/react-native-sdk'
 import AccountNav from './Account/AccountNav'
 import '../appDataClient'
@@ -43,38 +44,42 @@ export default function App() {
   ])
 
   return (
-    <OnboardingProvider
-      baseUrl={
-        Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api/v2'
-      }
-      v3BaseUrl={
-        Config.ONBOARDING_V3_BASE_URL || 'https://onboarding.dewi.org/api/v3'
-      }
-      solanaCluster="devnet"
-    >
-      <HotspotBleProvider>
-        <NavigationContainer>
-          <Stack.Navigator
-            screenOptions={({ route }) => ({
-              presentation: 'modal',
-              headerShown: route.name === 'Home',
-            })}
-          >
-            <Stack.Screen name="Home" component={Home} />
-            <Stack.Screen name="Multiply" component={Mulitply} />
-            <Stack.Screen name="HotspotBLE" component={HotspotBLENav} />
-            <Stack.Screen name="Account" component={AccountNav} />
-            <Stack.Screen name="AddGatewayTxn" component={AddGatewayTxn} />
-            <Stack.Screen
-              name="CreateRandomHotspot"
-              component={CreateRandomHotspot}
-            />
-            <Stack.Screen name="AssertLocation" component={AssertLocation} />
-            <Stack.Screen name="TransferHotspot" component={TransferHotspot} />
-            <Stack.Screen name="OraclePrice" component={OraclePrice} />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </HotspotBleProvider>
-    </OnboardingProvider>
+    <SolanaProvider cluster="devnet">
+      <OnboardingProvider
+        baseUrl={
+          Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api/v2'
+        }
+        v3BaseUrl={
+          Config.ONBOARDING_V3_BASE_URL || 'https://onboarding.dewi.org/api/v3'
+        }
+      >
+        <HotspotBleProvider>
+          <NavigationContainer>
+            <Stack.Navigator
+              screenOptions={({ route }) => ({
+                presentation: 'modal',
+                headerShown: route.name === 'Home',
+              })}
+            >
+              <Stack.Screen name="Home" component={Home} />
+              <Stack.Screen name="Multiply" component={Mulitply} />
+              <Stack.Screen name="HotspotBLE" component={HotspotBLENav} />
+              <Stack.Screen name="Account" component={AccountNav} />
+              <Stack.Screen name="AddGatewayTxn" component={AddGatewayTxn} />
+              <Stack.Screen
+                name="CreateRandomHotspot"
+                component={CreateRandomHotspot}
+              />
+              <Stack.Screen name="AssertLocation" component={AssertLocation} />
+              <Stack.Screen
+                name="TransferHotspot"
+                component={TransferHotspot}
+              />
+              <Stack.Screen name="OraclePrice" component={OraclePrice} />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </HotspotBleProvider>
+      </OnboardingProvider>
+    </SolanaProvider>
   )
 }
