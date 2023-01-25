@@ -271,8 +271,8 @@ const useSolana = ({
         result: { items: CompressedNFT[] }
       }>(
         owner.toString(),
-        { sortBy: 'created', sortDirection: 'asc' },
-        50,
+        { sortBy: 'created', sortDirection: 'desc' },
+        500,
         1,
         '',
         oldestCollectable || ''
