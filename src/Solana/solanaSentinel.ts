@@ -3,8 +3,8 @@ import useSWR from 'swr'
 
 export type SolanaStatus = 'not_started' | 'in_progress' | 'complete'
 
-const BASE_URL = 'https://solana-status.helium.com'
-// const BASE_URL = 'http://localhost:3000'
+// const BASE_URL = 'https://solana-status.helium.com'
+const BASE_URL = 'http://localhost:3000'
 
 const fetcher = (url: RequestInfo) => fetch(url).then((res) => res.json())
 

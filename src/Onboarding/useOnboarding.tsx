@@ -195,7 +195,7 @@ const useOnboarding = ({
 
       let location: string | undefined
       if (lat && lng && lat !== 0 && lng !== 0) {
-        location = getH3Location(lat, lng)
+        location = new BN(getH3Location(lat, lng), 'hex').toString()
       }
 
       const promises = hotspotTypes.map((type) =>
