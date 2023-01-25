@@ -5,9 +5,9 @@ import useOnboarding from './useOnboarding'
 import * as web3 from '@solana/web3.js'
 import { SodiumKeyPair } from '../Account/account'
 import Balance, { CurrencyType, USDollars } from '@helium/currency'
-import { SolHotspot } from '../utils/solanaUtils'
 import { HotspotType } from './OnboardingClientV3'
 import { OnboardingRecord } from '@helium/onboarding'
+import { SolHotspot } from '../types/solTypes'
 
 const initialState = {
   solanaStatus: {
@@ -20,7 +20,11 @@ const initialState = {
     userAddress: string
     newOwnerAddress: string
     httpClient?: Client
-  }) => new Promise<string>((resolve) => resolve('')),
+  }) =>
+    new Promise<{
+      transferHotspotTxn?: string | undefined
+      solanaTransaction?: Buffer | undefined
+    }>((resolve) => resolve({})),
   getOnboardTransactions: async (_opts: {
     txn: string
     hotspotAddress: string
@@ -102,7 +106,8 @@ const initialState = {
       pendingTxn?: PendingTransaction
     }>((resolve) => resolve({})),
   submitTransferHotspot: (_opts: {
-    transaction: string
+    transferHotspotTxn?: string
+    solanaTransaction?: Buffer
     httpClient?: Client
   }) =>
     new Promise<{

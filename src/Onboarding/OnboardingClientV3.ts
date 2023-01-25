@@ -51,15 +51,17 @@ export default class OnboardingClientV3 {
     return this.post('transactions/create-hotspot', opts)
   }
 
-  async onboard({
-    hotspotAddress,
-    type,
-  }: {
-    hotspotAddress: string
-    type: HotspotType
-  } & Partial<Metadata>) {
-    return this.post(`transactions/${type}/onboard`, {
-      entityKey: hotspotAddress,
+  async onboard(
+    opts: {
+      hotspotAddress: string
+      type: HotspotType
+    } & Partial<Metadata>
+  ) {
+    return this.post(`transactions/${opts.type}/onboard`, {
+      entityKey: opts.hotspotAddress,
+      location: opts.location,
+      elevation: opts.elevation,
+      gain: opts.gain,
     })
   }
 

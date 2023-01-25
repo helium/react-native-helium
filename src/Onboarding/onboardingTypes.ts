@@ -25,7 +25,7 @@ import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import { OnboardingRecord, Maker } from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
 import { SodiumKeyPair } from '../Account/account'
-import { SolHotspot } from '../utils/solanaUtils'
+import { SolHotspot } from '../types/solTypes'
 import { HotspotType } from './OnboardingClientV3'
 
 export type AssertData = {
@@ -59,7 +59,10 @@ export interface OnboardingManager {
     userAddress: string
     newOwnerAddress: string
     httpClient?: Client
-  }) => Promise<string>
+  }) => Promise<{
+    transferHotspotTxn?: string | undefined
+    solanaTransaction?: Buffer | undefined
+  }>
   submitAddGateway: (_opts: {
     hotspotAddress: string
     userHeliumAddress?: string
@@ -136,7 +139,8 @@ export interface OnboardingManager {
   baseUrl?: string
 
   submitTransferHotspot: (_opts: {
-    transaction: string
+    transferHotspotTxn?: string
+    solanaTransaction?: Buffer
     httpClient?: Client
   }) => Promise<{
     solTxId?: string

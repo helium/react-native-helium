@@ -1,97 +1,126 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { View, TextInput, StyleSheet, Text, Button } from 'react-native'
-import { Transfer, useOnboarding } from '@helium/react-native-sdk'
-import { getPendingTxn } from '../../appDataClient'
-import { getKeypairRaw } from '../Account/secureAccount'
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { Button, StyleSheet, Text, View } from 'react-native'
+import { SolUtils, Transfer, useOnboarding } from '@helium/react-native-sdk'
+import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
+import animalName from 'angry-purple-tiger'
+import Input from '../Input'
+import Address from '@helium/address'
 
-const TransferHotspot = () => {
-  const [txnStr, setTxnStr] = useState('')
-  const [gatewayAddress, setGatewayAddress] = useState('')
-  const [ownerAddress, setOwnerAddress] = useState('')
+type Props = {}
+const TransferHotspotV2 = ({}: Props) => {
+  const { createTransferTransaction, submitTransferHotspot } = useOnboarding()
+  const [hotspotAddress, setHotspotAddress] = useState('')
+  const [hotspotName, setHotspotName] = useState('')
   const [newOwnerAddress, setNewOwnerAddress] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [hash, setHash] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
-  const { submitTransferHotspot } = useOnboarding()
 
-  useEffect(() => {
-    if (!txnStr) return
-
+  const handleTransfer = useCallback(async () => {
     try {
-      const txn = Transfer.txnFromString(txnStr)
+      setSubmitted(true)
 
-      setGatewayAddress(txn.gateway?.b58 || '')
-      setOwnerAddress(txn.owner?.b58 || '')
-      setNewOwnerAddress(txn.newOwner?.b58 || '')
+      const address = await getAddressStr()
+      const { transferHotspotTxn, solanaTransaction } =
+        await createTransferTransaction({
+          userAddress: address,
+          hotspotAddress,
+          newOwnerAddress,
+        })
+
+      const keypairRaw = await getKeypairRaw()
+      if (transferHotspotTxn) {
+        const signedTxn = await Transfer.signTransferV2Txn(
+          transferHotspotTxn,
+          keypairRaw
+        )
+        if (!signedTxn.gateway?.b58) {
+          throw new Error('Error signing transfer txn')
+        }
+        const { pendingTxn } = await submitTransferHotspot({
+          transferHotspotTxn: signedTxn.toString(),
+        })
+        if (pendingTxn) {
+          setHash(pendingTxn.hash)
+          setStatus(pendingTxn.status)
+          setFailedReason(pendingTxn.failedReason || '')
+          return
+        }
+      } else if (solanaTransaction) {
+        const solanaKeypair = SolUtils.getSolanaKeypair(keypairRaw.sk)
+        const tx = SolUtils.bufferToTransaction(solanaTransaction)
+        tx.partialSign(solanaKeypair)
+
+        const { solTxId } = await submitTransferHotspot({
+          solanaTransaction: tx.serialize(),
+        })
+        if (solTxId) {
+          setHash(solTxId)
+          setStatus('complete')
+          return
+        }
+
+        setStatus('Unknown Failure')
+      }
     } catch (e) {
-      console.log(e)
+      setStatus((e as { toString: () => string }).toString())
     }
-  }, [txnStr])
+  }, [
+    createTransferTransaction,
+    hotspotAddress,
+    newOwnerAddress,
+    submitTransferHotspot,
+  ])
 
-  const submitTxn = useCallback(async () => {
-    setSubmitted(true)
-
-    // construct and publish transfer v2
-    const keypair = await getKeypairRaw()
-    const signedTxn = await Transfer.signTransferV2Txn(txnStr, keypair)
-    if (!signedTxn.gateway?.b58) {
-      throw new Error('Error signing transfer txn')
-    }
-
-    const { pendingTxn, solTxId } = await submitTransferHotspot({
-      transaction: signedTxn.toString(),
-    })
-
-    if (pendingTxn) {
-      setHash(pendingTxn.hash)
-      setStatus(pendingTxn.status)
-      setFailedReason(pendingTxn.failedReason || '')
-    } else if (solTxId) {
-      setHash(solTxId)
-      setStatus('complete')
-    } else {
-      setStatus('fail')
-    }
-  }, [submitTransferHotspot, txnStr])
-
-  const updateTxnStatus = useCallback(async () => {
-    if (!hash) return
-    const pendingTxns = (await getPendingTxn(hash)).data
-    if (!pendingTxns.length) return
-    setStatus(pendingTxns[0].status)
-    setFailedReason(pendingTxns[0].failedReason || '')
-  }, [hash])
+  const disabled = useMemo(
+    () => !Address.isValid(hotspotAddress) || !Address.isValid(newOwnerAddress),
+    [hotspotAddress, newOwnerAddress]
+  )
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      updateTxnStatus()
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [updateTxnStatus])
+    if (!Address.isValid(hotspotAddress)) {
+      setHotspotName('')
+      return
+    }
+
+    setHotspotName(animalName(hotspotAddress))
+  }, [hotspotAddress])
 
   return (
     <View style={styles.container}>
-      <Text style={styles.topMargin}>{`gateway: ${gatewayAddress}`}</Text>
-      <Text style={styles.topMargin}>{`owner: ${ownerAddress}`}</Text>
-      <Text style={styles.topMargin}>{`newOwner: ${newOwnerAddress}`}</Text>
-      <TextInput
-        onChangeText={setTxnStr}
-        value={txnStr}
-        placeholder="Enter transaction"
-        style={styles.wordInput}
-        editable={!submitted}
-        autoCapitalize="none"
-        autoCompleteType="off"
-        multiline
-        autoCorrect={false}
+      <Text style={styles.heading}>Transfer Hotspot</Text>
+      <Text style={styles.animalName}>{hotspotName}</Text>
+      <Input
+        title="Hotspot Address"
+        inputProps={{
+          editable: !submitted,
+          onChangeText: setHotspotAddress,
+          value: hotspotAddress,
+          placeholder: 'Enter Hotspot Address',
+          style: styles.input,
+          multiline: true,
+          numberOfLines: 2,
+        }}
+      />
+      <Input
+        title="New Owner Address"
+        inputProps={{
+          editable: !submitted,
+          onChangeText: setNewOwnerAddress,
+          value: newOwnerAddress,
+          placeholder: 'Enter New Owner Address',
+          style: styles.input,
+          multiline: true,
+          numberOfLines: 2,
+        }}
       />
       <Button
-        title="Submit Transaction"
-        disabled={!txnStr || submitted}
-        onPress={submitTxn}
+        title="Transfer Ownership"
+        onPress={handleTransfer}
+        disabled={disabled || submitted}
       />
-      <Text style={styles.topMargin}>Txn:</Text>
+      <Text style={styles.topMargin}>Txn</Text>
       <Text style={styles.topMargin} selectable>
         {hash}
       </Text>
@@ -103,18 +132,17 @@ const TransferHotspot = () => {
   )
 }
 
+export default memo(TransferHotspotV2)
+
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
+  heading: { fontSize: 36, textAlign: 'center', marginBottom: 12 },
+  animalName: {
+    fontSize: 18,
+    marginBottom: 24,
+    color: 'grey',
+    textAlign: 'center',
   },
-  wordInput: {
-    borderRadius: 12,
-    fontSize: 19,
-    padding: 16,
-    backgroundColor: 'white',
-    minHeight: 200,
-    marginTop: 16,
-  },
+  container: { flex: 1, padding: 24 },
+  input: { fontSize: 14, marginBottom: 24 },
   topMargin: { marginTop: 16 },
 })
-export default TransferHotspot

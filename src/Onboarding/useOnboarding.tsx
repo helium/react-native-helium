@@ -18,25 +18,36 @@ import {
   getStakingFee,
 } from '../utils/assertLocation'
 import Balance, { CurrencyType, USDollars } from '@helium/currency'
-import { Transfer } from '..'
+// import { SolHotspot, Transfer } from '..'
+import { SolHotspot } from '../types/solTypes'
+import * as Transfer from '../utils/transferHotspot'
 import {
   createHeliumEntityManagerProgram,
   getHeliumBalance,
   getSolBalance,
   getSolHotspotInfo,
   isSolHotspot,
-  SolHotspot,
   submitSolana,
   submitAllSolana,
   getOraclePriceFromSolana,
+  getHotspots,
+  createTransferCompressedCollectableTxn,
 } from '../utils/solanaUtils'
 import { Buffer } from 'buffer'
 import OnboardingClientV3, { HotspotType } from './OnboardingClientV3'
 import { BN } from 'bn.js'
+import { WrappedConnection } from '../utils/WrappedConnection'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
 
+export const SolanaConnection = {
+  'devnet': new WrappedConnection('https://rpc-devnet.aws.metaplex.com/'),
+  'testnet': new WrappedConnection(web3.clusterApiUrl('testnet')),
+  'mainnet-beta': new WrappedConnection(web3.clusterApiUrl('mainnet-beta')),
+} as const
+
+// TODO: solana cluster / connection should be moved to it's own provider, so makers can reuse it in their apps
 const useOnboarding = ({
   baseUrl,
   solanaCluster = 'devnet',
@@ -52,9 +63,7 @@ const useOnboarding = ({
   const onboardingV3Client = useRef(new OnboardingClientV3(v3BaseUrl))
   const solPubKey = useRef<web3.PublicKey>()
   const hemProgram = useRef<Program<HeliumEntityManager>>()
-  const solConnection = useRef(
-    new web3.Connection(web3.clusterApiUrl(solanaCluster))
-  )
+  const solConnection = useRef(SolanaConnection[solanaCluster])
 
   const getHeliumEntityManagerProgram = useCallback(
     async (publicKey: web3.PublicKey) => {
@@ -256,6 +265,7 @@ const useOnboarding = ({
           location,
         })
       )
+
       const solResponses = await Promise.all(promises)
       const solanaTransactions = solResponses
         .flatMap((r) => r.data.solanaTransactions)
@@ -730,19 +740,23 @@ const useOnboarding = ({
 
   const submitTransferHotspot = useCallback(
     async ({
-      transaction,
+      transferHotspotTxn,
+      solanaTransaction,
       httpClient,
     }: {
-      transaction: string
+      transferHotspotTxn?: string
+      solanaTransaction?: Buffer
       httpClient?: Client
     }): Promise<{ solTxId?: string; pendingTxn?: PendingTransaction }> => {
-      checkSolanaStatus()
+      if (!transferHotspotTxn && !solanaTransaction) {
+        throw new Error('No txn found')
+      }
 
       const client = httpClient || heliumHttpClient
 
-      if (isHelium) {
+      if (transferHotspotTxn) {
         // submit to helium if transition not started
-        const pendingTxn = await client.transactions.submit(transaction)
+        const pendingTxn = await client.transactions.submit(transferHotspotTxn)
         return {
           pendingTxn,
         }
@@ -750,14 +764,14 @@ const useOnboarding = ({
 
       // submit to solana
       const solTxId = await submitSolana({
-        txn: Buffer.from(transaction),
+        txn: solanaTransaction!,
         connection: solConnection.current,
       })
       return {
         solTxId,
       }
     },
-    [checkSolanaStatus, isHelium]
+    []
   )
 
   const createTransferTransaction = useCallback(
@@ -773,7 +787,10 @@ const useOnboarding = ({
       newOwnerAddress: string
       ownerKeypairRaw?: SodiumKeyPair
       httpClient?: Client
-    }) => {
+    }): Promise<{
+      transferHotspotTxn?: string | undefined
+      solanaTransaction?: Buffer | undefined
+    }> => {
       checkSolanaStatus()
 
       const client = httpClient || heliumHttpClient
@@ -786,14 +803,31 @@ const useOnboarding = ({
           client,
           ownerKeypairRaw,
         })
-        return txn.toString()
+        return { transferHotspotTxn: txn.toString() }
       }
 
-      // TODO: Handle Solana
-      // 1. Somehow determine if the hotspot is stale
-      // 2. Fetch from onboarding v3
-      // 3. Return the txn
-      return ''
+      const hotspots = await getHotspots({
+        heliumAddress: userAddress,
+        connection: solConnection.current,
+        oldestCollectable: '',
+      })
+
+      const hotspot = hotspots.find((h) => {
+        const addy = h.content.json_uri.split('/').slice(-1)[0]
+        return addy === hotspotAddress
+      })
+
+      if (!hotspot) {
+        throw new Error('Hotspot not found for user')
+      }
+
+      const txn = await createTransferCompressedCollectableTxn({
+        ownerHeliumAddress: userAddress,
+        newOwnerHeliumAddress: newOwnerAddress,
+        connection: solConnection.current,
+        collectable: hotspot,
+      })
+      return { solanaTransaction: Buffer.from(txn.serialize()) }
     },
     [isHelium, checkSolanaStatus]
   )

@@ -23,7 +23,7 @@ const Home = () => {
         handler: () => navigation.push('AssertLocation'),
       },
       {
-        title: 'Transfer Hotspot from Transaction String',
+        title: 'Transfer Hotspot',
         handler: () => navigation.push('TransferHotspot'),
       },
       {

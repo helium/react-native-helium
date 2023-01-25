@@ -32,8 +32,8 @@ import { HotspotErrorCode } from './HotspotBle/useHotspotBle'
 import { heliumHttpClient, createHttpClient } from './utils/httpClient'
 export { DiagnosticInfo } from './HotspotBle/bleParse'
 import { useSolanaStatus, useSolanaVars } from './utils/solanaSentinel'
-import { SolHotspot } from './utils/solanaUtils'
 import { HotspotType } from './Onboarding/OnboardingClientV3'
+import { SolHotspot } from './types/solTypes'
 
 type HeliumNativeType = {
   multiply(a: number, b: number): Promise<number>
