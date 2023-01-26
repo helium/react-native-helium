@@ -13,6 +13,7 @@ import {
   HotspotType,
   useOnboarding,
   SolUtils,
+  useSolana,
 } from '@helium/react-native-sdk'
 import Address from '@helium/address'
 import { getPendingTxn } from '../../appDataClient'
@@ -24,6 +25,9 @@ import Config from 'react-native-config'
 const AssertLocation = () => {
   const { getOnboardingRecord, submitAssertLocation, getAssertData } =
     useOnboarding()
+  const {
+    status: { isSolana },
+  } = useSolana()
   const [gatewayAddress, setGatewayAddress] = useState('')
   const [gatewayName, setGatewayName] = useState('')
   const [lat, setLat] = useState<string>()
@@ -267,22 +271,25 @@ const AssertLocation = () => {
           </>
         )}
 
-        <View style={styles.switchRow}>
-          <Switch
-            onValueChange={handleHotspotTypeChange('iot')}
-            value={hotspotTypes.includes('iot')}
-          />
-          <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
-        </View>
+        {isSolana && (
+          <>
+            <View style={styles.switchRow}>
+              <Switch
+                onValueChange={handleHotspotTypeChange('iot')}
+                value={hotspotTypes.includes('iot')}
+              />
+              <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
+            </View>
 
-        <View style={styles.switchRow}>
-          <Switch
-            onValueChange={handleHotspotTypeChange('mobile')}
-            value={hotspotTypes.includes('mobile')}
-          />
-          <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
-        </View>
-
+            <View style={styles.switchRow}>
+              <Switch
+                onValueChange={handleHotspotTypeChange('mobile')}
+                value={hotspotTypes.includes('mobile')}
+              />
+              <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
+            </View>
+          </>
+        )}
         <View style={styles.buttonRow}>
           <Button title="Update Assert Data" onPress={updateAssertData} />
         </View>

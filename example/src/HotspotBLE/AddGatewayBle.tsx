@@ -12,6 +12,7 @@ import {
   SolUtils,
   useHotspotBle,
   useOnboarding,
+  useSolana,
 } from '@helium/react-native-sdk'
 
 const AddGatewayBle = () => {
@@ -24,6 +25,9 @@ const AddGatewayBle = () => {
   const [failedReason, setFailedReason] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [hotspotTypes, setHotspotTypes] = useState<HotspotType[]>([])
+  const {
+    status: { isSolana },
+  } = useSolana()
 
   const handleAddGateway = useCallback(async () => {
     setSubmitted(true)
@@ -138,21 +142,25 @@ const AddGatewayBle = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.switchRow}>
-        <Switch
-          onValueChange={handleHotspotTypeChange('iot')}
-          value={hotspotTypes.includes('iot')}
-        />
-        <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
-      </View>
+      {isSolana && (
+        <>
+          <View style={styles.switchRow}>
+            <Switch
+              onValueChange={handleHotspotTypeChange('iot')}
+              value={hotspotTypes.includes('iot')}
+            />
+            <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
+          </View>
 
-      <View style={styles.switchRow}>
-        <Switch
-          onValueChange={handleHotspotTypeChange('mobile')}
-          value={hotspotTypes.includes('mobile')}
-        />
-        <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
-      </View>
+          <View style={styles.switchRow}>
+            <Switch
+              onValueChange={handleHotspotTypeChange('mobile')}
+              value={hotspotTypes.includes('mobile')}
+            />
+            <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
+          </View>
+        </>
+      )}
 
       <Button
         title="Add Gateway"

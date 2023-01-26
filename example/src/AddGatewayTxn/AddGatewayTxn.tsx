@@ -14,6 +14,7 @@ import {
   HotspotType,
   SolUtils,
   useOnboarding,
+  useSolana,
 } from '@helium/react-native-sdk'
 import { getPendingTxn } from '../../appDataClient'
 import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
@@ -32,6 +33,9 @@ const AddGatewayTxn = () => {
   const [hotspotTypes, setHotspotTypes] = useState<HotspotType[]>([])
   const { getOnboardingRecord, submitAddGateway, getOnboardTransactions } =
     useOnboarding()
+  const {
+    status: { isSolana },
+  } = useSolana()
 
   useEffect(() => {
     if (!hotspotAddress) return
@@ -164,21 +168,25 @@ const AddGatewayTxn = () => {
         autoCorrect={false}
       />
 
-      <View style={styles.switchRow}>
-        <Switch
-          onValueChange={handleHotspotTypeChange('iot')}
-          value={hotspotTypes.includes('iot')}
-        />
-        <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
-      </View>
+      {isSolana && (
+        <>
+          <View style={styles.switchRow}>
+            <Switch
+              onValueChange={handleHotspotTypeChange('iot')}
+              value={hotspotTypes.includes('iot')}
+            />
+            <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
+          </View>
 
-      <View style={styles.switchRow}>
-        <Switch
-          onValueChange={handleHotspotTypeChange('mobile')}
-          value={hotspotTypes.includes('mobile')}
-        />
-        <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
-      </View>
+          <View style={styles.switchRow}>
+            <Switch
+              onValueChange={handleHotspotTypeChange('mobile')}
+              value={hotspotTypes.includes('mobile')}
+            />
+            <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
+          </View>
+        </>
+      )}
 
       <Button
         title="Submit Transaction"
