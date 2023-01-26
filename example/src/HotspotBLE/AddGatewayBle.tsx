@@ -6,13 +6,13 @@ import {
   getKeypairRaw,
   getSecureItem,
 } from '../Account/secureAccount'
+import Solana from '@helium/solana'
 import {
-  HotspotType,
-  SolUtils,
   useHotspotBle,
   useOnboarding,
   useSolana,
 } from '@helium/react-native-sdk'
+import { HotspotType } from '@helium/onboarding'
 
 const AddGatewayBle = () => {
   const { getOnboardingRecord, submitAddGateway, getOnboardTransactions } =
@@ -68,10 +68,10 @@ const AddGatewayBle = () => {
     if (addGatewayTxn) {
       addGatewaySignedTxn = txnOwnerSigned.toString()
     } else if (solanaTransactions) {
-      const solanaKeypair = SolUtils.getSolanaKeypair(keypair.sk)
+      const solanaKeypair = Solana.getSolanaKeypair(keypair.sk)
 
       solanaSignedTransactions = solanaTransactions.map((txn) => {
-        const tx = SolUtils.bufferToTransaction(txn)
+        const tx = Solana.bufferToTransaction(txn)
         tx.partialSign(solanaKeypair)
         return tx.serialize()
       })

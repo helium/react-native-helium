@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
-import { SolUtils, Transfer, useOnboarding } from '@helium/react-native-sdk'
+import { Transfer, useOnboarding } from '@helium/react-native-sdk'
+import Solana from '@helium/solana'
 import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
 import animalName from 'angry-purple-tiger'
 import Input from '../Input'
@@ -48,8 +49,8 @@ const TransferHotspot = ({}: Props) => {
           return
         }
       } else if (solanaTransaction) {
-        const solanaKeypair = SolUtils.getSolanaKeypair(keypairRaw.sk)
-        const tx = SolUtils.bufferToTransaction(solanaTransaction)
+        const solanaKeypair = Solana.getSolanaKeypair(keypairRaw.sk)
+        const tx = Solana.bufferToTransaction(solanaTransaction)
         tx.partialSign(solanaKeypair)
 
         const { solTxId } = await submitTransferHotspot({

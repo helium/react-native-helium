@@ -1,8 +1,8 @@
 import React, { createContext, ReactNode, useContext } from 'react'
-import { CompressedNFT, SolHotspot } from './solanaTypes'
+import { CompressedNFT, SolHotspot } from '@helium/solana'
 import useSolana from './useSolana'
 import * as web3 from '@solana/web3.js'
-import HeliumSolana from './HeliumSolana'
+import HeliumSolana from '@helium/solana'
 import { TokenType } from './solanaSentinel'
 
 const initialState = {

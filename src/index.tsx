@@ -5,7 +5,6 @@ import * as Account from './Account/account'
 import * as AddGateway from './utils/addGateway'
 import * as Location from './utils/assertLocation'
 import * as Transfer from './utils/transferHotspot'
-import * as SolUtils from './Solana/solanaUtils'
 import './polyfill'
 import {
   AddGatewayV1,
@@ -34,10 +33,8 @@ import Balance, {
 import { HotspotErrorCode } from './HotspotBle/useHotspotBle'
 import { heliumHttpClient, createHttpClient } from './utils/httpClient'
 export { DiagnosticInfo } from './HotspotBle/bleParse'
-import { HotspotType } from './Onboarding/OnboardingClientV3'
-import { SolHotspot, CompressedNFT } from './Solana/solanaTypes'
+import { SolHotspot, CompressedNFT } from '@helium/solana'
 import { useSolanaStatus, useSolanaVars } from './Solana/solanaSentinel'
-import HeliumSolana from './Solana/HeliumSolana'
 
 type HeliumNativeType = {
   multiply(a: number, b: number): Promise<number>
@@ -62,11 +59,9 @@ export {
   useSolanaStatus,
   useSolanaVars,
   heliumHttpClient,
-  HeliumSolana,
   HotspotBleManager,
   HotspotBleProvider,
   HotspotErrorCode,
-  HotspotType,
   Keypair,
   Location,
   multiply,
@@ -76,7 +71,6 @@ export {
   SecurityTokens,
   SolanaProvider,
   SolHotspot,
-  SolUtils,
   State,
   Transfer,
   TransferHotspotV2,

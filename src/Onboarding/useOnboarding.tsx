@@ -1,5 +1,8 @@
 import { useCallback, useRef } from 'react'
-import OnboardingClient, { OnboardingRecord } from '@helium/onboarding'
+import OnboardingClient, {
+  OnboardingRecord,
+  HotspotType,
+} from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
 import { Client, Hotspot, PendingTransaction } from '@helium/http'
 import { AssertData } from './onboardingTypes'
@@ -13,24 +16,17 @@ import {
 import Balance, { CurrencyType, USDollars } from '@helium/currency'
 import * as Transfer from '../utils/transferHotspot'
 import { Buffer } from 'buffer'
-import OnboardingClientV3, { HotspotType } from './OnboardingClientV3'
 import { BN } from 'bn.js'
-import { SolHotspot } from '../Solana/solanaTypes'
+import bs58 from 'bs58'
+import { SolHotspot } from '@helium/solana'
 import { useSolanaContext } from '../Solana/SolanaProvider'
-import { isSolHotspot } from '../Solana/solanaUtils'
+import { isSolHotspot } from '@helium/solana'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
 
-const useOnboarding = ({
-  baseUrl,
-  v3BaseUrl,
-}: {
-  v3BaseUrl?: string
-  baseUrl?: string
-}) => {
+const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
   const onboardingClient = useRef(new OnboardingClient(baseUrl))
-  const onboardingV3Client = useRef(new OnboardingClientV3(v3BaseUrl))
   const solana = useSolanaContext()
 
   const checkSolanaStatus = useCallback(() => {
@@ -165,12 +161,14 @@ const useOnboarding = ({
         return { addGatewayTxn: txn }
       }
 
-      const createTxns = await onboardingV3Client.current.createHotspot({
+      const createTxns = await onboardingClient.current.createHotspot({
         transaction: txn,
       })
 
       await solana.submitAllSolana({
-        txns: createTxns.data.solanaTransactions.map((t) => Buffer.from(t)),
+        txns: (createTxns.data?.solanaTransactions || []).map((t) =>
+          Buffer.from(t)
+        ),
       })
 
       const gain = decimalGain ? Math.round(decimalGain * 10.0) : undefined
@@ -181,7 +179,7 @@ const useOnboarding = ({
       }
 
       const promises = hotspotTypes.map((type) =>
-        onboardingV3Client.current.onboard({
+        onboardingClient.current.onboard({
           hotspotAddress,
           type,
           gain,
@@ -192,7 +190,7 @@ const useOnboarding = ({
 
       const solResponses = await Promise.all(promises)
       const solanaTransactions = solResponses
-        .flatMap((r) => r.data.solanaTransactions)
+        .flatMap((r) => r.data?.solanaTransactions || [])
         .map((tx) => Buffer.from(tx))
 
       if (!solanaTransactions?.length) {
@@ -295,7 +293,7 @@ const useOnboarding = ({
         // TODO: Is this right?
         if (!hotspot.isFullHotspot) return false
 
-        address = hotspot.hotspotKey
+        address = bs58.encode(hotspot.entityKey)
       } else {
         // TODO: Is this right?
         if (hotspot.mode !== 'full') return false
@@ -539,7 +537,7 @@ const useOnboarding = ({
         const location = new BN(nextLocation, 'hex').toString()
 
         const promises = hotspotTypes.map((type) =>
-          onboardingV3Client.current.updateMetadata({
+          onboardingClient.current.updateMetadata({
             type,
             solanaAddress,
             hotspotAddress: gateway,
@@ -550,7 +548,7 @@ const useOnboarding = ({
         )
         const solResponses = await Promise.all(promises)
         solanaTransactions = solResponses
-          .flatMap((r) => r.data.solanaTransactions)
+          .flatMap((r) => r.data?.solanaTransactions || [])
           .map((txn) => Buffer.from(txn))
       }
       return {

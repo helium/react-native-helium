@@ -10,17 +10,17 @@ import {
 import {
   Location,
   AssertData,
-  HotspotType,
   useOnboarding,
-  SolUtils,
   useSolana,
 } from '@helium/react-native-sdk'
+import Solana from '@helium/solana'
 import Address from '@helium/address'
 import { getPendingTxn } from '../../appDataClient'
 import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
 import Input from '../Input'
 import animalName from 'angry-purple-tiger'
 import Config from 'react-native-config'
+import { HotspotType } from '@helium/onboarding'
 
 const AssertLocation = () => {
   const { getOnboardingRecord, submitAssertLocation, getAssertData } =
@@ -102,10 +102,10 @@ const AssertLocation = () => {
 
       assertLocationTxn = txnOwnerSigned.toString()
     } else if (assertData.solanaTransactions) {
-      const solanaKeypair = SolUtils.getSolanaKeypair(ownerKeypairRaw.sk)
+      const solanaKeypair = Solana.getSolanaKeypair(ownerKeypairRaw.sk)
 
       solanaTransactions = assertData.solanaTransactions.map((txn) => {
-        const tx = SolUtils.bufferToTransaction(txn)
+        const tx = Solana.bufferToTransaction(txn)
         tx.partialSign(solanaKeypair)
         return tx.serialize()
       })

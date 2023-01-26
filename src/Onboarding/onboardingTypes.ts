@@ -22,10 +22,9 @@ import Balance, {
   USDollars,
 } from '@helium/currency'
 import Client, { Hotspot, PendingTransaction } from '@helium/http'
-import { OnboardingRecord, Maker } from '@helium/onboarding'
+import { OnboardingRecord, Maker, HotspotType } from '@helium/onboarding'
 import { SodiumKeyPair } from '../Account/account'
-import { SolHotspot } from '../Solana/solanaTypes'
-import { HotspotType } from './OnboardingClientV3'
+import { SolHotspot } from '@helium/solana'
 
 export type AssertData = {
   balances?: {

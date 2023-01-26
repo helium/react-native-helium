@@ -4,9 +4,8 @@ import { AssertData, OnboardingManager } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
 import { SodiumKeyPair } from '../Account/account'
 import Balance, { CurrencyType, USDollars } from '@helium/currency'
-import { HotspotType } from './OnboardingClientV3'
-import { OnboardingRecord } from '@helium/onboarding'
-import { SolHotspot } from '../Solana/solanaTypes'
+import { HotspotType, OnboardingRecord } from '@helium/onboarding'
+import { SolHotspot } from '@helium/solana'
 
 const initialState = {
   createTransferTransaction: async (_opts: {
@@ -132,17 +131,11 @@ const { Provider } = OnboardingContext
 const OnboardingProvider = ({
   children,
   baseUrl,
-  v3BaseUrl,
 }: {
   children: ReactNode
   baseUrl?: string
-  v3BaseUrl?: string
 }) => {
-  return (
-    <Provider value={useOnboarding({ baseUrl, v3BaseUrl })}>
-      {children}
-    </Provider>
-  )
+  return <Provider value={useOnboarding({ baseUrl })}>{children}</Provider>
 }
 
 /**

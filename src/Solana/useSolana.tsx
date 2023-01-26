@@ -1,9 +1,8 @@
 import { useCallback, useRef } from 'react'
 import { Buffer } from 'buffer'
 import * as web3 from '@solana/web3.js'
-import { CompressedNFT } from './solanaTypes'
+import HeliumSolana, { CompressedNFT } from '@helium/solana'
 import { useSolanaStatus, useSolanaVars } from './solanaSentinel'
-import HeliumSolana from './HeliumSolana'
 
 const useSolana = ({
   cluster = 'devnet',
@@ -41,9 +40,10 @@ const useSolana = ({
       hotspotAddress: string
     }) => {
       return heliumSolana.current.getSolHotspotInfo({
-        iotMint,
+        mint: iotMint,
         hotspotAddress,
         pubKey,
+        symbol: 'IOT',
       })
     },
     [pubKey]

@@ -23,7 +23,7 @@ import Config from 'react-native-config'
 import OraclePrice from './OraclePrice/OraclePrice'
 import * as web3 from '@solana/web3.js'
 import { getAddressStr } from './Account/secureAccount'
-import HeliumSolana from '../../src/Solana/HeliumSolana'
+import HeliumSolana from '@helium/solana'
 
 const Stack = createNativeStackNavigator()
 
@@ -66,9 +66,6 @@ export default function App() {
       <OnboardingProvider
         baseUrl={
           Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api/v2'
-        }
-        v3BaseUrl={
-          Config.ONBOARDING_V3_BASE_URL || 'https://onboarding.dewi.org/api/v3'
         }
       >
         <HotspotBleProvider>

@@ -8,16 +8,12 @@ import {
   TouchableOpacity,
   Switch,
 } from 'react-native'
-import {
-  AddGateway,
-  HotspotType,
-  SolUtils,
-  useOnboarding,
-  useSolana,
-} from '@helium/react-native-sdk'
+import { AddGateway, useOnboarding, useSolana } from '@helium/react-native-sdk'
 import { getPendingTxn } from '../../appDataClient'
 import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
 import Clipboard from '@react-native-community/clipboard'
+import Solana from '@helium/solana'
+import { HotspotType } from '@helium/onboarding'
 
 const AddGatewayTxn = () => {
   const [txnStr, setTxnStr] = useState('')
@@ -82,10 +78,10 @@ const AddGatewayTxn = () => {
 
       addGatewaySignedTxn = txnOwnerSigned.toString()
     } else if (solanaTransactions) {
-      const solanaKeypair = SolUtils.getSolanaKeypair(keypair.sk)
+      const solanaKeypair = Solana.getSolanaKeypair(keypair.sk)
 
       solanaSignedTransactions = solanaTransactions.map((txn) => {
-        const tx = SolUtils.bufferToTransaction(txn)
+        const tx = Solana.bufferToTransaction(txn)
         tx.partialSign(solanaKeypair)
         return tx.serialize()
       })
