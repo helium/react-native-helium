@@ -50,11 +50,13 @@ export default function App() {
 
   useEffect(() => {
     const interval = setInterval(async () => {
-      const nextAddr = await getAddressStr()
-      if (nextAddr === address) return
+      try {
+        const nextAddr = await getAddressStr()
+        if (nextAddr === address) return
 
-      setAddress(nextAddr)
-      setPubKey(HeliumSolana.heliumAddressToSolPublicKey(nextAddr))
+        setAddress(nextAddr)
+        setPubKey(HeliumSolana.heliumAddressToSolPublicKey(nextAddr))
+      } catch {}
     }, 2000)
     return () => clearInterval(interval)
   }, [address])

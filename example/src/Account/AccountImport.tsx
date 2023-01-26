@@ -45,6 +45,12 @@ const AccountImport = () => {
     )
   }
 
+  const handleSubmit = useCallback(() => {
+    if (matchingWords.length === 0) return
+
+    handleSelectWord(matchingWords[0])()
+  }, [handleSelectWord, matchingWords])
+
   return (
     <View style={styles.container}>
       {words.length < TOTAL_WORDS && (
@@ -56,6 +62,10 @@ const AccountImport = () => {
           autoCapitalize="none"
           autoCompleteType="off"
           autoCorrect={false}
+          onSubmitEditing={handleSubmit}
+          blurOnSubmit={false}
+          returnKeyType={'next'}
+          autoFocus={true}
         />
       )}
       {words.length === TOTAL_WORDS && (

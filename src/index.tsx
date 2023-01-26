@@ -37,6 +37,7 @@ export { DiagnosticInfo } from './HotspotBle/bleParse'
 import { HotspotType } from './Onboarding/OnboardingClientV3'
 import { SolHotspot, CompressedNFT } from './Solana/solanaTypes'
 import { useSolanaStatus, useSolanaVars } from './Solana/solanaSentinel'
+import HeliumSolana from './Solana/HeliumSolana'
 
 type HeliumNativeType = {
   multiply(a: number, b: number): Promise<number>
@@ -61,6 +62,7 @@ export {
   useSolanaStatus,
   useSolanaVars,
   heliumHttpClient,
+  HeliumSolana,
   HotspotBleManager,
   HotspotBleProvider,
   HotspotErrorCode,
