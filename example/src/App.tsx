@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { LogBox } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import {
@@ -21,6 +21,9 @@ import TransferHotspot from './TransferHotspot/TransferHotspot'
 import CreateRandomHotspot from './CreateRandomHotspot/CreateRandomHotspot'
 import Config from 'react-native-config'
 import OraclePrice from './OraclePrice/OraclePrice'
+import * as web3 from '@solana/web3.js'
+import { getAddressStr } from './Account/secureAccount'
+import HeliumSolana from '../../src/Solana/HeliumSolana'
 
 const Stack = createNativeStackNavigator()
 
@@ -39,12 +42,25 @@ export type RootStackParamList = {
 export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>
 
 export default function App() {
+  const [address, setAddress] = useState('')
+  const [pubKey, setPubKey] = useState(web3.PublicKey.default)
   LogBox.ignoreLogs([
     'Require cycle', // ignore HeliumJS require cycles
   ])
 
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const nextAddr = await getAddressStr()
+      if (nextAddr === address) return
+
+      setAddress(nextAddr)
+      setPubKey(HeliumSolana.heliumAddressToSolPublicKey(nextAddr))
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [address])
+
   return (
-    <SolanaProvider cluster="devnet">
+    <SolanaProvider cluster="devnet" pubKey={pubKey}>
       <OnboardingProvider
         baseUrl={
           Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api/v2'

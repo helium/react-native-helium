@@ -117,11 +117,9 @@ const useOnboarding = ({
   const getHotspotForCurrentChain = useCallback(
     async ({
       hotspotAddress,
-      userHeliumAddress,
       httpClient,
     }: {
       hotspotAddress: string
-      userHeliumAddress: string
       httpClient?: Client
     }) => {
       checkSolanaStatus()
@@ -137,7 +135,6 @@ const useOnboarding = ({
       const hotspotInfo = await solana.getSolHotspotInfo({
         iotMint: solana.vars.iot.mint,
         hotspotAddress,
-        heliumAddress: userHeliumAddress,
       })
       return hotspotInfo
     },
@@ -212,11 +209,9 @@ const useOnboarding = ({
       hotspotAddress,
       addGatewayTxn,
       solanaTransactions,
-      userHeliumAddress,
       httpClient,
     }: {
       hotspotAddress: string
-      userHeliumAddress: string
       addGatewayTxn?: string
       solanaTransactions?: Buffer[]
       httpClient?: Client
@@ -232,7 +227,6 @@ const useOnboarding = ({
       const hotspotExists = !!(await getHotspotForCurrentChain({
         hotspotAddress,
         httpClient: client,
-        userHeliumAddress,
       }))
 
       if (hotspotExists) {
@@ -341,9 +335,7 @@ const useOnboarding = ({
     }) => {
       checkSolanaStatus()
 
-      const solBalance = await solana.getSolBalance({
-        heliumAddress,
-      })
+      const solBalance = await solana.getSolBalance()
 
       if (solana.status.isSolana) {
         // GET hnt Balance from solana
@@ -352,7 +344,6 @@ const useOnboarding = ({
         }
         const hntAmount = await solana.getHeliumBalance({
           mint: solana.vars?.hnt.mint,
-          heliumAddress,
         })
 
         return {
@@ -432,7 +423,6 @@ const useOnboarding = ({
 
       const hotspot = await getHotspotForCurrentChain({
         hotspotAddress: gateway,
-        userHeliumAddress: owner,
       })
 
       if (!onboardingRecord) {
@@ -731,7 +721,6 @@ const useOnboarding = ({
 
       // TODO: Page until you find it?
       const hotspots = await solana.getHotspots({
-        heliumAddress: userAddress,
         oldestCollectable: '',
       })
 
@@ -745,7 +734,6 @@ const useOnboarding = ({
       }
 
       const txn = await solana.createTransferCompressedCollectableTxn({
-        ownerHeliumAddress: userAddress,
         newOwnerHeliumAddress: newOwnerAddress,
         collectable: hotspot,
       })

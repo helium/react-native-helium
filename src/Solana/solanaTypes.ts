@@ -2,76 +2,12 @@ import { PublicKey } from '@solana/web3.js'
 import BN from 'bn.js'
 import * as web3 from '@solana/web3.js'
 import { WrappedConnection } from './WrappedConnection'
-import { TokenType } from './solanaSentinel'
-import HeliumSolana from './HeliumSolana'
 
 export const SolanaConnection = {
   'devnet': new WrappedConnection('https://rpc-devnet.aws.metaplex.com/'),
   'testnet': new WrappedConnection(web3.clusterApiUrl('testnet')),
   'mainnet-beta': new WrappedConnection(web3.clusterApiUrl('mainnet-beta')),
 } as const
-
-export interface SolanaManager {
-  heliumSolana: HeliumSolana
-  createTransferCompressedCollectableTxn: ({
-    collectable,
-    ownerHeliumAddress,
-    newOwnerHeliumAddress,
-  }: {
-    collectable: CompressedNFT
-    ownerHeliumAddress: string
-    newOwnerHeliumAddress: string
-  }) => Promise<web3.VersionedTransaction | undefined>
-  getHeliumBalance: ({
-    heliumAddress,
-    mint,
-  }: {
-    heliumAddress: string
-    mint: string
-  }) => Promise<number | undefined>
-  getHotspots: ({
-    heliumAddress,
-    oldestCollectable,
-  }: {
-    heliumAddress: string
-    oldestCollectable?: string
-  }) => Promise<CompressedNFT[]>
-  getOraclePriceFromSolana: ({
-    tokenType,
-  }: {
-    tokenType: 'HNT'
-  }) => Promise<number>
-  getSolBalance: ({
-    heliumAddress,
-  }: {
-    heliumAddress: string
-  }) => Promise<number>
-  getSolHotspotInfo: ({
-    iotMint,
-    hotspotAddress,
-    heliumAddress,
-  }: {
-    iotMint: string
-    hotspotAddress: string
-    heliumAddress: string
-  }) => Promise<SolHotspot | null>
-  status: {
-    inProgress: boolean
-    isHelium: boolean
-    isSolana: boolean
-  }
-  submitSolana: ({ txn }: { txn: Buffer }) => Promise<string>
-  submitAllSolana: ({ txns }: { txns: Buffer[] }) => Promise<string[]>
-  vars:
-    | Record<
-        TokenType,
-        {
-          metadata_url: string
-          mint: string
-        }
-      >
-    | undefined
-}
 
 export type SolHotspot = {
   asset: PublicKey

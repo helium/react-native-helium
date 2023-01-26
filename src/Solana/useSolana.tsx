@@ -7,56 +7,43 @@ import HeliumSolana from './HeliumSolana'
 
 const useSolana = ({
   cluster = 'devnet',
+  pubKey,
 }: {
   cluster?: 'mainnet-beta' | 'devnet' | 'testnet'
+  pubKey: web3.PublicKey
 }) => {
   const { isHelium, isSolana, inProgress } = useSolanaStatus()
   const { data: vars } = useSolanaVars(cluster)
   const heliumSolana = useRef(new HeliumSolana(cluster))
 
-  const pubKey = useCallback((heliumAddress: string) => {
-    return HeliumSolana.heliumAddressToSolPublicKey(heliumAddress)
-  }, [])
-
   const getHeliumBalance = useCallback(
-    async ({
-      heliumAddress,
-      mint,
-    }: {
-      heliumAddress: string
-      mint: string
-    }) => {
+    async ({ mint }: { mint: string }) => {
       return heliumSolana.current.getHeliumBalance({
-        pubKey: pubKey(heliumAddress),
+        pubKey,
         mint,
       })
     },
     [pubKey]
   )
 
-  const getSolBalance = useCallback(
-    async ({ heliumAddress }: { heliumAddress: string }) => {
-      return heliumSolana.current.getSolBalance({
-        pubKey: pubKey(heliumAddress),
-      })
-    },
-    [pubKey]
-  )
+  const getSolBalance = useCallback(async () => {
+    return heliumSolana.current.getSolBalance({
+      pubKey,
+    })
+  }, [pubKey])
 
   const getSolHotspotInfo = useCallback(
     async ({
       iotMint,
       hotspotAddress,
-      heliumAddress,
     }: {
       iotMint: string
       hotspotAddress: string
-      heliumAddress: string
     }) => {
       return heliumSolana.current.getSolHotspotInfo({
         iotMint,
         hotspotAddress,
-        pubKey: pubKey(heliumAddress),
+        pubKey,
       })
     },
     [pubKey]
@@ -82,15 +69,15 @@ const useSolana = ({
   const createTransferCompressedCollectableTxn = useCallback(
     async ({
       collectable,
-      ownerHeliumAddress,
       newOwnerHeliumAddress,
     }: {
       collectable: CompressedNFT
-      ownerHeliumAddress: string
       newOwnerHeliumAddress: string
     }): Promise<web3.VersionedTransaction | undefined> => {
-      const owner = pubKey(ownerHeliumAddress)
-      const recipient = pubKey(newOwnerHeliumAddress)
+      const owner = pubKey
+      const recipient = HeliumSolana.heliumAddressToSolPublicKey(
+        newOwnerHeliumAddress
+      )
       return heliumSolana.current.createTransferCompressedCollectableTxn({
         collectable,
         owner,
@@ -101,15 +88,9 @@ const useSolana = ({
   )
 
   const getHotspots = useCallback(
-    async ({
-      heliumAddress,
-      oldestCollectable,
-    }: {
-      heliumAddress: string
-      oldestCollectable?: string
-    }) => {
+    async ({ oldestCollectable }: { oldestCollectable?: string }) => {
       return heliumSolana.current.getHotspots({
-        pubKey: pubKey(heliumAddress),
+        pubKey,
         after: oldestCollectable,
       })
     },

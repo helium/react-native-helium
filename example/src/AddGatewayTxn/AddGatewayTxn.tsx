@@ -100,7 +100,6 @@ const AddGatewayTxn = () => {
       hotspotAddress,
       addGatewayTxn: addGatewaySignedTxn,
       solanaTransactions: solanaSignedTransactions,
-      userHeliumAddress: userAddress,
     })
 
     if (addGatewayResponse?.pendingTxn) {

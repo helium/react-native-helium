@@ -14,6 +14,7 @@ const initialState = {
     userAddress: string
     newOwnerAddress: string
     httpClient?: Client
+    ownerKeypairRaw?: SodiumKeyPair
   }) =>
     new Promise<{
       transferHotspotTxn?: string | undefined
@@ -33,7 +34,6 @@ const initialState = {
     ),
   submitAddGateway: async (_opts: {
     hotspotAddress: string
-    userHeliumAddress: string
     addGatewayTxn?: string
     solanaTransactions?: Buffer[]
     httpClient?: Client
@@ -58,6 +58,7 @@ const initialState = {
     elevation?: number
     ownerKeypairRaw?: SodiumKeyPair
     httpClient?: Client
+    dataOnly?: boolean
     hotspotTypes: HotspotType[]
     onboardingRecord?: OnboardingRecord | null
     createSolanaTransactions?: boolean
@@ -73,7 +74,6 @@ const initialState = {
     ),
   getHotspotForCurrentChain: async (_opts: {
     hotspotAddress: string
-    userHeliumAddress: string
     httpClient?: Client
   }) => null,
   getMakers: async () => [],

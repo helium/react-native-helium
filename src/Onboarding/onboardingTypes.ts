@@ -59,7 +59,6 @@ export interface OnboardingManager {
   }>
   submitAddGateway: (_opts: {
     hotspotAddress: string
-    userHeliumAddress: string
     addGatewayTxn?: string
     solanaTransactions?: Buffer[]
     httpClient?: Client
@@ -97,14 +96,14 @@ export interface OnboardingManager {
     decimalGain?: number
     elevation?: number
     ownerKeypairRaw?: SodiumKeyPair
-    hotspotTypes: HotspotType[]
     httpClient?: Client
+    dataOnly?: boolean
+    hotspotTypes: HotspotType[]
     onboardingRecord?: OnboardingRecord | null
     createSolanaTransactions?: boolean
   }) => Promise<AssertData>
   getHotspotForCurrentChain: (_opts: {
     hotspotAddress: string
-    userHeliumAddress: string
     httpClient?: Client
   }) => Promise<SolHotspot | Hotspot | null>
   hasFreeAssert: (_opts: {
