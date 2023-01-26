@@ -2,7 +2,6 @@ import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import React, { createContext, ReactNode, useContext } from 'react'
 import { AssertData, OnboardingManager } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
-import * as web3 from '@solana/web3.js'
 import { SodiumKeyPair } from '../Account/account'
 import Balance, { CurrencyType, USDollars } from '@helium/currency'
 import { HotspotType } from './OnboardingClientV3'
@@ -34,10 +33,9 @@ const initialState = {
     ),
   submitAddGateway: async (_opts: {
     hotspotAddress: string
-    userHeliumAddress?: string
+    userHeliumAddress: string
     addGatewayTxn?: string
     solanaTransactions?: Buffer[]
-    userSolPubKey?: web3.PublicKey
     httpClient?: Client
   }) =>
     new Promise<{
@@ -75,8 +73,7 @@ const initialState = {
     ),
   getHotspotForCurrentChain: async (_opts: {
     hotspotAddress: string
-    userHeliumAddress?: string
-    userSolPubKey?: web3.PublicKey
+    userHeliumAddress: string
     httpClient?: Client
   }) => null,
   getMakers: async () => [],

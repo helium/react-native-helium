@@ -4,11 +4,7 @@ import * as web3 from '@solana/web3.js'
 import { Client, Hotspot, PendingTransaction } from '@helium/http'
 import { AssertData } from './onboardingTypes'
 import { heliumHttpClient } from '../utils/httpClient'
-import {
-  heliumAddressToSolAddress,
-  heliumAddressToSolPublicKey,
-  SodiumKeyPair,
-} from '../Account/account'
+import { heliumAddressToSolAddress, SodiumKeyPair } from '../Account/account'
 import {
   createLocationTxn,
   getH3Location,
@@ -122,24 +118,13 @@ const useOnboarding = ({
     async ({
       hotspotAddress,
       userHeliumAddress,
-      userSolPubKey,
       httpClient,
     }: {
       hotspotAddress: string
-      userHeliumAddress?: string
-      userSolPubKey?: web3.PublicKey
+      userHeliumAddress: string
       httpClient?: Client
     }) => {
       checkSolanaStatus()
-      let pubKey = userSolPubKey
-
-      if (userHeliumAddress && !userSolPubKey) {
-        pubKey = heliumAddressToSolPublicKey(userHeliumAddress)
-      }
-
-      if (!pubKey) {
-        throw new Error('User address is required')
-      }
 
       if (!solana.vars?.iot.mint) {
         throw new Error('Failed to fetch mint from solana vars')
@@ -152,7 +137,7 @@ const useOnboarding = ({
       const hotspotInfo = await solana.getSolHotspotInfo({
         iotMint: solana.vars.iot.mint,
         hotspotAddress,
-        pubKey,
+        heliumAddress: userHeliumAddress,
       })
       return hotspotInfo
     },
@@ -227,15 +212,13 @@ const useOnboarding = ({
       hotspotAddress,
       addGatewayTxn,
       solanaTransactions,
-      userSolPubKey,
       userHeliumAddress,
       httpClient,
     }: {
       hotspotAddress: string
-      userHeliumAddress?: string
+      userHeliumAddress: string
       addGatewayTxn?: string
       solanaTransactions?: Buffer[]
-      userSolPubKey?: web3.PublicKey
       httpClient?: Client
     }): Promise<{
       solanaTxnIds?: string[]
@@ -248,7 +231,6 @@ const useOnboarding = ({
       // TODO: Remove this check?
       const hotspotExists = !!(await getHotspotForCurrentChain({
         hotspotAddress,
-        userSolPubKey,
         httpClient: client,
         userHeliumAddress,
       }))

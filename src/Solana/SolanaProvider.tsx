@@ -2,10 +2,10 @@ import React, { createContext, ReactNode, useContext } from 'react'
 import { CompressedNFT, SolanaManager, SolHotspot } from './solanaTypes'
 import useSolana from './useSolana'
 import * as web3 from '@solana/web3.js'
-import { SolanaConnection } from './solanaUtils'
+import HeliumSolana from './HeliumSolana'
 
 const initialState = {
-  connection: SolanaConnection.devnet,
+  heliumSolana: new HeliumSolana('devnet'),
   createTransferCompressedCollectableTxn: async (_opts: {
     collectable: CompressedNFT
     ownerHeliumAddress: string
@@ -25,7 +25,7 @@ const initialState = {
   getSolHotspotInfo: (_opts: {
     iotMint: string
     hotspotAddress: string
-    pubKey: web3.PublicKey
+    heliumAddress: string
   }) => new Promise<SolHotspot | null>((resolve) => resolve(null)),
   status: {
     inProgress: false,

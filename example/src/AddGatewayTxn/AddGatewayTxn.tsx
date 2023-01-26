@@ -9,7 +9,6 @@ import {
   Switch,
 } from 'react-native'
 import {
-  Account,
   AddGateway,
   HotspotType,
   SolUtils,
@@ -97,13 +96,11 @@ const AddGatewayTxn = () => {
       throw new Error('No user found')
     }
 
-    const userSolPubKey = Account.heliumAddressToSolPublicKey(userAddress)
-
     const addGatewayResponse = await submitAddGateway({
       hotspotAddress,
       addGatewayTxn: addGatewaySignedTxn,
       solanaTransactions: solanaSignedTransactions,
-      userSolPubKey,
+      userHeliumAddress: userAddress,
     })
 
     if (addGatewayResponse?.pendingTxn) {

@@ -1,7 +1,6 @@
 import { Buffer } from 'buffer'
 import * as web3 from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Hotspot } from '@helium/http'
 import { PROGRAM_ID as BUBBLEGUM_PROGRAM_ID } from '@metaplex-foundation/mpl-bubblegum'
 import { SolHotspot } from '../Solana/solanaTypes'
 import { WrappedConnection } from './WrappedConnection'
@@ -19,9 +18,8 @@ export const SolanaConnection = {
   'mainnet-beta': new WrappedConnection(web3.clusterApiUrl('mainnet-beta')),
 } as const
 
-export const isSolHotspot = (
-  hotspot: SolHotspot | Hotspot
-): hotspot is SolHotspot => Object.keys(hotspot).includes('numLocationAsserts')
+export const isSolHotspot = (hotspot: any): hotspot is SolHotspot =>
+  Object.keys(hotspot).includes('numLocationAsserts')
 
 export const getSolanaKeypair = (secretKey: string) => {
   return web3.Keypair.fromSecretKey(Buffer.from(secretKey, 'base64'))

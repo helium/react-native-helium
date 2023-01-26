@@ -3,9 +3,16 @@ import BN from 'bn.js'
 import * as web3 from '@solana/web3.js'
 import { WrappedConnection } from './WrappedConnection'
 import { TokenType } from './solanaSentinel'
+import HeliumSolana from './HeliumSolana'
+
+export const SolanaConnection = {
+  'devnet': new WrappedConnection('https://rpc-devnet.aws.metaplex.com/'),
+  'testnet': new WrappedConnection(web3.clusterApiUrl('testnet')),
+  'mainnet-beta': new WrappedConnection(web3.clusterApiUrl('mainnet-beta')),
+} as const
 
 export interface SolanaManager {
-  connection: WrappedConnection
+  heliumSolana: HeliumSolana
   createTransferCompressedCollectableTxn: ({
     collectable,
     ownerHeliumAddress,
@@ -42,11 +49,11 @@ export interface SolanaManager {
   getSolHotspotInfo: ({
     iotMint,
     hotspotAddress,
-    pubKey,
+    heliumAddress,
   }: {
     iotMint: string
     hotspotAddress: string
-    pubKey: web3.PublicKey
+    heliumAddress: string
   }) => Promise<SolHotspot | null>
   status: {
     inProgress: boolean
@@ -223,3 +230,10 @@ export type AssetProof = {
   leaf: string
   tree_id: string
 }
+
+export const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new web3.PublicKey(
+  'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'
+)
+
+export const TXN_FEE_IN_LAMPORTS = 5000
+export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL

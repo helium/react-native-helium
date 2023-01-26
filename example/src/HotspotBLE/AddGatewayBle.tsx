@@ -7,7 +7,6 @@ import {
   getSecureItem,
 } from '../Account/secureAccount'
 import {
-  Account,
   HotspotType,
   SolUtils,
   useHotspotBle,
@@ -83,13 +82,11 @@ const AddGatewayBle = () => {
       throw new Error('No user found')
     }
 
-    const userSolPubKey = Account.heliumAddressToSolPublicKey(userAddress)
-
     const addGatewayResponse = await submitAddGateway({
       hotspotAddress: onboardAddress,
       addGatewayTxn: addGatewaySignedTxn,
       solanaTransactions: solanaSignedTransactions,
-      userSolPubKey,
+      userHeliumAddress: userAddress,
     })
 
     if (addGatewayResponse?.pendingTxn) {

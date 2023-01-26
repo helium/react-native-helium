@@ -23,7 +23,6 @@ import Balance, {
 } from '@helium/currency'
 import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import { OnboardingRecord, Maker } from '@helium/onboarding'
-import * as web3 from '@solana/web3.js'
 import { SodiumKeyPair } from '../Account/account'
 import { SolHotspot } from '../Solana/solanaTypes'
 import { HotspotType } from './OnboardingClientV3'
@@ -60,10 +59,9 @@ export interface OnboardingManager {
   }>
   submitAddGateway: (_opts: {
     hotspotAddress: string
-    userHeliumAddress?: string
+    userHeliumAddress: string
     addGatewayTxn?: string
     solanaTransactions?: Buffer[]
-    userSolPubKey?: web3.PublicKey
     httpClient?: Client
   }) => Promise<{
     solanaTxnIds?: string[]
@@ -106,8 +104,7 @@ export interface OnboardingManager {
   }) => Promise<AssertData>
   getHotspotForCurrentChain: (_opts: {
     hotspotAddress: string
-    userHeliumAddress?: string
-    userSolPubKey?: web3.PublicKey
+    userHeliumAddress: string
     httpClient?: Client
   }) => Promise<SolHotspot | Hotspot | null>
   hasFreeAssert: (_opts: {
