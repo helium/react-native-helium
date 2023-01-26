@@ -7,7 +7,7 @@ import Input from '../Input'
 import Address from '@helium/address'
 
 type Props = {}
-const TransferHotspotV2 = ({}: Props) => {
+const TransferHotspot = ({}: Props) => {
   const { createTransferTransaction, submitTransferHotspot } = useOnboarding()
   const [hotspotAddress, setHotspotAddress] = useState('')
   const [hotspotName, setHotspotName] = useState('')
@@ -132,7 +132,7 @@ const TransferHotspotV2 = ({}: Props) => {
   )
 }
 
-export default memo(TransferHotspotV2)
+export default memo(TransferHotspot)
 
 const styles = StyleSheet.create({
   heading: { fontSize: 36, textAlign: 'center', marginBottom: 12 },
