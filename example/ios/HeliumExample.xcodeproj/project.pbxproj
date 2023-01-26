@@ -8,13 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* HeliumExampleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* HeliumExampleTests.m */; };
-		13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.m */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
-		2D02E4BC1E0B4A80006451C7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.m */; };
 		2D02E4BD1E0B4A84006451C7 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		2D02E4BF1E0B4AB3006451C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		2DCD954D1E0B4F2C00145EB5 /* HeliumExampleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* HeliumExampleTests.m */; };
+		5020A7312983081B00B4473D /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5020A7302983081B00B4473D /* AppDelegate.mm */; };
+		5020A7322983081B00B4473D /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5020A7302983081B00B4473D /* AppDelegate.mm */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		A8FC50DBD92323E2EC946CB8 /* libPods-HeliumExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C0FEE9F78FAD16A127CBF07C /* libPods-HeliumExample.a */; };
 		E9E8F3F8D6E79D367E48B6CC /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A882637913B432EFE0ACC8EF /* ExpoModulesProvider.swift */; };
@@ -44,13 +44,13 @@
 		00E356F21AD99517003FC87E /* HeliumExampleTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HeliumExampleTests.m; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* HeliumExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HeliumExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = HeliumExample/AppDelegate.h; sourceTree = "<group>"; };
-		13B07FB01A68108700A75B9A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = HeliumExample/AppDelegate.m; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = HeliumExample/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = HeliumExample/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = HeliumExample/main.m; sourceTree = "<group>"; };
 		2D02E47B1E0B4A5D006451C7 /* HeliumExample-tvOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "HeliumExample-tvOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D02E4901E0B4A5D006451C7 /* HeliumExample-tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "HeliumExample-tvOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F06112B73A1F0F0094A99E3 /* Pods-HeliumExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HeliumExample.release.xcconfig"; path = "Target Support Files/Pods-HeliumExample/Pods-HeliumExample.release.xcconfig"; sourceTree = "<group>"; };
+		5020A7302983081B00B4473D /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = HeliumExample/AppDelegate.mm; sourceTree = "<group>"; };
 		7E2DB48E57205999EB20AAA4 /* Pods-HeliumExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HeliumExample.debug.xcconfig"; path = "Target Support Files/Pods-HeliumExample/Pods-HeliumExample.debug.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = HeliumExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A882637913B432EFE0ACC8EF /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-HeliumExample/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
@@ -113,8 +113,8 @@
 			isa = PBXGroup;
 			children = (
 				008F07F21AC5B25A0029DE68 /* main.jsbundle */,
+				5020A7302983081B00B4473D /* AppDelegate.mm */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
-				13B07FB01A68108700A75B9A /* AppDelegate.m */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
@@ -502,8 +502,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
+				5020A7312983081B00B4473D /* AppDelegate.mm in Sources */,
 				E9E8F3F8D6E79D367E48B6CC /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -512,8 +512,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5020A7322983081B00B4473D /* AppDelegate.mm in Sources */,
 				2D02E4BF1E0B4AB3006451C7 /* main.m in Sources */,
-				2D02E4BC1E0B4A80006451C7 /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
