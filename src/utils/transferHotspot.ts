@@ -8,6 +8,7 @@ import { TransferHotspotV2 } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
 import Address from '@helium/address'
 import Client, { PocReceiptsV2 } from '@helium/http'
+import { first } from 'lodash'
 
 /**
  * Create a  {@link TransferHotspotV2} transaction.
@@ -73,13 +74,14 @@ const getLastChallenge = async (gatewayAddress: string, client: Client) => {
         'state_channel_close_v1',
       ],
     })
-  const [lastHotspotActivity] = hotspotActivityList
-    ? await hotspotActivityList?.take(1)
-    : []
-
-  if (!lastHotspotActivity) return
-
-  return (lastHotspotActivity as PocReceiptsV2).height
+  try {
+    const items = hotspotActivityList ? await hotspotActivityList?.take(1) : []
+    const lastHotspotActivity = first(items)
+    if (!lastHotspotActivity) return
+    return (lastHotspotActivity as PocReceiptsV2).height
+  } catch (e) {
+    return
+  }
 }
 
 export const createTransferTransaction = async ({
@@ -108,7 +110,6 @@ export const createTransferTransaction = async ({
 
   // check hotspot for valid activity
   const chainVars = await client.vars.get(['transfer_hotspot_stale_poc_blocks'])
-
   const staleBlockCount = chainVars.transferHotspotStalePocBlocks as number
   const blockHeight = await client.blocks.getHeight()
   const reportedActivityBlock = await getLastChallenge(hotspotAddress, client)
