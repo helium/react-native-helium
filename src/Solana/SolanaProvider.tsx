@@ -1,28 +1,26 @@
 import React, { createContext, ReactNode, useContext } from 'react'
-import { CompressedNFT, SolHotspot } from '@helium/solana'
 import useSolana from './useSolana'
 import * as web3 from '@solana/web3.js'
-import HeliumSolana from '@helium/solana'
-import { TokenType } from './solanaSentinel'
+import { Asset, SolHotspot } from '@helium/hotspot-utils'
+import { HotspotType } from '@helium/onboarding'
 
 const initialState = {
-  heliumSolana: new HeliumSolana('devnet'),
   createTransferCompressedCollectableTxn: async (_opts: {
-    collectable: CompressedNFT
+    collectable: Asset
     newOwnerHeliumAddress: string
   }) =>
     new Promise<web3.VersionedTransaction | undefined>((resolve) =>
       resolve(undefined)
     ),
   getHeliumBalance: (_opts: { mint: string }) =>
-    new Promise<number | undefined>((resolve) => resolve(undefined)),
+    new Promise<number>((resolve) => resolve(0)),
   getHotspots: (_opts: { oldestCollectable?: string }) =>
-    new Promise<CompressedNFT[]>((resolve) => resolve([])),
+    new Promise<Asset[]>((resolve) => resolve([])),
   getOraclePriceFromSolana: (_opts: { tokenType: 'HNT' }) =>
     new Promise<number>((resolve) => resolve(0)),
   getSolBalance: () => new Promise<number>((resolve) => resolve(0)),
-  getSolHotspotInfo: (_opts: { iotMint: string; hotspotAddress: string }) =>
-    new Promise<SolHotspot | null>((resolve) => resolve(null)),
+  getSolHotspotInfo: (_opts: { hotspotAddress: string; symbol: HotspotType }) =>
+    new Promise<SolHotspot | undefined>((resolve) => resolve(undefined)),
   status: {
     inProgress: false,
     isHelium: false,
@@ -53,48 +51,4 @@ export const useSolanaContext = (): SolanaManager => useContext(SolanaContext)
 
 export default SolanaProvider
 
-export interface SolanaManager {
-  heliumSolana: HeliumSolana
-  createTransferCompressedCollectableTxn: ({
-    collectable,
-    newOwnerHeliumAddress,
-  }: {
-    collectable: CompressedNFT
-    newOwnerHeliumAddress: string
-  }) => Promise<web3.VersionedTransaction | undefined>
-  getHeliumBalance: ({ mint }: { mint: string }) => Promise<number | undefined>
-  getHotspots: ({
-    oldestCollectable,
-  }: {
-    oldestCollectable?: string
-  }) => Promise<CompressedNFT[]>
-  getOraclePriceFromSolana: ({
-    tokenType,
-  }: {
-    tokenType: 'HNT'
-  }) => Promise<number>
-  getSolBalance: () => Promise<number>
-  getSolHotspotInfo: ({
-    iotMint,
-    hotspotAddress,
-  }: {
-    iotMint: string
-    hotspotAddress: string
-  }) => Promise<SolHotspot | null>
-  status: {
-    inProgress: boolean
-    isHelium: boolean
-    isSolana: boolean
-  }
-  submitSolana: ({ txn }: { txn: Buffer }) => Promise<string>
-  submitAllSolana: ({ txns }: { txns: Buffer[] }) => Promise<string[]>
-  vars:
-    | Record<
-        TokenType,
-        {
-          metadata_url: string
-          mint: string
-        }
-      >
-    | undefined
-}
+export type SolanaManager = ReturnType<typeof useSolana>

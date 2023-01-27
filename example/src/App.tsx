@@ -23,7 +23,7 @@ import Config from 'react-native-config'
 import OraclePrice from './OraclePrice/OraclePrice'
 import * as web3 from '@solana/web3.js'
 import { getAddressStr } from './Account/secureAccount'
-import HeliumSolana from '@helium/solana'
+import { heliumAddressToSolPublicKey } from '@helium/spl-utils'
 
 const Stack = createNativeStackNavigator()
 
@@ -55,7 +55,7 @@ export default function App() {
         if (nextAddr === address) return
 
         setAddress(nextAddr)
-        setPubKey(HeliumSolana.heliumAddressToSolPublicKey(nextAddr))
+        setPubKey(heliumAddressToSolPublicKey(nextAddr))
       } catch {}
     }, 2000)
     return () => clearInterval(interval)
@@ -65,7 +65,10 @@ export default function App() {
     <SolanaProvider cluster="devnet" pubKey={pubKey}>
       <OnboardingProvider
         baseUrl={
-          Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api/v2'
+          // Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api/v3'
+          // TODO: REMOVE and set back to prod
+          Config.ONBOARDING_BASE_URL ||
+          'https://onboarding.oracle.test-helium.com/api/v3'
         }
       >
         <HotspotBleProvider>

@@ -17,15 +17,14 @@ import Balance, { CurrencyType, USDollars } from '@helium/currency'
 import * as Transfer from '../utils/transferHotspot'
 import { Buffer } from 'buffer'
 import { BN } from 'bn.js'
-import bs58 from 'bs58'
-import { SolHotspot } from '@helium/solana'
 import { useSolanaContext } from '../Solana/SolanaProvider'
-import { isSolHotspot } from '@helium/solana'
+import { SolHotspot } from '@helium/hotspot-utils'
+import { isSolHotspot } from '../utils/isSolHotspot'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
 
-const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
+const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
   const onboardingClient = useRef(new OnboardingClient(baseUrl))
   const solana = useSolanaContext()
 
@@ -108,33 +107,6 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
       }
     },
     []
-  )
-
-  const getHotspotForCurrentChain = useCallback(
-    async ({
-      hotspotAddress,
-      httpClient,
-    }: {
-      hotspotAddress: string
-      httpClient?: Client
-    }) => {
-      checkSolanaStatus()
-
-      if (!solana.vars?.iot.mint) {
-        throw new Error('Failed to fetch mint from solana vars')
-      }
-
-      if (solana.status.isHelium) {
-        return getHeliumHotspotInfo({ hotspotAddress, httpClient })
-      }
-
-      const hotspotInfo = await solana.getSolHotspotInfo({
-        iotMint: solana.vars.iot.mint,
-        hotspotAddress,
-      })
-      return hotspotInfo
-    },
-    [checkSolanaStatus, solana, getHeliumHotspotInfo]
   )
 
   const getOnboardTransactions = useCallback(
@@ -221,16 +193,6 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
 
       const client = httpClient || heliumHttpClient
 
-      // TODO: Remove this check?
-      const hotspotExists = !!(await getHotspotForCurrentChain({
-        hotspotAddress,
-        httpClient: client,
-      }))
-
-      if (hotspotExists) {
-        throw new Error('Hotspot already on chain')
-      }
-
       if (solana.status.isHelium) {
         if (!addGatewayTxn) {
           throw new Error('Transaction is missing')
@@ -270,16 +232,16 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
         solanaTxnIds,
       }
     },
-    [checkSolanaStatus, getHotspotForCurrentChain, handleError, solana]
+    [checkSolanaStatus, handleError, solana]
   )
 
   const hasFreeAssert = useCallback(
-    async ({
+    ({
       hotspot,
       onboardingRecord: paramsOnboardRecord,
     }: {
       hotspot?: Hotspot | SolHotspot | null
-      onboardingRecord?: OnboardingRecord | null
+      onboardingRecord: OnboardingRecord | null
     }) => {
       if (!hotspot) {
         // TODO: Is this right?
@@ -288,21 +250,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
       }
       let onboardingRecord: OnboardingRecord | null | undefined =
         paramsOnboardRecord
-      let address = ''
       if (isSolHotspot(hotspot)) {
         // TODO: Is this right?
         if (!hotspot.isFullHotspot) return false
-
-        address = bs58.encode(hotspot.entityKey)
       } else {
         // TODO: Is this right?
         if (hotspot.mode !== 'full') return false
-
-        address = hotspot.address
-      }
-
-      if (!onboardingRecord) {
-        onboardingRecord = await getOnboardingRecord(address)
       }
 
       if (!onboardingRecord) {
@@ -320,7 +273,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
         (hotspot?.speculativeNonce || 0)
       )
     },
-    [getOnboardingRecord]
+    []
   )
 
   const getBalances = useCallback(
@@ -382,6 +335,36 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
     },
     [checkSolanaStatus, solana]
   )
+  const locationInfo = useCallback(
+    ({
+      lat,
+      lng,
+      hotspot,
+      onboardingRecord,
+    }: {
+      lat: number
+      lng: number
+      hotspot?: Hotspot | SolHotspot | null
+      onboardingRecord: OnboardingRecord
+    }) => {
+      const nextLocation = getH3Location(lat, lng)
+      let updatingLocation = !hotspot
+      if (hotspot) {
+        if (!isSolHotspot(hotspot)) {
+          updatingLocation = hotspot.location !== nextLocation
+        } else if (hotspot.location) {
+          // TODO: Not sure if this is correct
+          const loc = hotspot.location.toString('hex')
+          updatingLocation = loc !== nextLocation
+        }
+      }
+      const isFree =
+        hasFreeAssert({ hotspot, onboardingRecord }) || !updatingLocation
+      return { updatingLocation, nextLocation, isFree }
+    },
+    [hasFreeAssert]
+  )
+
   const getAssertData = useCallback(
     async ({
       gateway,
@@ -414,48 +397,37 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
 
       const client = httpClient || heliumHttpClient
 
-      let onboardingRecord: OnboardingRecord | null | undefined =
-        paramsOnboardRecord
+      let record = paramsOnboardRecord || (await getOnboardingRecord(gateway))
 
-      const gain = Math.round(decimalGain * 10.0)
-
-      const hotspot = await getHotspotForCurrentChain({
-        hotspotAddress: gateway,
-      })
-
-      if (!onboardingRecord) {
-        onboardingRecord = await getOnboardingRecord(gateway)
-      }
-
-      if (!onboardingRecord) {
+      if (!record) {
         throw new Error('Onboarding record not found')
       }
 
-      const isFree = await hasFreeAssert({ hotspot, onboardingRecord })
-
-      const maker = onboardingRecord.maker
-      const payer = isFree ? maker.address : owner
-
-      const nextLocation = getH3Location(lat, lng)
-
-      let updatingLocation = !hotspot
-      if (hotspot) {
-        if (solana.status.isHelium) {
-          updatingLocation = hotspot.location !== nextLocation
-        } else if (hotspot.location) {
-          // TODO: Not sure if this is correct
-          const loc = hotspot.location.toString('hex')
-          updatingLocation = loc !== nextLocation
-        }
-      }
+      const onboardingRecord = record
 
       const balances = await getBalances({ heliumAddress: owner, httpClient })
       let hasSufficientBalance = true
 
-      // TODO: Where does oracle price come from in solana world?
       const oraclePrice = await getOraclePrice(client)
 
+      const gain = Math.round(decimalGain * 10.0)
+
       if (solana.status.isHelium) {
+        const hotspot = await getHeliumHotspotInfo({
+          hotspotAddress: gateway,
+          httpClient,
+        })
+
+        const { isFree, nextLocation, updatingLocation } = locationInfo({
+          hotspot,
+          onboardingRecord,
+          lat,
+          lng,
+        })
+
+        const maker = onboardingRecord.maker
+        const payer = isFree ? maker.address : owner
+
         const transaction = await createLocationTxn({
           gateway,
           owner,
@@ -474,7 +446,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
           (transaction.stakingFee || 0) + (transaction.fee || 0),
           CurrencyType.dataCredit
         )
-        const totalStakingAmountHnt =
+        let totalStakingAmountHnt =
           totalStakingAmountDC.toNetworkTokens(oraclePrice)
         const totalStakingAmountUsd = totalStakingAmountDC.toUsd(oraclePrice)
         // if not free and we're still on helium the user needs hnt for fee and staking fee
@@ -500,30 +472,64 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
         }
       }
 
-      // if not free and we're on solana the user needs sol for txn fee and hnt for staking fee
-      const stakingFee = getStakingFee({ dataOnly, updatingLocation })
+      const hotspotInfos = await Promise.all(
+        hotspotTypes.map(async (t) => {
+          const hotspot = await solana.getSolHotspotInfo({
+            hotspotAddress: gateway,
+            symbol: t,
+          })
+          const { isFree, nextLocation, updatingLocation } = locationInfo({
+            lat,
+            lng,
+            onboardingRecord,
+            hotspot,
+          })
+          const stakingFee = getStakingFee({ dataOnly, updatingLocation })
+          const totalStakingAmountDC = new Balance(
+            stakingFee,
+            CurrencyType.dataCredit
+          )
 
-      //TODO: Fees will be charged for each network. Verify this is correct.
-      const multiplier = hotspotTypes.length
+          const solFee = new Balance(TXN_FEE_IN_SOL, CurrencyType.solTokens)
+          return {
+            hotspot,
+            totalStakingAmountDC,
+            solFee,
+            isFree,
+            nextLocation,
+          }
+        })
+      )
 
-      const totalStakingAmountDC = new Balance(
-        stakingFee,
-        CurrencyType.dataCredit
-      ).times(multiplier)
+      const { isFree, totalStakingAmountDC, solFee, nextLocation } =
+        hotspotInfos.reduce(
+          (acc, curr) => {
+            return {
+              isFree: acc.isFree || curr.isFree,
+              totalStakingAmountDC: acc.totalStakingAmountDC.plus(
+                curr.totalStakingAmountDC
+              ),
+              solFee: acc.solFee.plus(curr.solFee),
+              nextLocation: acc.nextLocation || curr.nextLocation,
+            }
+          },
+          {
+            isFree: false,
+            totalStakingAmountDC: new Balance(0, CurrencyType.dataCredit),
+            solFee: new Balance(0, CurrencyType.solTokens),
+            nextLocation: '',
+          }
+        )
 
       const totalStakingAmountHnt =
         totalStakingAmountDC.toNetworkTokens(oraclePrice)
-
       const totalStakingAmountUsd = totalStakingAmountDC.toUsd(oraclePrice)
-
-      const solFee = new Balance(TXN_FEE_IN_SOL, CurrencyType.solTokens).times(
-        multiplier
-      )
 
       if (isFree) {
         hasSufficientBalance = true
       } else {
-        const hasSufficientSol = balances.sol.integerBalance > TXN_FEE_IN_SOL
+        const hasSufficientSol =
+          balances.sol.integerBalance >= solFee.integerBalance
         const hasSufficientHnt =
           (balances.hnt?.integerBalance || 0) >=
           totalStakingAmountHnt.integerBalance
@@ -551,10 +557,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
           .flatMap((r) => r.data?.solanaTransactions || [])
           .map((txn) => Buffer.from(txn))
       }
+      const maker = onboardingRecord.maker
+      const payer = isFree ? maker.address : owner
       return {
         balances,
         hasSufficientBalance,
-        hotspot,
+        hotspot: null,
         isFree,
         heliumFee: {
           dc: totalStakingAmountDC,
@@ -569,12 +577,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
     },
     [
       checkSolanaStatus,
-      getHotspotForCurrentChain,
-      hasFreeAssert,
+      getOnboardingRecord,
       getBalances,
       getOraclePrice,
-      solana.status.isHelium,
-      getOnboardingRecord,
+      solana,
+      getHeliumHotspotInfo,
+      locationInfo,
     ]
   )
 
@@ -605,7 +613,8 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
           httpClient,
         })
 
-        const isFree = await hasFreeAssert({ hotspot })
+        const onboardingRecord = await getOnboardingRecord(gateway)
+        const isFree = hasFreeAssert({ hotspot, onboardingRecord })
         if (isFree) {
           // If L1 is helium and txn is free, must submit to onboard server for payer signature
           const onboardResponse =
@@ -645,6 +654,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
       checkSolanaStatus,
       solana,
       getHeliumHotspotInfo,
+      getOnboardingRecord,
       hasFreeAssert,
       handleError,
     ]
@@ -762,7 +772,6 @@ const useOnboarding = ({ baseUrl }: { baseUrl?: string }) => {
     baseUrl,
     createTransferTransaction,
     getAssertData,
-    getHotspotForCurrentChain,
     getMakers,
     getMinFirmware,
     getOnboardingRecord,

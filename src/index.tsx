@@ -12,17 +12,19 @@ import {
   TransferHotspotV2,
 } from '@helium/transactions'
 import HotspotBleProvider, {
+  HotspotBleManager,
   useHotspotBleContext as useHotspotBle,
 } from './HotspotBle/HotspotBleProvider'
 import OnboardingProvider, {
+  OnboardingManager,
   useOnboardingContext as useOnboarding,
 } from './Onboarding/OnboardingProvider'
 import SolanaProvider, {
   useSolanaContext as useSolana,
+  SolanaManager,
 } from './Solana/SolanaProvider'
-import { AssertData, OnboardingManager } from './Onboarding/onboardingTypes'
+import { AssertData } from './Onboarding/onboardingTypes'
 import { Keypair } from '@helium/crypto-react-native'
-import { HotspotBleManager } from './HotspotBle/bleTypes'
 import { State } from 'react-native-ble-plx'
 import Balance, {
   NetworkTokens,
@@ -33,8 +35,8 @@ import Balance, {
 import { HotspotErrorCode } from './HotspotBle/useHotspotBle'
 import { heliumHttpClient, createHttpClient } from './utils/httpClient'
 export { DiagnosticInfo } from './HotspotBle/bleParse'
-import { SolHotspot, CompressedNFT } from '@helium/solana'
 import { useSolanaStatus, useSolanaVars } from './Solana/solanaSentinel'
+import { Asset, SolHotspot } from '@helium/hotspot-utils'
 
 type HeliumNativeType = {
   multiply(a: number, b: number): Promise<number>
@@ -50,14 +52,12 @@ export {
   Account,
   AddGateway,
   AddGatewayV1,
-  AssertLocationV2,
   AssertData,
+  AssertLocationV2,
+  Asset,
   Balance,
   createHttpClient,
-  CompressedNFT,
   DataCredits,
-  useSolanaStatus,
-  useSolanaVars,
   heliumHttpClient,
   HotspotBleManager,
   HotspotBleProvider,
@@ -69,6 +69,7 @@ export {
   OnboardingManager,
   OnboardingProvider,
   SecurityTokens,
+  SolanaManager,
   SolanaProvider,
   SolHotspot,
   State,
@@ -78,4 +79,6 @@ export {
   useHotspotBle,
   useOnboarding,
   useSolana,
+  useSolanaStatus,
+  useSolanaVars,
 }

@@ -194,10 +194,11 @@
     ]
   },
   "dependencies": {
+    "@helium/currency-utils": "file:.yalc/@helium/currency-utils",
     "@helium/helium-entity-manager-sdk": "^0.0.12",
     "@helium/helium-sub-daos-sdk": "^0.0.12",
-    "@helium/solana": "file:.yalc/@helium/solana",
-    "@helium/spl-utils": "^0.0.10",
+    "@helium/hotspot-utils": "file:.yalc/@helium/hotspot-utils",
+    "@helium/spl-utils": "file:.yalc/@helium/spl-utils",
     "@helium/voter-stake-registry-sdk": "^0.0.12",
     "@metaplex-foundation/beet": "^0.7.1",
     "@metaplex-foundation/beet-solana": "^0.4.0",

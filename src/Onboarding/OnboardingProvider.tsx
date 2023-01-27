@@ -1,11 +1,11 @@
 import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import React, { createContext, ReactNode, useContext } from 'react'
-import { AssertData, OnboardingManager } from './onboardingTypes'
+import { AssertData } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
 import { SodiumKeyPair } from '../Account/account'
 import Balance, { CurrencyType, USDollars } from '@helium/currency'
 import { HotspotType, OnboardingRecord } from '@helium/onboarding'
-import { SolHotspot } from '@helium/solana'
+import { SolHotspot } from '@helium/hotspot-utils'
 
 const initialState = {
   createTransferTransaction: async (_opts: {
@@ -71,14 +71,10 @@ const initialState = {
         payer: '',
       })
     ),
-  getHotspotForCurrentChain: async (_opts: {
-    hotspotAddress: string
-    httpClient?: Client
-  }) => null,
   getMakers: async () => [],
   getMinFirmware: async () => '',
   getOnboardingRecord: async (_hotspotAddress: string) => null,
-  hasFreeAssert: async (_opts: {
+  hasFreeAssert: (_opts: {
     hotspot?: Hotspot | SolHotspot | null
     onboardingRecord?: OnboardingRecord | null
   }) => false,
@@ -133,7 +129,7 @@ const OnboardingProvider = ({
   baseUrl,
 }: {
   children: ReactNode
-  baseUrl?: string
+  baseUrl: string
 }) => {
   return <Provider value={useOnboarding({ baseUrl })}>{children}</Provider>
 }
@@ -147,6 +143,7 @@ const OnboardingProvider = ({
     const { getOnboardingRecord, postPaymentTransaction } = useOnboarding()}
  * ```
  */
+export type OnboardingManager = ReturnType<typeof useOnboarding>
 export const useOnboardingContext = (): OnboardingManager =>
   useContext(OnboardingContext)
 
