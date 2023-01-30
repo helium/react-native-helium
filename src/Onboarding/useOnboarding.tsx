@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import OnboardingClient, {
   OnboardingRecord,
   HotspotType,
@@ -8,11 +8,7 @@ import { Client, Hotspot, PendingTransaction } from '@helium/http'
 import { AssertData } from './onboardingTypes'
 import { heliumHttpClient } from '../utils/httpClient'
 import { heliumAddressToSolAddress, SodiumKeyPair } from '../Account/account'
-import {
-  createLocationTxn,
-  getH3Location,
-  getStakingFee,
-} from '../utils/assertLocation'
+import { createLocationTxn, getH3Location } from '../utils/assertLocation'
 import Balance, {
   CurrencyType,
   NetworkTokens,
@@ -29,8 +25,18 @@ export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
 
 const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
-  const onboardingClient = useRef(new OnboardingClient(baseUrl))
   const solana = useSolanaContext()
+  const [onboardingClient, setOnboardingClient] = useState(
+    new OnboardingClient(`${baseUrl}${solana.status.isHelium ? '/v2' : '/v3'}`)
+  )
+
+  useEffect(() => {
+    setOnboardingClient(
+      new OnboardingClient(
+        `${baseUrl}${solana.status.isHelium ? '/v2' : '/v3'}`
+      )
+    )
+  }, [baseUrl, solana.status.isHelium])
 
   const checkSolanaStatus = useCallback(() => {
     if (solana.status.inProgress) {
@@ -61,25 +67,25 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
   )
 
   const getMinFirmware = useCallback(async () => {
-    const response = await onboardingClient.current.getFirmware()
+    const response = await onboardingClient.getFirmware()
 
     handleError(response, 'unable to get min firmware version')
 
     return response.data?.version || null
-  }, [handleError])
+  }, [handleError, onboardingClient])
 
   const getMakers = useCallback(async () => {
-    const response = await onboardingClient.current.getMakers()
+    const response = await onboardingClient.getMakers()
 
     handleError(response, 'unable to get makers')
 
     return response.data
-  }, [handleError])
+  }, [handleError, onboardingClient])
 
   const getOnboardingRecord = useCallback(
     async (hotspotAddress: string) => {
       try {
-        const response = await onboardingClient.current.getOnboardingRecord(
+        const response = await onboardingClient.getOnboardingRecord(
           hotspotAddress
         )
 
@@ -92,7 +98,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       } catch {}
       return null
     },
-    [handleError]
+    [handleError, onboardingClient]
   )
 
   const getHeliumHotspotInfo = useCallback(
@@ -113,6 +119,20 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     []
   )
 
+  const createHotspot = useCallback(
+    async ({ txn }: { txn: string }) => {
+      const createTxns = await onboardingClient.createHotspot({
+        transaction: txn,
+      })
+      return solana.submitAllSolana({
+        txns: (createTxns.data?.solanaTransactions || []).map((t) =>
+          Buffer.from(t)
+        ),
+      })
+    },
+    [onboardingClient, solana]
+  )
+
   const getOnboardTransactions = useCallback(
     async ({
       txn,
@@ -131,63 +151,41 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       decimalGain?: number
       elevation?: number
     }): Promise<{ addGatewayTxn?: string; solanaTransactions?: Buffer[] }> => {
-      // TODO: check solana status, check if hotspot exists
-
-      console.log(solana.status)
       if (solana.status.isHelium) {
         return { addGatewayTxn: txn }
       }
 
-      console.log('\n\n here we go')
-      console.log(!!onboardingClient.current)
-      try {
-        console.log('before')
-        const createTxns = await onboardingClient.current.createHotspot({
-          transaction: txn,
-        })
-        console.log('after')
-        console.log({ createTxns })
+      const gain = decimalGain ? Math.round(decimalGain * 10.0) : undefined
 
-        await solana.submitAllSolana({
-          txns: (createTxns.data?.solanaTransactions || []).map((t) =>
-            Buffer.from(t)
-          ),
-        })
+      let location: string | undefined
+      if (lat && lng && lat !== 0 && lng !== 0) {
+        location = new BN(getH3Location(lat, lng), 'hex').toString()
+      }
 
-        const gain = decimalGain ? Math.round(decimalGain * 10.0) : undefined
-
-        let location: string | undefined
-        if (lat && lng && lat !== 0 && lng !== 0) {
-          location = new BN(getH3Location(lat, lng), 'hex').toString()
-        }
-
-        const promises = hotspotTypes.map((type) =>
-          onboardingClient.current.onboard({
+      const solResponses = await Promise.all(
+        hotspotTypes.map(async (type) => {
+          const onboardResponse = await onboardingClient.onboard({
             hotspotAddress,
             type,
             gain,
             elevation,
             location,
           })
-        )
+          return onboardResponse
+        })
+      )
 
-        const solResponses = await Promise.all(promises)
-        const solanaTransactions = solResponses
-          .flatMap((r) => r.data?.solanaTransactions || [])
-          .map((tx) => Buffer.from(tx))
+      const solanaTransactions = solResponses
+        .flatMap((r) => r.data?.solanaTransactions || [])
+        .map((tx) => Buffer.from(tx))
 
-        if (!solanaTransactions?.length) {
-          throw new Error('failed to create solana onboard txns')
-        }
-
-        return { solanaTransactions }
-      } catch (e) {
-        console.log('boom')
-        console.log(e)
+      if (!solanaTransactions?.length) {
+        throw new Error('failed to create solana onboard txns')
       }
-      return {}
+
+      return { solanaTransactions }
     },
-    [solana]
+    [onboardingClient, solana.status.isHelium]
   )
 
   const submitAddGateway = useCallback(
@@ -209,18 +207,15 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       const client = httpClient || heliumHttpClient
 
-      console.log(solana)
-
       if (solana.status.isHelium) {
         if (!addGatewayTxn) {
           throw new Error('Transaction is missing')
         }
         // If L1 is helium, must submit to onboard server for payer signature
-        const onboardResponse =
-          await onboardingClient.current.postPaymentTransaction(
-            hotspotAddress,
-            addGatewayTxn
-          )
+        const onboardResponse = await onboardingClient.postPaymentTransaction(
+          hotspotAddress,
+          addGatewayTxn
+        )
         handleError(
           onboardResponse,
           `unable to post payment transaction for ${hotspotAddress}`
@@ -250,7 +245,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         solanaTxnIds,
       }
     },
-    [checkSolanaStatus, handleError, solana]
+    [checkSolanaStatus, handleError, onboardingClient, solana]
   )
 
   const hasFreeAssert = useCallback(
@@ -262,7 +257,6 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       onboardingRecord: OnboardingRecord | null
     }) => {
       if (!hotspot) {
-        // TODO: Is this right?
         // assume free as it hasn't been added the chain
         return true
       }
@@ -299,12 +293,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         if (!solana.vars?.hnt.mint) {
           throw new Error('Hnt mint not found')
         }
-        const hntAmount = await solana.getHeliumBalance({
-          mint: solana.vars?.hnt.mint,
+        const balance = await solana.getHeliumBalance({
+          mint: solana.vars.hnt.mint,
         })
 
         return {
-          hnt: new Balance(hntAmount || 0, CurrencyType.networkToken),
+          hnt: new Balance(balance, CurrencyType.networkToken),
           sol: new Balance(solBalance, CurrencyType.solTokens),
         }
       } else {
@@ -431,7 +425,6 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
   const getSolanaAssertData = useCallback(
     async ({
       balances,
-      dataOnly,
       elevation,
       gain,
       gateway,
@@ -445,7 +438,6 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       owner: string
       gain: number
       elevation: number
-      dataOnly?: boolean
       onboardingRecord: OnboardingRecord
       oraclePrice: Balance<USDollars>
       nextLocation: string
@@ -458,56 +450,35 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       let solanaTransactions: Buffer[] | undefined
 
       let hasSufficientBalance = true
-      let totalStakingAmountDC = new Balance(0, CurrencyType.dataCredit)
-      let isFree = true
       const maker = onboardingRecord.maker
-      let payer = maker.address
-      let solFee = new Balance(0, CurrencyType.solTokens)
 
-      // TODO: simulate txn to determine fees
       const solanaAddress = heliumAddressToSolAddress(owner)
       const location = new BN(nextLocation, 'hex').toString()
 
-      const promises = hotspotTypes.map((type) =>
-        onboardingClient.current.updateMetadata({
-          type,
-          solanaAddress,
-          hotspotAddress: gateway,
-          location,
-          elevation,
-          gain,
-        })
+      const solResponses = await Promise.all(
+        hotspotTypes.map((type) =>
+          onboardingClient.updateMetadata({
+            type,
+            solanaAddress,
+            hotspotAddress: gateway,
+            location,
+            elevation,
+            gain,
+          })
+        )
       )
-      const solResponses = await Promise.all(promises)
       solanaTransactions = solResponses
         .flatMap((r) => r.data?.solanaTransactions || [])
         .map((txn) => Buffer.from(txn))
 
-      const txns = solanaTransactions.map(web3.Transaction.from)
-
-      const ownerKey = new web3.PublicKey(owner)
-      txns.forEach((txn) => {
-        const ownerIsPayer = txn.feePayer?.equals(ownerKey)
-        if (txn.feePayer) {
-          payer = txn.feePayer?.toBase58()
-        }
-
-        if (isFree) {
-          isFree = !ownerIsPayer
-        }
-        // TODO: Is there a way to get staking fee from the txn??????????
-        // Or can I pull in the asset and see it's previous location?
-        const stakingFee = new Balance(
-          getStakingFee({ updatingLocation: true, dataOnly }),
-          CurrencyType.dataCredit
-        )
-        totalStakingAmountDC = totalStakingAmountDC.plus(stakingFee)
-        solFee = solFee.plus(
-          new Balance(TXN_FEE_IN_SOL, CurrencyType.solTokens)
-        )
-      })
-
-      // TODO: Determine hasSufficientBalance
+      ///////////////////////////////////////////////////////////////////////////
+      // TODO: Set all these based on simulated txn
+      let payer = maker.address
+      let isFree = true
+      let solFee = new Balance(0, CurrencyType.solTokens)
+      let totalStakingAmountDC = new Balance(0, CurrencyType.dataCredit)
+      // const txns = solanaTransactions.map(web3.Transaction.from)
+      ///////////////////////////////////////////////////////////////////////////
 
       return {
         balances,
@@ -523,7 +494,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         oraclePrice,
       }
     },
-    []
+    [onboardingClient]
   )
 
   const getAssertData = useCallback(
@@ -586,7 +557,6 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       return getSolanaAssertData({
         balances,
-        dataOnly,
         elevation,
         gain,
         gateway,
@@ -639,11 +609,10 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         const isFree = hasFreeAssert({ hotspot, onboardingRecord })
         if (isFree) {
           // If L1 is helium and txn is free, must submit to onboard server for payer signature
-          const onboardResponse =
-            await onboardingClient.current.postPaymentTransaction(
-              gateway,
-              assertLocationTxn.toString()
-            )
+          const onboardResponse = await onboardingClient.postPaymentTransaction(
+            gateway,
+            assertLocationTxn.toString()
+          )
 
           handleError(
             onboardResponse,
@@ -678,6 +647,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       getHeliumHotspotInfo,
       getOnboardingRecord,
       hasFreeAssert,
+      onboardingClient,
       handleError,
     ]
   )
@@ -750,7 +720,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       }
 
       // TODO: Add paging
-      const hotspots = await solana.getHotspots()
+      const hotspots = await solana.getHotspots({ page: 0 })
 
       const hotspot = hotspots.find((h) => {
         const addy = h.content.json_uri.split('/').slice(-1)[0]
@@ -790,6 +760,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
   return {
     baseUrl,
+    createHotspot,
     createTransferTransaction,
     getAssertData,
     getMakers,

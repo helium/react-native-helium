@@ -12,14 +12,18 @@ import * as Currency from '@helium/currency-utils'
 import {
   Asset,
   heliumAddressToSolPublicKey,
+  searchAssets,
+  SearchAssetsOpts,
   sendAndConfirmWithRetry,
 } from '@helium/spl-utils'
 import * as Hotspot from '@helium/hotspot-utils'
+import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { entityCreatorKey } from '@helium/helium-entity-manager-sdk'
 
 // TODO: Get urls for each cluster
 const METAPLEX_URL = 'https://rpc-devnet.aws.metaplex.com/'
 
-const createConnection = (cluster: Cluster) =>
+export const createConnection = (cluster: Cluster) =>
   new Connection(clusterApiUrl(cluster))
 
 const useSolana = ({
@@ -50,12 +54,28 @@ const useSolana = ({
   }, [cluster, propsCluster, pubKey, wallet])
 
   const getHeliumBalance = useCallback(
-    async ({ mint }: { mint: string }) =>
-      Currency.getBalance({
-        pubKey: wallet,
-        connection,
-        mint,
-      }),
+    async ({ mint }: { mint: string }) => {
+      // TODO: Figure out why this isn't working
+      // return Currency.getBalance({
+      //   pubKey: wallet,
+      //   connection,
+      //   mint: new PublicKey(mint),
+      // })
+
+      // TODO: Move to @helium/currency-utils
+      const account = new PublicKey(wallet)
+      const tokenAccounts = await connection.getTokenAccountsByOwner(account, {
+        programId: TOKEN_PROGRAM_ID,
+      })
+
+      const vals = {} as Record<string, bigint>
+      tokenAccounts.value.forEach((tokenAccount) => {
+        const accountData = AccountLayout.decode(tokenAccount.account.data)
+        vals[accountData.mint.toBase58()] = accountData.amount
+      })
+
+      return Number(vals[mint])
+    },
     [connection, wallet]
   )
 
@@ -114,14 +134,18 @@ const useSolana = ({
     [connection, pubKey]
   )
 
-  const getHotspots = useCallback(async () => {
-    // TODO: Add paging
-
-    //TODO:
-    //   const creator = entityCreatorKey(new PublicKey(hntMint))[0]
-    // return searchAssets(METAPLEX_URL, wallet, creator.toString(), {})
-    return [] as Asset[]
-  }, [])
+  const getHotspots = useCallback(
+    async (opts: Omit<SearchAssetsOpts, 'ownerAddress' | 'creatorAddress'>) => {
+      // TODO: Test, make sure this is right?
+      const creator = entityCreatorKey(new PublicKey(vars?.hnt.mint || ''))[0]
+      return searchAssets(METAPLEX_URL, {
+        ownerAddress: wallet.toString(),
+        creatorAddress: creator.toString(),
+        ...opts,
+      })
+    },
+    [vars?.hnt.mint, wallet]
+  )
 
   return {
     connection,

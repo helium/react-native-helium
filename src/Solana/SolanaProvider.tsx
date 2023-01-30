@@ -1,11 +1,11 @@
 import React, { createContext, ReactNode, useContext } from 'react'
-import useSolana from './useSolana'
+import useSolana, { createConnection } from './useSolana'
 import * as web3 from '@solana/web3.js'
 import { PriceData } from '@helium/currency-utils'
-import { Asset } from '@helium/spl-utils'
+import { Asset, SearchAssetsOpts } from '@helium/spl-utils'
 
 const initialState = {
-  connection: new web3.Connection('devnet'),
+  connection: createConnection('devnet'),
   createTransferCompressedCollectableTxn: async (_opts: {
     collectable: Asset
     newOwnerHeliumAddress: string
@@ -15,7 +15,9 @@ const initialState = {
     ),
   getHeliumBalance: (_opts: { mint: string }) =>
     new Promise<number>((resolve) => resolve(0)),
-  getHotspots: () => new Promise<Asset[]>((resolve) => resolve([])),
+  getHotspots: (
+    _opts: Omit<SearchAssetsOpts, 'ownerAddress' | 'creatorAddress'>
+  ) => new Promise<Asset[]>((resolve) => resolve([])),
   getOraclePriceFromSolana: (_opts: { tokenType: 'HNT' }) =>
     new Promise<PriceData | undefined>((resolve) => resolve(undefined)),
   getSolBalance: () => new Promise<number>((resolve) => resolve(0)),

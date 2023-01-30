@@ -48,6 +48,8 @@ const initialState = {
   submitSolanaTransactions: (_opts: { solanaTransactions: string[] }) =>
     new Promise<string[]>((resolve) => resolve([])),
   baseUrl: '',
+  createHotspot: (_opts: { txn: string }) =>
+    new Promise<string[]>((resolve) => resolve([])),
   getAssertData: (_opts: {
     gateway: string
     owner: string
@@ -59,7 +61,6 @@ const initialState = {
     dataOnly?: boolean
     hotspotTypes: HotspotType[]
     onboardingRecord?: OnboardingRecord | null
-    createSolanaTransactions?: boolean
   }) =>
     new Promise<AssertData>((resolve) =>
       resolve({

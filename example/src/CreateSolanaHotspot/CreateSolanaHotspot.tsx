@@ -8,11 +8,11 @@ import {
   View,
 } from 'react-native'
 import Input from '../Input'
-import useCreateRandomHotspot from './useCreateHotspot'
+import useCreateHotspot from './useCreateHotspot'
 import Clipboard from '@react-native-community/clipboard'
 import Config from 'react-native-config'
 
-const CreateRandomHotspot = () => {
+const CreateSolanaHotspot = () => {
   const [makerAddress, setMakerAddress] = useState(
     Config.ONBOARDING_MAKER_ADDRESS || ''
   )
@@ -21,17 +21,18 @@ const CreateRandomHotspot = () => {
   )
   const [deepLinkScheme, setDeepLinkScheme] = useState('makerappscheme://')
   const [submitted, setSubmitted] = useState(false)
-  const { txn, create } = useCreateRandomHotspot()
+  const { txn, create } = useCreateHotspot()
 
   const createHotspot = useCallback(async () => {
     setSubmitted(true)
     try {
-      await create({ makerAddress, authorization })
+      const txIds = await create({ makerAddress, authorization })
+      console.log({ txIds, txn })
     } catch (e) {
       console.error(e)
     }
     setSubmitted(false)
-  }, [authorization, create, makerAddress])
+  }, [authorization, create, makerAddress, txn])
 
   return (
     <View style={styles.container}>
@@ -73,6 +74,9 @@ const CreateRandomHotspot = () => {
       <View style={styles.innnerContainer}>
         <Button title="Create" disabled={submitted} onPress={createHotspot} />
       </View>
+      <Text>
+        Note: You will need to wait at least a minute to onboard this hotspot
+      </Text>
       <TouchableOpacity
         style={styles.buttonContainer}
         disabled={!deepLinkScheme.includes('://') || !txn}
@@ -109,4 +113,4 @@ const styles = StyleSheet.create({
   },
 })
 
-export default CreateRandomHotspot
+export default CreateSolanaHotspot

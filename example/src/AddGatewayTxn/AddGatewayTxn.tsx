@@ -98,8 +98,6 @@ const AddGatewayTxn = () => {
       solanaTransactions: solanaSignedTransactions,
     })
 
-    console.log({ addGatewayResponse })
-
     if (addGatewayResponse?.pendingTxn) {
       setHash(addGatewayResponse.pendingTxn.hash)
       setStatus(addGatewayResponse.pendingTxn.status)
@@ -184,7 +182,7 @@ const AddGatewayTxn = () => {
 
       <Button
         title="Submit Transaction"
-        disabled={!txnStr || submitted || !hotspotTypes.length}
+        disabled={!txnStr || submitted || (isSolana && !hotspotTypes.length)}
         onPress={submitOnboardingTxns}
       />
 

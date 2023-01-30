@@ -18,7 +18,7 @@ import AccountNav from './Account/AccountNav'
 import '../appDataClient'
 import AssertLocation from './AssertLocation/AssertLocation'
 import TransferHotspot from './TransferHotspot/TransferHotspot'
-import CreateRandomHotspot from './CreateRandomHotspot/CreateRandomHotspot'
+import CreateSolanaHotspot from './CreateSolanaHotspot/CreateSolanaHotspot'
 import Config from 'react-native-config'
 import OraclePrice from './OraclePrice/OraclePrice'
 import * as web3 from '@solana/web3.js'
@@ -65,7 +65,7 @@ export default function App() {
     <SolanaProvider cluster="devnet" pubKey={pubKey}>
       <OnboardingProvider
         baseUrl={
-          Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api/v3'
+          Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api'
         }
       >
         <HotspotBleProvider>
@@ -83,7 +83,7 @@ export default function App() {
               <Stack.Screen name="AddGatewayTxn" component={AddGatewayTxn} />
               <Stack.Screen
                 name="CreateRandomHotspot"
-                component={CreateRandomHotspot}
+                component={CreateSolanaHotspot}
               />
               <Stack.Screen name="AssertLocation" component={AssertLocation} />
               <Stack.Screen

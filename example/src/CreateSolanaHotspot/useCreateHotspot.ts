@@ -13,7 +13,7 @@ function random(len: number): string {
 
 const useCreateRandomHotspot = () => {
   const [txn, setTxn] = useState('')
-  const { baseUrl } = useOnboarding()
+  const { baseUrl, createHotspot } = useOnboarding()
 
   const create = async ({
     authorization,
@@ -25,12 +25,11 @@ const useCreateRandomHotspot = () => {
     const me = new Keypair(await getKeypairRaw())
     const gateway = await Keypair.makeRandom()
     const maker = Address.fromB58(makerAddress)
-    const onboardingKey = random(10)
 
     await axios.post(
-      `${baseUrl}/hotspots`,
+      `${baseUrl}/v3/hotspots`,
       {
-        onboardingKey,
+        onboardingKey: gateway.address.b58,
         macWlan0: random(10),
         macEth0: random(10),
         rpiSerial: random(10),
@@ -54,11 +53,12 @@ const useCreateRandomHotspot = () => {
       gateway,
     })
 
+    console.log('creating hotspot with txn')
+
+    console.log(signedTxn.toString())
     setTxn(signedTxn.toString())
 
-    return axios.post(`${baseUrl}/transactions/pay/${onboardingKey}`, {
-      transaction: signedTxn.toString(),
-    })
+    return createHotspot({ txn: signedTxn.toString() })
   }
 
   return { txn, create }

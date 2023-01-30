@@ -11,7 +11,7 @@ const Home = () => {
       { title: 'HotspotBLE', handler: () => navigation.push('HotspotBLE') },
       { title: 'Account', handler: () => navigation.push('Account') },
       {
-        title: 'Create Random Hotspot',
+        title: 'Create Solana Hotspot',
         handler: () => navigation.push('CreateRandomHotspot'),
       },
       {
