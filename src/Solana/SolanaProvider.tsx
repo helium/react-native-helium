@@ -1,9 +1,8 @@
 import React, { createContext, ReactNode, useContext } from 'react'
 import useSolana from './useSolana'
 import * as web3 from '@solana/web3.js'
-import { Asset, SolHotspot } from '@helium/hotspot-utils'
-import { HotspotType } from '@helium/onboarding'
 import { PriceData } from '@helium/currency-utils'
+import { Asset } from '@helium/spl-utils'
 
 const initialState = {
   connection: new web3.Connection('devnet'),
@@ -20,8 +19,6 @@ const initialState = {
   getOraclePriceFromSolana: (_opts: { tokenType: 'HNT' }) =>
     new Promise<PriceData | undefined>((resolve) => resolve(undefined)),
   getSolBalance: () => new Promise<number>((resolve) => resolve(0)),
-  getSolHotspotInfo: (_opts: { hotspotAddress: string; type: HotspotType }) =>
-    new Promise<SolHotspot | undefined>((resolve) => resolve(undefined)),
   status: {
     inProgress: false,
     isHelium: false,

@@ -1367,8 +1367,10 @@
     react-native-sodium "^0.4.0"
     safe-buffer "^5.2.1"
 
-"@helium/currency-utils@file:.yalc/@helium/currency-utils":
-  version "0.0.23"
+"@helium/currency-utils@^0.0.24":
+  version "0.0.24"
+  resolved "https://registry.yarnpkg.com/@helium/currency-utils/-/currency-utils-0.0.24.tgz#57b1f1ef3742c547ff0e6a870eb756fdc2476a71"
+  integrity sha512-WmNq7iwTN9DwGHzqF7r2O2s2xQ/+UOxPw0VP7Wv2knF7mDKUXCx9tQpCyMyNKzomk3s8aPJjLvX/oj7sZx37mg==
   dependencies:
     "@pythnetwork/client" "^2.12.0"
     "@solana/spl-token" "^0.3.7"
@@ -1392,24 +1394,6 @@
     "@helium/spl-utils" "^0.0.12"
     "@metaplex-foundation/mpl-token-metadata" "^2.2.3"
     "@project-serum/anchor" "0.26.0"
-    "@solana/spl-token" "^0.3.6"
-    bn.js "^5.2.0"
-    bs58 "^4.0.1"
-    crypto-js "^4.1.1"
-
-"@helium/helium-entity-manager-sdk@^0.0.22":
-  version "0.0.22"
-  resolved "https://registry.yarnpkg.com/@helium/helium-entity-manager-sdk/-/helium-entity-manager-sdk-0.0.22.tgz#ddaf4071c7f04957dd94693ca472fded11e8ec7e"
-  integrity sha512-LkWDcHuFks9ukE6e1SHZGO5yu8l7QUom4YdxFTOW30GeGCdatFZ1TFD5X01iG4JJUQ11Te183A1eMR85wiHSDA==
-  dependencies:
-    "@helium/address" "^4.6.2"
-    "@helium/helium-sub-daos-sdk" "^0.0.22"
-    "@helium/idls" "^0.0.22"
-    "@helium/spl-utils" "^0.0.22"
-    "@metaplex-foundation/mpl-bubblegum" "^0.6.2"
-    "@metaplex-foundation/mpl-token-metadata" "^2.2.3"
-    "@project-serum/anchor" "0.26.0"
-    "@solana/spl-account-compression" "^0.1.5"
     "@solana/spl-token" "^0.3.6"
     bn.js "^5.2.0"
     bs58 "^4.0.1"
@@ -1440,10 +1424,11 @@
     bn.js "^5.2.0"
     bs58 "^4.0.1"
 
-"@helium/hotspot-utils@file:.yalc/@helium/hotspot-utils":
-  version "0.0.23"
+"@helium/hotspot-utils@^0.0.24":
+  version "0.0.24"
+  resolved "https://registry.yarnpkg.com/@helium/hotspot-utils/-/hotspot-utils-0.0.24.tgz#93e0611ce3ddd92d61e7992cd16f5116018d9d44"
+  integrity sha512-nZSXku48DAM5tOR6QClh8oDvaVg7jJXhXNvt7kSjvziAhqJbvjLFQNmpBd7785o5RuuslPoiUgdLdAvLfssgKw==
   dependencies:
-    "@helium/helium-entity-manager-sdk" "^0.0.22"
     "@helium/helium-sub-daos-sdk" "^0.0.22"
     "@helium/idls" "^0.0.22"
     "@project-serum/anchor" "^0.26.0"
@@ -1485,14 +1470,16 @@
     borsh "^0.7.0"
     bs58 "^4.0.1"
 
-"@helium/onboarding@file:.yalc/@helium/onboarding":
-  version "4.8.2"
+"@helium/onboarding@^4.9.0":
+  version "4.9.0"
+  resolved "https://registry.yarnpkg.com/@helium/onboarding/-/onboarding-4.9.0.tgz#3327746d2f64dc640113f0587ce7be224557a824"
+  integrity sha512-6Ye4X2yc1SYh5m9cakO0tPCEUL1bpJBhVP6BxVwZmT0iIT3hv5XRuuYUFTJRvzJ6PcpM1i39ypx5kp2ZBQ6MDA==
   dependencies:
     axios "^0.24.0"
     axios-retry "^3.4.0"
     qs "^6.10.3"
 
-"@helium/proto-ble@^4.0.0":
+"@helium/proto-ble@^4.8.1":
   version "4.8.1"
   resolved "https://registry.yarnpkg.com/@helium/proto-ble/-/proto-ble-4.8.1.tgz#0e6ffb72c3a29e685d655849b8f04df0f53bb039"
   integrity sha512-Lg8ZkeJHESpTPEKvk+0729WbbgYzXr2PvOt+LBOjF+5rMdDC/BnArfRsYRFC3QC6FK/C1YeqEAKmDkT2UW3loA==
@@ -1529,8 +1516,10 @@
     borsh "^0.7.0"
     bs58 "^4.0.1"
 
-"@helium/spl-utils@file:.yalc/@helium/spl-utils":
-  version "0.0.23"
+"@helium/spl-utils@^0.0.24":
+  version "0.0.24"
+  resolved "https://registry.yarnpkg.com/@helium/spl-utils/-/spl-utils-0.0.24.tgz#e714dbdd708cea9c4cacfcf4fa0bd45214a94c02"
+  integrity sha512-pkKwqUTjLVCA4jz+OSE+IE4yTFIQ+6R+yH6ic2dM+DdJlaOsdtnLqs3i8z72vp/HiaU8PHmjCptE4yfQrKr7aw==
   dependencies:
     "@helium/address" "^4.8.1"
     "@project-serum/anchor" "0.26.0"
@@ -2376,7 +2365,7 @@
   dependencies:
     buffer "~6.0.3"
 
-"@solana/spl-account-compression@^0.1.4", "@solana/spl-account-compression@^0.1.5":
+"@solana/spl-account-compression@^0.1.4":
   version "0.1.5"
   resolved "https://registry.yarnpkg.com/@solana/spl-account-compression/-/spl-account-compression-0.1.5.tgz#81f7bbd1120bf211ed2091b44b9f030fd08bf2d3"
   integrity sha512-ZrJNrc4fqxJtqOjws6fEeMKhiA/ile9aDP83mutee3MVxN2cloL9xVHb3p2g3JuNCw4jb+AClZt0JbLCthz47w==

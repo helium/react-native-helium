@@ -9,8 +9,8 @@ import { AssertLocationV2 } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
 import { geoToH3 } from 'h3-js'
 import { Hotspot } from '@helium/http'
-import { SolHotspot } from '@helium/hotspot-utils'
 import { isSolHotspot } from './isSolHotspot'
+import { Asset } from '@helium/spl-utils'
 
 const DEFAULT_H3_RES = 12
 
@@ -61,7 +61,7 @@ export const createLocationTxn = async ({
   elevation?: number
   maker: string
   isFree?: boolean
-  hotspot?: Hotspot | SolHotspot | null
+  hotspot?: Hotspot | Asset | null
   dataOnly?: boolean
   updatingLocation: boolean
   nextLocation: string

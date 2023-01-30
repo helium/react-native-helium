@@ -24,8 +24,6 @@ import * as Transfer from '../utils/transferHotspot'
 import { Buffer } from 'buffer'
 import { BN } from 'bn.js'
 import { useSolanaContext } from '../Solana/SolanaProvider'
-import { SolHotspot } from '@helium/hotspot-utils'
-import { isSolHotspot } from '../utils/isSolHotspot'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
@@ -260,7 +258,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       hotspot,
       onboardingRecord: paramsOnboardRecord,
     }: {
-      hotspot?: Hotspot | SolHotspot | null
+      hotspot?: Hotspot | null
       onboardingRecord: OnboardingRecord | null
     }) => {
       if (!hotspot) {
@@ -270,22 +268,10 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       }
       let onboardingRecord: OnboardingRecord | null | undefined =
         paramsOnboardRecord
-      if (isSolHotspot(hotspot)) {
-        // TODO: Is this right?
-        if (!hotspot.isFullHotspot) return false
-      } else {
-        // TODO: Is this right?
-        if (hotspot.mode !== 'full') return false
-      }
+      if (hotspot.mode !== 'full') return false
 
       if (!onboardingRecord) {
         throw new Error('Onboarding record not found')
-      }
-
-      if (hotspot && isSolHotspot(hotspot)) {
-        return (
-          onboardingRecord.maker.locationNonceLimit > hotspot.numLocationAsserts
-        )
       }
 
       return (
@@ -478,11 +464,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       let payer = maker.address
       let solFee = new Balance(0, CurrencyType.solTokens)
 
-      // TODO: REmove?
-      // @ts-ignore
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const hotspots = await solana.getHotspots()
-
+      // TODO: simulate txn to determine fees
       const solanaAddress = heliumAddressToSolAddress(owner)
       const location = new BN(nextLocation, 'hex').toString()
 
@@ -541,7 +523,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         oraclePrice,
       }
     },
-    [solana]
+    []
   )
 
   const getAssertData = useCallback(

@@ -5,7 +5,7 @@ import useOnboarding from './useOnboarding'
 import { SodiumKeyPair } from '../Account/account'
 import Balance, { CurrencyType, USDollars } from '@helium/currency'
 import { HotspotType, OnboardingRecord } from '@helium/onboarding'
-import { SolHotspot } from '@helium/hotspot-utils'
+import { Asset } from '@helium/spl-utils'
 
 const initialState = {
   createTransferTransaction: async (_opts: {
@@ -73,7 +73,7 @@ const initialState = {
   getMinFirmware: async () => '',
   getOnboardingRecord: async (_hotspotAddress: string) => null,
   hasFreeAssert: (_opts: {
-    hotspot?: Hotspot | SolHotspot | null
+    hotspot?: Hotspot | Asset | null
     onboardingRecord?: OnboardingRecord | null
   }) => false,
   postPaymentTransaction: async (

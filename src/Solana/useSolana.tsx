@@ -8,16 +8,13 @@ import {
   VersionedTransaction,
 } from '@solana/web3.js'
 import { useSolanaStatus, useSolanaVars } from './solanaSentinel'
-import * as Hotspot from '@helium/hotspot-utils'
 import * as Currency from '@helium/currency-utils'
-import { Program } from '@project-serum/anchor'
-import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
-import { getOraclePrice } from '@helium/currency-utils'
 import {
+  Asset,
   heliumAddressToSolPublicKey,
   sendAndConfirmWithRetry,
 } from '@helium/spl-utils'
-import { HotspotType } from '@helium/onboarding'
+import * as Hotspot from '@helium/hotspot-utils'
 
 // TODO: Get urls for each cluster
 const METAPLEX_URL = 'https://rpc-devnet.aws.metaplex.com/'
@@ -39,7 +36,6 @@ const useSolana = ({
   const [cluster, setCluster] = useState(propsCluster)
   const [wallet, setWallet] = useState(pubKey)
   const [connection, setConnection] = useState(createConnection(propsCluster))
-  const [hemProgram, setHemProgram] = useState<Program<HeliumEntityManager>>()
 
   useEffect(() => {
     if (pubKey.equals(wallet) && cluster === propsCluster) return
@@ -49,11 +45,6 @@ const useSolana = ({
       setWallet(pubKey)
       const nextConnection = new Connection(clusterApiUrl(cluster))
       setConnection(nextConnection)
-      const nextHemProgram = await Hotspot.createHeliumEntityManagerProgram({
-        publicKey: pubKey,
-        connection: nextConnection,
-      })
-      setHemProgram(nextHemProgram)
     }
     update()
   }, [cluster, propsCluster, pubKey, wallet])
@@ -71,29 +62,6 @@ const useSolana = ({
   const getSolBalance = useCallback(
     async () => connection.getBalance(wallet),
     [connection, wallet]
-  )
-
-  const getSolHotspotInfo = useCallback(
-    async ({
-      hotspotAddress,
-      type,
-    }: {
-      hotspotAddress: string
-      type: HotspotType
-    }) => {
-      const mint = type === 'mobile' ? vars?.mobile.mint : vars?.iot.mint
-      if (!mint || !hemProgram) {
-        return
-      }
-
-      return Hotspot.getSolHotspotInfo({
-        mint,
-        hotspotAddress,
-        program: hemProgram,
-        symbol: type === 'iot' ? 'IOT' : 'MOBILE',
-      })
-    },
-    [hemProgram, vars]
   )
 
   const submitSolana = useCallback(
@@ -121,7 +89,7 @@ const useSolana = ({
     }: {
       tokenType: 'HNT'
     }): Promise<Currency.PriceData | undefined> =>
-      getOraclePrice({ tokenType, cluster, connection }),
+      Currency.getOraclePrice({ tokenType, cluster, connection }),
     [cluster, connection]
   )
 
@@ -130,7 +98,7 @@ const useSolana = ({
       collectable,
       newOwnerHeliumAddress,
     }: {
-      collectable: Hotspot.Asset
+      collectable: Asset
       newOwnerHeliumAddress: string
     }): Promise<VersionedTransaction | undefined> => {
       const owner = pubKey
@@ -148,12 +116,12 @@ const useSolana = ({
 
   const getHotspots = useCallback(async () => {
     // TODO: Add paging
-    return Hotspot.getHotspots({
-      url: METAPLEX_URL,
-      wallet: wallet.toString(),
-      hntMint: vars?.hnt.mint || '',
-    })
-  }, [vars?.hnt.mint, wallet])
+
+    //TODO:
+    //   const creator = entityCreatorKey(new PublicKey(hntMint))[0]
+    // return searchAssets(METAPLEX_URL, wallet, creator.toString(), {})
+    return [] as Asset[]
+  }, [])
 
   return {
     connection,
@@ -162,7 +130,6 @@ const useSolana = ({
     getHotspots,
     getOraclePriceFromSolana,
     getSolBalance,
-    getSolHotspotInfo,
     status: {
       inProgress,
       isHelium,

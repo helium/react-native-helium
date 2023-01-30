@@ -36,7 +36,6 @@ import { HotspotErrorCode } from './HotspotBle/useHotspotBle'
 import { heliumHttpClient, createHttpClient } from './utils/httpClient'
 export { DiagnosticInfo } from './HotspotBle/bleParse'
 import { useSolanaStatus, useSolanaVars } from './Solana/solanaSentinel'
-import { Asset, SolHotspot } from '@helium/hotspot-utils'
 
 type HeliumNativeType = {
   multiply(a: number, b: number): Promise<number>
@@ -54,7 +53,6 @@ export {
   AddGatewayV1,
   AssertData,
   AssertLocationV2,
-  Asset,
   Balance,
   createHttpClient,
   DataCredits,
@@ -71,7 +69,6 @@ export {
   SecurityTokens,
   SolanaManager,
   SolanaProvider,
-  SolHotspot,
   State,
   Transfer,
   TransferHotspotV2,
