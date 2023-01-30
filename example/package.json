@@ -13,7 +13,7 @@
     "@helium/crypto": "^4.8.1",
     "@helium/crypto-react-native": "^4.5.0",
     "@helium/http": "^4.8.1",
-    "@helium/onboarding": "^4.8.2",
+    "@helium/onboarding": "file:.yalc/@helium/onboarding",
     "@helium/proto-ble": "^4.0.0",
     "@helium/spl-utils": "file:.yalc/@helium/spl-utils",
     "@helium/transactions": "^4.3.1",

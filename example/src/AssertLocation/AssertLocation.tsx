@@ -48,7 +48,6 @@ const AssertLocation = () => {
     }
 
     const userAddress = await getAddressStr()
-    const ownerKeypairRaw = await getKeypairRaw()
 
     const data = await getAssertData({
       decimalGain: gain ? parseFloat(gain) : undefined,
@@ -57,7 +56,6 @@ const AssertLocation = () => {
       lat: parseFloat(lat),
       lng: parseFloat(lng),
       owner: userAddress,
-      ownerKeypairRaw,
       hotspotTypes,
     })
     setAssertData(data)
@@ -247,7 +245,7 @@ const AssertLocation = () => {
           />
         </View>
 
-        {assertData && (
+        {assertData?.fees && (
           <>
             <Text style={styles.heading}>
               Amount to assert hotspot location
@@ -258,16 +256,10 @@ const AssertLocation = () => {
             >{`hasSufficientBalance: ${assertData.hasSufficientBalance}`}</Text>
             <Text
               style={styles.text}
-            >{`Helium Fees as HNT: ${assertData.heliumFee?.hnt?.toString()}`}</Text>
+            >{`Helium Fees DC: ${assertData.fees.dc?.toString()}`}</Text>
             <Text
               style={styles.text}
-            >{`Helium Fees as DC: ${assertData.heliumFee?.dc.toString()}`}</Text>
-            <Text
-              style={styles.text}
-            >{`Helium Fees as USD: ${assertData.heliumFee?.usd?.toString()}`}</Text>
-            <Text
-              style={styles.text}
-            >{`Sol Fee: ${assertData.solFee?.toString()}`}</Text>
+            >{`Sol Fee: ${assertData.fees.sol?.toString()}`}</Text>
           </>
         )}
 
@@ -275,16 +267,16 @@ const AssertLocation = () => {
           <>
             <View style={styles.switchRow}>
               <Switch
-                onValueChange={handleHotspotTypeChange('IOT')}
-                value={hotspotTypes.includes('IOT')}
+                onValueChange={handleHotspotTypeChange('iot')}
+                value={hotspotTypes.includes('iot')}
               />
               <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
             </View>
 
             <View style={styles.switchRow}>
               <Switch
-                onValueChange={handleHotspotTypeChange('MOBILE')}
-                value={hotspotTypes.includes('MOBILE')}
+                onValueChange={handleHotspotTypeChange('mobile')}
+                value={hotspotTypes.includes('mobile')}
               />
               <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
             </View>

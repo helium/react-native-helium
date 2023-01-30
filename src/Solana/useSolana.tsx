@@ -34,7 +34,6 @@ const useSolana = ({
 }) => {
   const { isHelium, isSolana, inProgress } = useSolanaStatus()
 
-  // TODO: Verify these update with cluster change
   const { data: vars } = useSolanaVars(propsCluster)
 
   const [cluster, setCluster] = useState(propsCluster)
@@ -70,19 +69,19 @@ const useSolana = ({
   )
 
   const getSolBalance = useCallback(
-    async () => Currency.getSolBalance({ connection, pubKey: wallet }),
+    async () => connection.getBalance(wallet),
     [connection, wallet]
   )
 
   const getSolHotspotInfo = useCallback(
     async ({
       hotspotAddress,
-      symbol,
+      type,
     }: {
       hotspotAddress: string
-      symbol: HotspotType
+      type: HotspotType
     }) => {
-      const mint = symbol === 'MOBILE' ? vars?.mobile.mint : vars?.iot.mint
+      const mint = type === 'mobile' ? vars?.mobile.mint : vars?.iot.mint
       if (!mint || !hemProgram) {
         return
       }
@@ -91,7 +90,7 @@ const useSolana = ({
         mint,
         hotspotAddress,
         program: hemProgram,
-        symbol,
+        symbol: type === 'iot' ? 'IOT' : 'MOBILE',
       })
     },
     [hemProgram, vars]
@@ -117,7 +116,11 @@ const useSolana = ({
   )
 
   const getOraclePriceFromSolana = useCallback(
-    async ({ tokenType }: { tokenType: 'HNT' }) =>
+    async ({
+      tokenType,
+    }: {
+      tokenType: 'HNT'
+    }): Promise<Currency.PriceData | undefined> =>
       getOraclePrice({ tokenType, cluster, connection }),
     [cluster, connection]
   )
@@ -143,16 +146,17 @@ const useSolana = ({
     [connection, pubKey]
   )
 
-  const getHotspots = useCallback(
-    async ({ oldestCollectable }: { oldestCollectable?: string }) => {
-      return Hotspot.getAssetsByOwner(METAPLEX_URL, wallet.toString(), {
-        after: oldestCollectable,
-      })
-    },
-    [wallet]
-  )
+  const getHotspots = useCallback(async () => {
+    // TODO: Add paging
+    return Hotspot.getHotspots({
+      url: METAPLEX_URL,
+      wallet: wallet.toString(),
+      hntMint: vars?.hnt.mint || '',
+    })
+  }, [vars?.hnt.mint, wallet])
 
   return {
+    connection,
     createTransferCompressedCollectableTxn,
     getHeliumBalance,
     getHotspots,

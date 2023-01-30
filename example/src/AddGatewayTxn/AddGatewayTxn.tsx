@@ -98,6 +98,8 @@ const AddGatewayTxn = () => {
       solanaTransactions: solanaSignedTransactions,
     })
 
+    console.log({ addGatewayResponse })
+
     if (addGatewayResponse?.pendingTxn) {
       setHash(addGatewayResponse.pendingTxn.hash)
       setStatus(addGatewayResponse.pendingTxn.status)
@@ -164,16 +166,16 @@ const AddGatewayTxn = () => {
         <>
           <View style={styles.switchRow}>
             <Switch
-              onValueChange={handleHotspotTypeChange('IOT')}
-              value={hotspotTypes.includes('IOT')}
+              onValueChange={handleHotspotTypeChange('iot')}
+              value={hotspotTypes.includes('iot')}
             />
             <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
           </View>
 
           <View style={styles.switchRow}>
             <Switch
-              onValueChange={handleHotspotTypeChange('MOBILE')}
-              value={hotspotTypes.includes('MOBILE')}
+              onValueChange={handleHotspotTypeChange('mobile')}
+              value={hotspotTypes.includes('mobile')}
             />
             <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
           </View>
@@ -182,7 +184,7 @@ const AddGatewayTxn = () => {
 
       <Button
         title="Submit Transaction"
-        disabled={!txnStr || submitted}
+        disabled={!txnStr || submitted || !hotspotTypes.length}
         onPress={submitOnboardingTxns}
       />
 

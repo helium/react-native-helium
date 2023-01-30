@@ -3,8 +3,10 @@ import useSolana from './useSolana'
 import * as web3 from '@solana/web3.js'
 import { Asset, SolHotspot } from '@helium/hotspot-utils'
 import { HotspotType } from '@helium/onboarding'
+import { PriceData } from '@helium/currency-utils'
 
 const initialState = {
+  connection: new web3.Connection('devnet'),
   createTransferCompressedCollectableTxn: async (_opts: {
     collectable: Asset
     newOwnerHeliumAddress: string
@@ -14,12 +16,11 @@ const initialState = {
     ),
   getHeliumBalance: (_opts: { mint: string }) =>
     new Promise<number>((resolve) => resolve(0)),
-  getHotspots: (_opts: { oldestCollectable?: string }) =>
-    new Promise<Asset[]>((resolve) => resolve([])),
+  getHotspots: () => new Promise<Asset[]>((resolve) => resolve([])),
   getOraclePriceFromSolana: (_opts: { tokenType: 'HNT' }) =>
-    new Promise<number>((resolve) => resolve(0)),
+    new Promise<PriceData | undefined>((resolve) => resolve(undefined)),
   getSolBalance: () => new Promise<number>((resolve) => resolve(0)),
-  getSolHotspotInfo: (_opts: { hotspotAddress: string; symbol: HotspotType }) =>
+  getSolHotspotInfo: (_opts: { hotspotAddress: string; type: HotspotType }) =>
     new Promise<SolHotspot | undefined>((resolve) => resolve(undefined)),
   status: {
     inProgress: false,

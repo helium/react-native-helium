@@ -55,7 +55,6 @@ const initialState = {
     lng: number
     decimalGain?: number
     elevation?: number
-    ownerKeypairRaw?: SodiumKeyPair
     httpClient?: Client
     dataOnly?: boolean
     hotspotTypes: HotspotType[]
@@ -66,9 +65,8 @@ const initialState = {
       resolve({
         hasSufficientBalance: true,
         isFree: true,
-        hotspot: null,
-        solFee: new Balance(0, CurrencyType.solTokens),
         payer: '',
+        oraclePrice: new Balance(0, CurrencyType.usd),
       })
     ),
   getMakers: async () => [],

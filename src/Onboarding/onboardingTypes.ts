@@ -5,8 +5,6 @@ import Balance, {
   TestNetworkTokens,
   USDollars,
 } from '@helium/currency'
-import { SolHotspot } from '@helium/hotspot-utils'
-import { Hotspot } from '@helium/http'
 import { Maker } from '@helium/onboarding'
 
 export type AssertData = {
@@ -15,14 +13,12 @@ export type AssertData = {
     sol: Balance<SolTokens>
   }
   hasSufficientBalance: boolean
-  hotspot: SolHotspot | Hotspot | null
   isFree: boolean
-  heliumFee?: {
-    dc: Balance<DataCredits>
-    hnt: Balance<NetworkTokens>
-    usd: Balance<USDollars>
+  fees?: {
+    dc?: Balance<DataCredits>
+    sol?: Balance<SolTokens>
   }
-  solFee: Balance<SolTokens>
+  oraclePrice: Balance<USDollars>
   assertLocationTxn?: string
   solanaTransactions?: Buffer[]
   payer: string

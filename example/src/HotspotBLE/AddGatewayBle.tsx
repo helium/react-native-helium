@@ -142,16 +142,16 @@ const AddGatewayBle = () => {
         <>
           <View style={styles.switchRow}>
             <Switch
-              onValueChange={handleHotspotTypeChange('IOT')}
-              value={hotspotTypes.includes('IOT')}
+              onValueChange={handleHotspotTypeChange('iot')}
+              value={hotspotTypes.includes('iot')}
             />
             <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
           </View>
 
           <View style={styles.switchRow}>
             <Switch
-              onValueChange={handleHotspotTypeChange('MOBILE')}
-              value={hotspotTypes.includes('MOBILE')}
+              onValueChange={handleHotspotTypeChange('mobile')}
+              value={hotspotTypes.includes('mobile')}
             />
             <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
           </View>

@@ -65,10 +65,7 @@ export default function App() {
     <SolanaProvider cluster="devnet" pubKey={pubKey}>
       <OnboardingProvider
         baseUrl={
-          // Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api/v3'
-          // TODO: REMOVE and set back to prod
-          Config.ONBOARDING_BASE_URL ||
-          'https://onboarding.oracle.test-helium.com/api/v3'
+          Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api/v3'
         }
       >
         <HotspotBleProvider>
