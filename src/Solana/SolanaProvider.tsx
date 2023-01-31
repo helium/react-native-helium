@@ -13,8 +13,21 @@ const initialState = {
     new Promise<web3.VersionedTransaction | undefined>((resolve) =>
       resolve(undefined)
     ),
-  getHeliumBalance: (_opts: { mint: string }) =>
-    new Promise<number>((resolve) => resolve(0)),
+  getHntBalance: () => new Promise<bigint>((resolve) => resolve(0n)),
+  getBalances: () =>
+    new Promise<{
+      hntBalance: bigint
+      iotBalance: bigint
+      mobileBalance: bigint
+      dcBalance: bigint
+    }>((resolve) =>
+      resolve({
+        hntBalance: 0n,
+        iotBalance: 0n,
+        dcBalance: 0n,
+        mobileBalance: 0n,
+      })
+    ),
   getHotspots: (
     _opts: Omit<SearchAssetsOpts, 'ownerAddress' | 'creatorAddress'>
   ) => new Promise<Asset[]>((resolve) => resolve([])),

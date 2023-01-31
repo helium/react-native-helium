@@ -1379,10 +1379,8 @@
     react-native-sodium "^0.4.0"
     safe-buffer "^5.2.1"
 
-"@helium/currency-utils@^0.0.24":
+"@helium/currency-utils@file:.yalc/@helium/currency-utils":
   version "0.0.24"
-  resolved "https://registry.yarnpkg.com/@helium/currency-utils/-/currency-utils-0.0.24.tgz#57b1f1ef3742c547ff0e6a870eb756fdc2476a71"
-  integrity sha512-WmNq7iwTN9DwGHzqF7r2O2s2xQ/+UOxPw0VP7Wv2knF7mDKUXCx9tQpCyMyNKzomk3s8aPJjLvX/oj7sZx37mg==
   dependencies:
     "@pythnetwork/client" "^2.12.0"
     "@solana/spl-token" "^0.3.7"

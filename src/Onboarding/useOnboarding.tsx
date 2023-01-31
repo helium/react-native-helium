@@ -293,12 +293,10 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         if (!solana.vars?.hnt.mint) {
           throw new Error('Hnt mint not found')
         }
-        const balance = await solana.getHeliumBalance({
-          mint: solana.vars.hnt.mint,
-        })
+        const balance = await solana.getHntBalance()
 
         return {
-          hnt: new Balance(balance, CurrencyType.networkToken),
+          hnt: Balance.fromIntAndTicker(Number(balance), 'HNT'),
           sol: new Balance(solBalance, CurrencyType.solTokens),
         }
       } else {

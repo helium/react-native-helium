@@ -45,6 +45,7 @@
     "react-native-crypto": "^2.2.0",
     "react-native-get-random-values": "^1.7.0",
     "react-native-permissions": "^3.0.5",
+    "react-native-quick-crypto": "^0.5.0",
     "react-native-safe-area-context": "^3.3.2",
     "react-native-screens": "^3.6.0",
     "react-native-sodium": "0.4.0",

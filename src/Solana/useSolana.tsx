@@ -53,31 +53,35 @@ const useSolana = ({
     update()
   }, [cluster, propsCluster, pubKey, wallet])
 
-  const getHeliumBalance = useCallback(
-    async ({ mint }: { mint: string }) => {
-      // TODO: Figure out why this isn't working
-      // return Currency.getBalance({
-      //   pubKey: wallet,
-      //   connection,
-      //   mint: new PublicKey(mint),
-      // })
+  const getHntBalance = useCallback(async () => {
+    if (!vars?.hnt.mint)
+      throw Error('HNT mint not found for ' + cluster.toString())
+    return Currency.getBalance({
+      pubKey: wallet,
+      connection,
+      mint: new PublicKey(vars?.hnt.mint),
+    })
+  }, [cluster, connection, vars?.hnt.mint, wallet])
 
-      // TODO: Move to @helium/currency-utils
-      const account = new PublicKey(wallet)
-      const tokenAccounts = await connection.getTokenAccountsByOwner(account, {
-        programId: TOKEN_PROGRAM_ID,
-      })
+  const getBalances = useCallback(async () => {
+    const account = new PublicKey(wallet)
+    const tokenAccounts = await connection.getTokenAccountsByOwner(account, {
+      programId: TOKEN_PROGRAM_ID,
+    })
 
-      const vals = {} as Record<string, bigint>
-      tokenAccounts.value.forEach((tokenAccount) => {
-        const accountData = AccountLayout.decode(tokenAccount.account.data)
-        vals[accountData.mint.toBase58()] = accountData.amount
-      })
+    const vals = {} as Record<string, bigint>
+    tokenAccounts.value.forEach((tokenAccount) => {
+      const accountData = AccountLayout.decode(tokenAccount.account.data)
+      vals[accountData.mint.toBase58()] = accountData.amount
+    })
 
-      return Number(vals[mint])
-    },
-    [connection, wallet]
-  )
+    return {
+      hntBalance: vars?.hnt.mint ? vals[vars.hnt.mint] : 0n,
+      iotBalance: vars?.iot.mint ? vals[vars.iot.mint] : 0n,
+      dcBalance: vars?.dc.mint ? vals[vars.dc.mint] : 0n,
+      mobileBalance: vars?.mobile.mint ? vals[vars.mobile.mint] : 0n,
+    }
+  }, [connection, vars, wallet])
 
   const getSolBalance = useCallback(
     async () => connection.getBalance(wallet),
@@ -150,7 +154,8 @@ const useSolana = ({
   return {
     connection,
     createTransferCompressedCollectableTxn,
-    getHeliumBalance,
+    getHntBalance,
+    getBalances,
     getHotspots,
     getOraclePriceFromSolana,
     getSolBalance,
