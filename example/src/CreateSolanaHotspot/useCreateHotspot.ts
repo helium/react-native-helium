@@ -53,9 +53,6 @@ const useCreateRandomHotspot = () => {
       gateway,
     })
 
-    console.log('creating hotspot with txn')
-
-    console.log(signedTxn.toString())
     setTxn(signedTxn.toString())
 
     return createHotspot({ txn: signedTxn.toString() })

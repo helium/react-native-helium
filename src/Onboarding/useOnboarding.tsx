@@ -20,6 +20,7 @@ import * as Transfer from '../utils/transferHotspot'
 import { Buffer } from 'buffer'
 import { BN } from 'bn.js'
 import { useSolanaContext } from '../Solana/SolanaProvider'
+import { heliumAddressToSolPublicKey } from '@helium/spl-utils'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
@@ -124,10 +125,13 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       const createTxns = await onboardingClient.createHotspot({
         transaction: txn,
       })
+
       return solana.submitAllSolana({
-        txns: (createTxns.data?.solanaTransactions || []).map((t) =>
-          Buffer.from(t)
-        ),
+        txns: (createTxns.data?.solanaTransactions || []).map((t) => {
+          const buff = Buffer.from(t)
+          console.log(buff.toString('base64'))
+          return buff
+        }),
       })
     },
     [onboardingClient, solana]
@@ -171,6 +175,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
             elevation,
             location,
           })
+          console.log({ onboardResponse })
           return onboardResponse
         })
       )
@@ -465,9 +470,19 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
           })
         )
       )
+
       solanaTransactions = solResponses
         .flatMap((r) => r.data?.solanaTransactions || [])
         .map((txn) => Buffer.from(txn))
+
+      const makerKey = heliumAddressToSolPublicKey(maker.address)
+
+      const simulated = await Promise.all(
+        solanaTransactions.map((t) =>
+          solana.simulateTxn(t, { maker: makerKey })
+        )
+      )
+      console.log({ simulated })
 
       ///////////////////////////////////////////////////////////////////////////
       // TODO: Set all these based on simulated txn
@@ -492,7 +507,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         oraclePrice,
       }
     },
-    [onboardingClient]
+    [onboardingClient, solana]
   )
 
   const getAssertData = useCallback(
@@ -720,7 +735,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       // TODO: Add paging
       const hotspots = await solana.getHotspots({ page: 0 })
 
-      const hotspot = hotspots.find((h) => {
+      const hotspot = hotspots?.find((h) => {
         const addy = h.content.json_uri.split('/').slice(-1)[0]
         return addy === hotspotAddress
       })

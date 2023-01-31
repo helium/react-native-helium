@@ -34,6 +34,12 @@ const initialState = {
   getOraclePriceFromSolana: (_opts: { tokenType: 'HNT' }) =>
     new Promise<PriceData | undefined>((resolve) => resolve(undefined)),
   getSolBalance: () => new Promise<number>((resolve) => resolve(0)),
+  simulateTxn: (
+    _buff: Buffer,
+    _opts: {
+      maker: web3.PublicKey
+    }
+  ) => new Promise<any>((resolve) => resolve(undefined)),
   status: {
     inProgress: false,
     isHelium: false,
@@ -50,14 +56,16 @@ const { Provider } = SolanaContext
 
 const SolanaProvider = ({
   children,
-  pubKey,
+  heliumWallet,
   cluster,
 }: {
   children: ReactNode
   cluster?: 'devnet' | 'testnet' | 'mainnet-beta'
-  pubKey: web3.PublicKey
+  heliumWallet: string
 }) => {
-  return <Provider value={useSolana({ cluster, pubKey })}>{children}</Provider>
+  return (
+    <Provider value={useSolana({ cluster, heliumWallet })}>{children}</Provider>
+  )
 }
 
 export const useSolanaContext = (): SolanaManager => useContext(SolanaContext)

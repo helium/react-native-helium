@@ -3,6 +3,7 @@ import useSWR from 'swr'
 
 export type SolanaStatus = 'not_started' | 'in_progress' | 'complete'
 
+// TODO: Remove
 // const BASE_URL = 'https://solana-status.helium.com'
 const BASE_URL = 'http://localhost:3000'
 

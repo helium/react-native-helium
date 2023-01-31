@@ -21,9 +21,7 @@ import TransferHotspot from './TransferHotspot/TransferHotspot'
 import CreateSolanaHotspot from './CreateSolanaHotspot/CreateSolanaHotspot'
 import Config from 'react-native-config'
 import OraclePrice from './OraclePrice/OraclePrice'
-import * as web3 from '@solana/web3.js'
 import { getAddressStr } from './Account/secureAccount'
-import { heliumAddressToSolPublicKey } from '@helium/spl-utils'
 
 const Stack = createNativeStackNavigator()
 
@@ -43,7 +41,7 @@ export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>
 
 export default function App() {
   const [address, setAddress] = useState('')
-  const [pubKey, setPubKey] = useState(web3.PublicKey.default)
+  const [heliumWallet, setHeliumWallet] = useState('')
   LogBox.ignoreLogs([
     'Require cycle', // ignore HeliumJS require cycles
   ])
@@ -55,14 +53,14 @@ export default function App() {
         if (nextAddr === address) return
 
         setAddress(nextAddr)
-        setPubKey(heliumAddressToSolPublicKey(nextAddr))
+        setHeliumWallet(nextAddr)
       } catch {}
     }, 2000)
     return () => clearInterval(interval)
   }, [address])
 
   return (
-    <SolanaProvider cluster="devnet" pubKey={pubKey}>
+    <SolanaProvider cluster="devnet" heliumWallet={heliumWallet}>
       <OnboardingProvider
         baseUrl={
           Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api'
