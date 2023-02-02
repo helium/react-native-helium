@@ -24,7 +24,7 @@ const TransferHotspot = ({}: Props) => {
       setSubmitted(true)
 
       const address = await getAddressStr()
-      const { transferHotspotTxn, solanaTransaction } =
+      const { transferHotspotTxn, solanaTransactions } =
         await createTransferTransaction({
           userAddress: address,
           hotspotAddress,
@@ -50,14 +50,17 @@ const TransferHotspot = ({}: Props) => {
           setFailedReason(pendingTransferTxn.failedReason || '')
           return
         }
-      } else if (solanaTransaction) {
+      } else if (solanaTransactions) {
         const solanaKeypair = getSolanaKeypair(keypairRaw.sk)
-        const tx = bufferToTransaction(Buffer.from(solanaTransaction, 'base64'))
-        tx.partialSign(solanaKeypair)
+        const solanaSignedTransactions = solanaTransactions.map((txn) => {
+          const tx = bufferToTransaction(Buffer.from(txn, 'base64'))
+          tx.partialSign(solanaKeypair)
+          return tx.serialize().toString('base64')
+        })
 
         const { solanaTxnIds } = await submitTransactions({
           hotspotAddress,
-          solanaTransactions: [tx.serialize().toString('base64')],
+          solanaTransactions: solanaSignedTransactions,
         })
         if (solanaTxnIds?.length) {
           setHash(solanaTxnIds[0])

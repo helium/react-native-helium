@@ -19,7 +19,6 @@ import '../appDataClient'
 import AssertLocation from './AssertLocation/AssertLocation'
 import TransferHotspot from './TransferHotspot/TransferHotspot'
 import CreateSolanaHotspot from './CreateSolanaHotspot/CreateSolanaHotspot'
-import Config from 'react-native-config'
 import OraclePrice from './OraclePrice/OraclePrice'
 import { getAddressStr } from './Account/secureAccount'
 
@@ -60,12 +59,12 @@ export default function App() {
   }, [address])
 
   return (
-    <SolanaProvider cluster="devnet" heliumWallet={heliumWallet}>
-      <OnboardingProvider
-        baseUrl={
-          Config.ONBOARDING_BASE_URL || 'https://onboarding.dewi.org/api'
-        }
-      >
+    <SolanaProvider
+      cluster="devnet"
+      heliumWallet={heliumWallet}
+      solanaStatusOverride="complete"
+    >
+      <OnboardingProvider baseUrl="https://onboarding.oracle.test-helium.com/api">
         <HotspotBleProvider>
           <NavigationContainer>
             <Stack.Navigator

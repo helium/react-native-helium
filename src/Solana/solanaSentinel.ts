@@ -3,9 +3,7 @@ import useSWR from 'swr'
 
 export type SolanaStatus = 'not_started' | 'in_progress' | 'complete'
 
-// TODO: Remove
-// const BASE_URL = 'https://solana-status.helium.com'
-const BASE_URL = 'http://localhost:3000'
+const BASE_URL = 'https://solana-status.helium.com'
 
 const fetcher = (url: RequestInfo) => fetch(url).then((res) => res.json())
 
@@ -23,15 +21,24 @@ export const useSolanaVars = (cluster?: Cluster) => {
   )
 }
 
-export const useSolanaStatus = () => {
+export const useSolanaStatus = (solanaStatusOverride?: SolanaStatus) => {
   const { data: solanaStatus } = useSWR<{
     migrationStatus: SolanaStatus
-  }>(BASE_URL, fetcher)
+  }>(solanaStatusOverride ? null : BASE_URL, fetcher)
+
+  if (!solanaStatusOverride) {
+    return {
+      isSolana: solanaStatus?.migrationStatus === 'complete',
+      isHelium: solanaStatus?.migrationStatus === 'not_started',
+      inProgress: solanaStatus?.migrationStatus === 'in_progress',
+      migrationStatus: solanaStatus?.migrationStatus,
+    }
+  }
 
   return {
-    isSolana: solanaStatus?.migrationStatus === 'complete',
-    isHelium: solanaStatus?.migrationStatus === 'not_started',
-    inProgress: solanaStatus?.migrationStatus === 'in_progress',
-    migrationStatus: solanaStatus?.migrationStatus,
+    isSolana: solanaStatusOverride === 'complete',
+    isHelium: solanaStatusOverride === 'not_started',
+    inProgress: solanaStatusOverride === 'in_progress',
+    migrationStatus: solanaStatusOverride,
   }
 }

@@ -20,7 +20,7 @@ const initialState = {
   }) =>
     new Promise<{
       transferHotspotTxn?: string | undefined
-      solanaTransaction?: string | undefined
+      solanaTransactions?: string[] | undefined
     }>((resolve) => resolve({})),
   getAssertData: (_opts: {
     gateway: string

@@ -3,6 +3,7 @@ import useSolana, { createConnection } from './useSolana'
 import * as web3 from '@solana/web3.js'
 import { PriceData } from '@helium/currency-utils'
 import { Asset, SearchAssetsOpts } from '@helium/spl-utils'
+import { SolanaStatus } from './solanaSentinel'
 
 const initialState = {
   connection: createConnection('devnet'),
@@ -58,13 +59,19 @@ const SolanaProvider = ({
   children,
   heliumWallet,
   cluster,
+  solanaStatusOverride,
 }: {
   children: ReactNode
   cluster?: 'devnet' | 'testnet' | 'mainnet-beta'
-  heliumWallet: string
+  heliumWallet?: string
+  solanaStatusOverride?: SolanaStatus
 }) => {
   return (
-    <Provider value={useSolana({ cluster, heliumWallet })}>{children}</Provider>
+    <Provider
+      value={useSolana({ cluster, heliumWallet, solanaStatusOverride })}
+    >
+      {children}
+    </Provider>
   )
 }
 

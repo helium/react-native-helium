@@ -8,7 +8,7 @@ import {
   VersionedTransaction,
   LAMPORTS_PER_SOL,
 } from '@solana/web3.js'
-import { useSolanaStatus, useSolanaVars } from './solanaSentinel'
+import { SolanaStatus, useSolanaStatus, useSolanaVars } from './solanaSentinel'
 import * as Currency from '@helium/currency-utils'
 import {
   Asset,
@@ -33,11 +33,14 @@ export const createConnection = (cluster: Cluster) =>
 const useSolana = ({
   cluster: propsCluster = 'devnet',
   heliumWallet,
+  solanaStatusOverride,
 }: {
   cluster?: Cluster
-  heliumWallet: string
+  heliumWallet?: string
+  solanaStatusOverride?: SolanaStatus
 }) => {
-  const { isHelium, isSolana, inProgress } = useSolanaStatus()
+  const { isHelium, isSolana, inProgress } =
+    useSolanaStatus(solanaStatusOverride)
 
   const { data: vars } = useSolanaVars(propsCluster)
 
@@ -47,6 +50,7 @@ const useSolana = ({
 
   useEffect(() => {
     try {
+      if (!heliumWallet) return
       const nextPubKey = heliumAddressToSolPublicKey(heliumWallet)
       if (wallet && nextPubKey.equals(wallet) && cluster === propsCluster)
         return

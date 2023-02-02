@@ -623,7 +623,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       httpClient?: Client
     }): Promise<{
       transferHotspotTxn?: string | undefined
-      solanaTransaction?: string | undefined
+      solanaTransactions?: string[] | undefined
     }> => {
       checkSolanaStatus()
 
@@ -660,7 +660,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         throw new Error('Failed to create transfer transaction')
       }
       return {
-        solanaTransaction: Buffer.from(txn.serialize()).toString('base64'),
+        solanaTransactions: [Buffer.from(txn.serialize()).toString('base64')],
       }
     },
     [checkSolanaStatus, solana]
