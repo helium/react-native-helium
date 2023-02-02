@@ -6,10 +6,11 @@ import animalName from 'angry-purple-tiger'
 import Input from '../Input'
 import Address from '@helium/address'
 import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
+import { Buffer } from 'buffer'
 
 type Props = {}
 const TransferHotspot = ({}: Props) => {
-  const { createTransferTransaction, submitTransferHotspot } = useOnboarding()
+  const { createTransferTransaction, submitTransactions } = useOnboarding()
   const [hotspotAddress, setHotspotAddress] = useState('')
   const [hotspotName, setHotspotName] = useState('')
   const [newOwnerAddress, setNewOwnerAddress] = useState('')
@@ -39,25 +40,27 @@ const TransferHotspot = ({}: Props) => {
         if (!signedTxn.gateway?.b58) {
           throw new Error('Error signing transfer txn')
         }
-        const { pendingTxn } = await submitTransferHotspot({
+        const { pendingTransferTxn } = await submitTransactions({
+          hotspotAddress,
           transferHotspotTxn: signedTxn.toString(),
         })
-        if (pendingTxn) {
-          setHash(pendingTxn.hash)
-          setStatus(pendingTxn.status)
-          setFailedReason(pendingTxn.failedReason || '')
+        if (pendingTransferTxn) {
+          setHash(pendingTransferTxn.hash)
+          setStatus(pendingTransferTxn.status)
+          setFailedReason(pendingTransferTxn.failedReason || '')
           return
         }
       } else if (solanaTransaction) {
         const solanaKeypair = getSolanaKeypair(keypairRaw.sk)
-        const tx = bufferToTransaction(solanaTransaction)
+        const tx = bufferToTransaction(Buffer.from(solanaTransaction, 'base64'))
         tx.partialSign(solanaKeypair)
 
-        const { solTxId } = await submitTransferHotspot({
-          solanaTransaction: tx.serialize(),
+        const { solanaTxnIds } = await submitTransactions({
+          hotspotAddress,
+          solanaTransactions: [tx.serialize().toString('base64')],
         })
-        if (solTxId) {
-          setHash(solTxId)
+        if (solanaTxnIds?.length) {
+          setHash(solanaTxnIds[0])
           setStatus('complete')
           return
         }
@@ -71,7 +74,7 @@ const TransferHotspot = ({}: Props) => {
     createTransferTransaction,
     hotspotAddress,
     newOwnerAddress,
-    submitTransferHotspot,
+    submitTransactions,
   ])
 
   const disabled = useMemo(

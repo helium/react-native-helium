@@ -21,9 +21,10 @@ import animalName from 'angry-purple-tiger'
 import Config from 'react-native-config'
 import { HotspotType } from '@helium/onboarding'
 import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
+import { Buffer } from 'buffer'
 
 const AssertLocation = () => {
-  const { getOnboardingRecord, submitAssertLocation, getAssertData } =
+  const { getOnboardingRecord, submitTransactions, getAssertData } =
     useOnboarding()
   const {
     status: { isSolana },
@@ -82,7 +83,7 @@ const AssertLocation = () => {
     const userAddress = await getAddressStr()
 
     let assertLocationTxn = ''
-    let solanaTransactions: Buffer[] | undefined
+    let solanaTransactions: string[] | undefined
 
     if (assertData.assertLocationTxn) {
       const txnOwnerSigned = await Location.signAssertTxn({
@@ -103,22 +104,22 @@ const AssertLocation = () => {
       const solanaKeypair = getSolanaKeypair(ownerKeypairRaw.sk)
 
       solanaTransactions = assertData.solanaTransactions.map((txn) => {
-        const tx = bufferToTransaction(txn)
+        const tx = bufferToTransaction(Buffer.from(txn, 'base64'))
         tx.partialSign(solanaKeypair)
-        return tx.serialize()
+        return tx.serialize().toString('base64')
       })
     }
 
-    const { solanaTxnIds, pendingTxn } = await submitAssertLocation({
+    const { solanaTxnIds, pendingAssertTxn } = await submitTransactions({
       assertLocationTxn,
       solanaTransactions,
-      gateway: gatewayAddress,
+      hotspotAddress: gatewayAddress,
     })
 
-    if (pendingTxn) {
-      setHash(pendingTxn.hash)
-      setStatus(pendingTxn.status)
-      setFailedReason(pendingTxn.failedReason || '')
+    if (pendingAssertTxn) {
+      setHash(pendingAssertTxn.hash)
+      setStatus(pendingAssertTxn.status)
+      setFailedReason(pendingAssertTxn.failedReason || '')
     } else if (solanaTxnIds?.length) {
       setHash(solanaTxnIds.join(', '))
       setStatus('complete')
@@ -126,7 +127,7 @@ const AssertLocation = () => {
       setStatus('fail')
     }
     setSubmitted(false)
-  }, [assertData, gatewayAddress, submitAssertLocation])
+  }, [assertData, gatewayAddress, submitTransactions])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return

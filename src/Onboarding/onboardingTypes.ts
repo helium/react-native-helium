@@ -20,7 +20,7 @@ export type AssertData = {
   }
   oraclePrice: Balance<USDollars>
   assertLocationTxn?: string
-  solanaTransactions?: Buffer[]
+  solanaTransactions?: string[]
   payer: string
   maker?: Maker
 }

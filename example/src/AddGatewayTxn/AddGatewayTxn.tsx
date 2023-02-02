@@ -14,6 +14,7 @@ import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
 import Clipboard from '@react-native-community/clipboard'
 import { HotspotType } from '@helium/onboarding'
 import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
+import { Buffer } from 'buffer'
 
 const AddGatewayTxn = () => {
   const [txnStr, setTxnStr] = useState('')
@@ -26,7 +27,7 @@ const AddGatewayTxn = () => {
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
   const [hotspotTypes, setHotspotTypes] = useState<HotspotType[]>([])
-  const { getOnboardingRecord, submitAddGateway, getOnboardTransactions } =
+  const { getOnboardingRecord, submitTransactions, getOnboardTransactions } =
     useOnboarding()
   const {
     status: { isSolana },
@@ -65,7 +66,7 @@ const AddGatewayTxn = () => {
     })
 
     let addGatewaySignedTxn: string | undefined
-    let solanaSignedTransactions: Buffer[] | undefined
+    let solanaSignedTransactions: string[] | undefined
 
     if (addGatewayTxn) {
       const txnOwnerSigned = await AddGateway.signGatewayTxn(
@@ -81,9 +82,9 @@ const AddGatewayTxn = () => {
       const solanaKeypair = getSolanaKeypair(keypair.sk)
 
       solanaSignedTransactions = solanaTransactions.map((txn) => {
-        const tx = bufferToTransaction(txn)
+        const tx = bufferToTransaction(Buffer.from(txn, 'base64'))
         tx.partialSign(solanaKeypair)
-        return tx.serialize()
+        return tx.serialize().toString('base64')
       })
     }
 
@@ -92,28 +93,28 @@ const AddGatewayTxn = () => {
       throw new Error('No user found')
     }
 
-    const addGatewayResponse = await submitAddGateway({
+    const response = await submitTransactions({
       hotspotAddress,
       addGatewayTxn: addGatewaySignedTxn,
       solanaTransactions: solanaSignedTransactions,
     })
 
-    if (addGatewayResponse?.pendingTxn) {
-      setHash(addGatewayResponse.pendingTxn.hash)
-      setStatus(addGatewayResponse.pendingTxn.status)
-      setFailedReason(addGatewayResponse.pendingTxn.failedReason || '')
+    if (response?.pendingGatewayTxn) {
+      setHash(response.pendingGatewayTxn.hash)
+      setStatus(response.pendingGatewayTxn.status)
+      setFailedReason(response.pendingGatewayTxn.failedReason || '')
       return
     }
 
-    if (addGatewayResponse?.solanaTxnIds?.length) {
-      setSolTxId(addGatewayResponse.solanaTxnIds.join(', '))
+    if (response?.solanaTxnIds?.length) {
+      setSolTxId(response.solanaTxnIds.join(', '))
       setStatus('Solana Success')
     }
   }, [
     getOnboardTransactions,
     hotspotAddress,
     hotspotTypes,
-    submitAddGateway,
+    submitTransactions,
     txnStr,
   ])
 

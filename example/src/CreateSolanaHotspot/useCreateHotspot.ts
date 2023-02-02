@@ -1,8 +1,14 @@
 import Address from '@helium/address'
-import { AddGatewayV1, Keypair, useOnboarding } from '@helium/react-native-sdk'
+import {
+  AddGatewayV1,
+  Keypair,
+  useOnboarding,
+  useSolana,
+} from '@helium/react-native-sdk'
 import axios from 'axios'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { getKeypairRaw } from '../Account/secureAccount'
+import { Buffer } from 'buffer'
 
 function random(len: number): string {
   return new Array(len).join().replace(/(.|$)/g, function () {
@@ -13,7 +19,25 @@ function random(len: number): string {
 
 const useCreateRandomHotspot = () => {
   const [txn, setTxn] = useState('')
-  const { baseUrl, createHotspot } = useOnboarding()
+  const { baseUrl, onboardingClient } = useOnboarding()
+  const solana = useSolana()
+
+  const createHotspot = useCallback(
+    async (signedTxn: AddGatewayV1) => {
+      const createTxns = await onboardingClient.createHotspot({
+        transaction: signedTxn.toString(),
+      })
+
+      return solana.submitAllSolana({
+        txns: (createTxns.data?.solanaTransactions || []).map((t) => {
+          const buff = Buffer.from(t)
+          console.log(buff.toString('base64'))
+          return buff
+        }),
+      })
+    },
+    [onboardingClient, solana]
+  )
 
   const create = async ({
     authorization,
@@ -55,7 +79,7 @@ const useCreateRandomHotspot = () => {
 
     setTxn(signedTxn.toString())
 
-    return createHotspot({ txn: signedTxn.toString() })
+    return createHotspot(signedTxn)
   }
 
   return { txn, create }

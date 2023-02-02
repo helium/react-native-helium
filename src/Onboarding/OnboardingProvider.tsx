@@ -1,13 +1,16 @@
-import Client, { Hotspot, PendingTransaction } from '@helium/http'
+import Client, { PendingTransaction } from '@helium/http'
 import React, { createContext, ReactNode, useContext } from 'react'
 import { AssertData } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
 import { SodiumKeyPair } from '../Account/account'
 import Balance, { CurrencyType, USDollars } from '@helium/currency'
-import { HotspotType, OnboardingRecord } from '@helium/onboarding'
-import { Asset } from '@helium/spl-utils'
+import OnboardingClient, {
+  HotspotType,
+  OnboardingRecord,
+} from '@helium/onboarding'
 
 const initialState = {
+  baseUrl: '',
   createTransferTransaction: async (_opts: {
     hotspotAddress: string
     userAddress: string
@@ -17,39 +20,8 @@ const initialState = {
   }) =>
     new Promise<{
       transferHotspotTxn?: string | undefined
-      solanaTransaction?: Buffer | undefined
+      solanaTransaction?: string | undefined
     }>((resolve) => resolve({})),
-  getOnboardTransactions: async (_opts: {
-    txn: string
-    hotspotAddress: string
-    hotspotTypes: HotspotType[]
-    lat?: number
-    lng?: number
-    decimalGain?: number
-    elevation?: number
-  }) =>
-    new Promise<{ heliumTxn?: string; solanaTransactions?: Buffer[] }>(
-      (resolve) => resolve({})
-    ),
-  submitAddGateway: async (_opts: {
-    hotspotAddress: string
-    addGatewayTxn?: string
-    solanaTransactions?: Buffer[]
-    httpClient?: Client
-  }) =>
-    new Promise<{
-      solanaTxnIds?: string[]
-      pendingTxn?: PendingTransaction
-    }>((resolve) => resolve({})),
-  getOraclePrice: (_httpClient?: Client) =>
-    new Promise<Balance<USDollars>>((resolve) =>
-      resolve(new Balance(0, CurrencyType.usd))
-    ),
-  submitSolanaTransactions: (_opts: { solanaTransactions: string[] }) =>
-    new Promise<string[]>((resolve) => resolve([])),
-  baseUrl: '',
-  createHotspot: (_opts: { txn: string }) =>
-    new Promise<string[]>((resolve) => resolve([])),
   getAssertData: (_opts: {
     gateway: string
     owner: string
@@ -70,35 +42,38 @@ const initialState = {
         oraclePrice: new Balance(0, CurrencyType.usd),
       })
     ),
-  getMakers: async () => [],
   getMinFirmware: async () => '',
   getOnboardingRecord: async (_hotspotAddress: string) => null,
-  hasFreeAssert: (_opts: {
-    hotspot?: Hotspot | Asset | null
-    onboardingRecord?: OnboardingRecord | null
-  }) => false,
-  postPaymentTransaction: async (
-    _hotspotAddress: string,
-    _transaction: string
-  ) => null,
-  submitAssertLocation: async (_opts: {
-    assertLocationTxn?: string
-    solanaTransactions?: Buffer[]
-    httpClient?: Client
-    gateway: string
+  getOnboardTransactions: async (_opts: {
+    txn: string
+    hotspotAddress: string
+    hotspotTypes: HotspotType[]
+    lat?: number
+    lng?: number
+    decimalGain?: number
+    elevation?: number
+  }) =>
+    new Promise<{ heliumTxn?: string; solanaTransactions?: string[] }>(
+      (resolve) => resolve({})
+    ),
+  getOraclePrice: (_httpClient?: Client) =>
+    new Promise<Balance<USDollars>>((resolve) =>
+      resolve(new Balance(0, CurrencyType.usd))
+    ),
+  onboardingClient: new OnboardingClient(''),
+  submitTransactions: (_opts: {
+    solanaTransactions?: string[] | undefined
+    hotspotAddress: string
+    addGatewayTxn?: string | undefined
+    httpClient?: Client | undefined
+    transferHotspotTxn?: string | undefined
+    assertLocationTxn?: string | undefined
   }) =>
     new Promise<{
-      solTxnIds?: string[]
-      pendingTxn?: PendingTransaction
-    }>((resolve) => resolve({})),
-  submitTransferHotspot: (_opts: {
-    transferHotspotTxn?: string
-    solanaTransaction?: Buffer
-    httpClient?: Client
-  }) =>
-    new Promise<{
-      solTxId?: string
-      pendingTxn?: PendingTransaction
+      pendingTransferTxn?: PendingTransaction
+      pendingAssertTxn?: PendingTransaction
+      pendingGatewayTxn?: PendingTransaction
+      solanaTxnIds?: string[]
     }>((resolve) => resolve({})),
 }
 const OnboardingContext =

@@ -75,14 +75,6 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     return response.data?.version || null
   }, [handleError, onboardingClient])
 
-  const getMakers = useCallback(async () => {
-    const response = await onboardingClient.getMakers()
-
-    handleError(response, 'unable to get makers')
-
-    return response.data
-  }, [handleError, onboardingClient])
-
   const getOnboardingRecord = useCallback(
     async (hotspotAddress: string) => {
       try {
@@ -120,23 +112,6 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     []
   )
 
-  const createHotspot = useCallback(
-    async ({ txn }: { txn: string }) => {
-      const createTxns = await onboardingClient.createHotspot({
-        transaction: txn,
-      })
-
-      return solana.submitAllSolana({
-        txns: (createTxns.data?.solanaTransactions || []).map((t) => {
-          const buff = Buffer.from(t)
-          console.log(buff.toString('base64'))
-          return buff
-        }),
-      })
-    },
-    [onboardingClient, solana]
-  )
-
   const getOnboardTransactions = useCallback(
     async ({
       txn,
@@ -154,7 +129,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       lng?: number
       decimalGain?: number
       elevation?: number
-    }): Promise<{ addGatewayTxn?: string; solanaTransactions?: Buffer[] }> => {
+    }): Promise<{ addGatewayTxn?: string; solanaTransactions?: string[] }> => {
       if (solana.status.isHelium) {
         return { addGatewayTxn: txn }
       }
@@ -182,7 +157,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       const solanaTransactions = solResponses
         .flatMap((r) => r.data?.solanaTransactions || [])
-        .map((tx) => Buffer.from(tx))
+        .map((tx) => Buffer.from(tx).toString('base64'))
 
       if (!solanaTransactions?.length) {
         throw new Error('failed to create solana onboard txns')
@@ -197,60 +172,34 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     async ({
       hotspotAddress,
       addGatewayTxn,
-      solanaTransactions,
       httpClient,
     }: {
       hotspotAddress: string
-      addGatewayTxn?: string
-      solanaTransactions?: Buffer[]
+      addGatewayTxn: string
       httpClient?: Client
-    }): Promise<{
-      solanaTxnIds?: string[]
-      pendingTxn?: PendingTransaction
-    }> => {
-      checkSolanaStatus()
-
+    }): Promise<PendingTransaction | undefined> => {
       const client = httpClient || heliumHttpClient
 
-      if (solana.status.isHelium) {
-        if (!addGatewayTxn) {
-          throw new Error('Transaction is missing')
-        }
-        // If L1 is helium, must submit to onboard server for payer signature
-        const onboardResponse = await onboardingClient.postPaymentTransaction(
-          hotspotAddress,
-          addGatewayTxn
-        )
-        handleError(
-          onboardResponse,
-          `unable to post payment transaction for ${hotspotAddress}`
-        )
-        if (!onboardResponse.data?.transaction) {
-          throw new Error('Onboarding server failure - txn missing')
-        }
-
-        // txn is now payerSignature is now signed by the maker, time to submit
-        const pendingTxn = await client.transactions.submit(
-          onboardResponse.data?.transaction
-        )
-        return {
-          pendingTxn,
-        }
+      if (!addGatewayTxn) {
+        throw new Error('Transaction is missing')
+      }
+      // If L1 is helium, must submit to onboard server for payer signature
+      const onboardResponse = await onboardingClient.postPaymentTransaction(
+        hotspotAddress,
+        addGatewayTxn
+      )
+      handleError(
+        onboardResponse,
+        `unable to post payment transaction for ${hotspotAddress}`
+      )
+      if (!onboardResponse.data?.transaction) {
+        throw new Error('Onboarding server failure - txn missing')
       }
 
-      if (!solanaTransactions?.length) {
-        throw new Error('No solana transactions to submit')
-      }
-
-      const solanaTxnIds = await solana.submitAllSolana({
-        txns: solanaTransactions,
-      })
-
-      return {
-        solanaTxnIds,
-      }
+      // txn is now payerSignature is now signed by the maker, time to submit
+      return client.transactions.submit(onboardResponse.data?.transaction)
     },
-    [checkSolanaStatus, handleError, onboardingClient, solana]
+    [handleError, onboardingClient]
   )
 
   const hasFreeAssert = useCallback(
@@ -503,7 +452,9 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         isFree,
         maker,
         payer,
-        solanaTransactions,
+        solanaTransactions: solanaTransactions.map((tx) =>
+          tx.toString('base64')
+        ),
         oraclePrice,
       }
     },
@@ -594,69 +545,47 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
   const submitAssertLocation = useCallback(
     async ({
       assertLocationTxn,
-      solanaTransactions,
       httpClient,
       gateway,
     }: {
-      assertLocationTxn?: string
-      solanaTransactions?: Buffer[]
+      assertLocationTxn: string
       httpClient?: Client
       gateway: string
-    }): Promise<{
-      solanaTxnIds?: string[]
-      pendingTxn?: PendingTransaction
-    }> => {
+    }): Promise<PendingTransaction | undefined> => {
       checkSolanaStatus()
 
       const client = httpClient || heliumHttpClient
 
-      if (assertLocationTxn) {
-        let txnStr = assertLocationTxn
+      let txnStr = assertLocationTxn
 
-        const hotspot = await getHeliumHotspotInfo({
-          hotspotAddress: gateway,
-          httpClient,
-        })
-
-        const onboardingRecord = await getOnboardingRecord(gateway)
-        const isFree = hasFreeAssert({ hotspot, onboardingRecord })
-        if (isFree) {
-          // If L1 is helium and txn is free, must submit to onboard server for payer signature
-          const onboardResponse = await onboardingClient.postPaymentTransaction(
-            gateway,
-            assertLocationTxn.toString()
-          )
-
-          handleError(
-            onboardResponse,
-            `unable to post payment transaction for ${gateway}`
-          )
-
-          if (!onboardResponse?.data?.transaction) {
-            throw new Error('failed to fetch txn from onboarding server')
-          }
-          txnStr = onboardResponse.data?.transaction
-        }
-        const pendingTxn = await client.transactions.submit(txnStr)
-        return {
-          pendingTxn,
-        }
-      }
-
-      if (!solanaTransactions?.length) {
-        throw new Error('No solana transactions to submit')
-      }
-
-      const solanaTxnIds = await solana.submitAllSolana({
-        txns: solanaTransactions,
+      const hotspot = await getHeliumHotspotInfo({
+        hotspotAddress: gateway,
+        httpClient,
       })
-      return {
-        solanaTxnIds,
+
+      const onboardingRecord = await getOnboardingRecord(gateway)
+      const isFree = hasFreeAssert({ hotspot, onboardingRecord })
+      if (isFree) {
+        // If L1 is helium and txn is free, must submit to onboard server for payer signature
+        const onboardResponse = await onboardingClient.postPaymentTransaction(
+          gateway,
+          assertLocationTxn.toString()
+        )
+
+        handleError(
+          onboardResponse,
+          `unable to post payment transaction for ${gateway}`
+        )
+
+        if (!onboardResponse?.data?.transaction) {
+          throw new Error('failed to fetch txn from onboarding server')
+        }
+        txnStr = onboardResponse.data?.transaction
       }
+      return client.transactions.submit(txnStr)
     },
     [
       checkSolanaStatus,
-      solana,
       getHeliumHotspotInfo,
       getOnboardingRecord,
       hasFreeAssert,
@@ -668,36 +597,15 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
   const submitTransferHotspot = useCallback(
     async ({
       transferHotspotTxn,
-      solanaTransaction,
       httpClient,
     }: {
-      transferHotspotTxn?: string
-      solanaTransaction?: Buffer
+      transferHotspotTxn: string
       httpClient?: Client
-    }): Promise<{ solTxId?: string; pendingTxn?: PendingTransaction }> => {
-      if (!transferHotspotTxn && !solanaTransaction) {
-        throw new Error('No txn found')
-      }
-
+    }): Promise<PendingTransaction | undefined> => {
       const client = httpClient || heliumHttpClient
-
-      if (transferHotspotTxn) {
-        // submit to helium if transition not started
-        const pendingTxn = await client.transactions.submit(transferHotspotTxn)
-        return {
-          pendingTxn,
-        }
-      }
-
-      // submit to solana
-      const solTxId = await solana.submitSolana({
-        txn: solanaTransaction!,
-      })
-      return {
-        solTxId,
-      }
+      return client.transactions.submit(transferHotspotTxn)
     },
-    [solana]
+    []
   )
 
   const createTransferTransaction = useCallback(
@@ -715,7 +623,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       httpClient?: Client
     }): Promise<{
       transferHotspotTxn?: string | undefined
-      solanaTransaction?: Buffer | undefined
+      solanaTransaction?: string | undefined
     }> => {
       checkSolanaStatus()
 
@@ -751,7 +659,9 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       if (!txn) {
         throw new Error('Failed to create transfer transaction')
       }
-      return { solanaTransaction: Buffer.from(txn.serialize()) }
+      return {
+        solanaTransaction: Buffer.from(txn.serialize()).toString('base64'),
+      }
     },
     [checkSolanaStatus, solana]
   )
@@ -771,21 +681,91 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     [solana]
   )
 
+  const submitTransactions = useCallback(
+    async ({
+      solanaTransactions,
+      hotspotAddress,
+      addGatewayTxn,
+      httpClient,
+      transferHotspotTxn,
+      assertLocationTxn,
+    }: {
+      solanaTransactions?: string[]
+      hotspotAddress: string
+      addGatewayTxn?: string
+      httpClient?: Client
+      transferHotspotTxn?: string
+      assertLocationTxn?: string
+    }): Promise<{
+      pendingTransferTxn?: PendingTransaction
+      pendingAssertTxn?: PendingTransaction
+      pendingGatewayTxn?: PendingTransaction
+      solanaTxnIds?: string[]
+    }> => {
+      if (solanaTransactions?.length) {
+        if (!solana.status.isSolana) {
+          throw new Error('Solana transactions not yet supported')
+        }
+        const solanaTxnIds = await submitSolanaTransactions({
+          solanaTransactions: solanaTransactions,
+        })
+        return { solanaTxnIds }
+      }
+
+      if (!solana.status.isHelium) {
+        throw new Error('Helium transactions no longer supported')
+      }
+
+      const response = {} as {
+        pendingTransferTxn?: PendingTransaction
+        pendingAssertTxn?: PendingTransaction
+        pendingGatewayTxn?: PendingTransaction
+      }
+
+      if (assertLocationTxn) {
+        response.pendingAssertTxn = await submitAssertLocation({
+          assertLocationTxn,
+          httpClient,
+          gateway: hotspotAddress,
+        })
+      }
+
+      if (addGatewayTxn) {
+        response.pendingGatewayTxn = await submitAddGateway({
+          hotspotAddress,
+          addGatewayTxn,
+          httpClient,
+        })
+      }
+
+      if (transferHotspotTxn) {
+        response.pendingTransferTxn = await submitTransferHotspot({
+          transferHotspotTxn,
+          httpClient,
+        })
+      }
+
+      return response
+    },
+    [
+      solana,
+      submitAddGateway,
+      submitAssertLocation,
+      submitSolanaTransactions,
+      submitTransferHotspot,
+    ]
+  )
+
   return {
     baseUrl,
-    createHotspot,
     createTransferTransaction,
     getAssertData,
-    getMakers,
     getMinFirmware,
     getOnboardingRecord,
     getOnboardTransactions,
     getOraclePrice,
-    hasFreeAssert,
-    submitAddGateway,
-    submitSolanaTransactions,
-    submitAssertLocation,
-    submitTransferHotspot,
+    onboardingClient,
+    submitTransactions,
   }
 }
 
