@@ -19,10 +19,17 @@ import {
 } from '@helium/spl-utils'
 import * as Hotspot from '@helium/hotspot-utils'
 import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { entityCreatorKey } from '@helium/helium-entity-manager-sdk'
+import {
+  entityCreatorKey,
+  init,
+  makerKey,
+} from '@helium/helium-entity-manager-sdk'
 import BigNumber from 'bignumber.js'
 import { getBalance } from '@helium/currency-utils'
 import axios from 'axios'
+import { AnchorProvider, Wallet, Program } from '@coral-xyz/anchor'
+import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
+import { daoKey } from '@helium/helium-sub-daos-sdk'
 
 // TODO: Get urls for each cluster
 const METAPLEX_URL = 'https://rpc-devnet.aws.metaplex.com/'
@@ -47,6 +54,23 @@ const useSolana = ({
   const [cluster, setCluster] = useState(propsCluster)
   const [wallet, setWallet] = useState<PublicKey>()
   const [connection, setConnection] = useState(createConnection(propsCluster))
+  const [hemProgram, setHemProgram] = useState<Program<HeliumEntityManager>>()
+
+  useEffect(() => {
+    if (!heliumWallet) return
+
+    // TODO: Is this right?
+    const anchorWallet = {
+      get publicKey() {
+        return wallet
+      },
+    } as Wallet
+
+    const provider = new AnchorProvider(connection, anchorWallet, {
+      preflightCommitment: 'confirmed',
+    })
+    init(provider).then(setHemProgram)
+  }, [connection, heliumWallet, wallet])
 
   useEffect(() => {
     try {
@@ -153,17 +177,34 @@ const useSolana = ({
   )
 
   const getHotspots = useCallback(
-    async (opts: Omit<SearchAssetsOpts, 'ownerAddress' | 'creatorAddress'>) => {
+    async (
+      opts: Omit<SearchAssetsOpts, 'ownerAddress' | 'creatorAddress'> & {
+        makerName?: string
+      }
+    ) => {
       if (!wallet) return
-      // TODO: Test, make sure this is right?
-      const creator = entityCreatorKey(new PublicKey(vars?.hnt.mint || ''))[0]
-      return searchAssets(METAPLEX_URL, {
+
+      const searchParams = {
         ownerAddress: wallet.toString(),
-        creatorAddress: creator.toString(),
         ...opts,
-      })
+      } as SearchAssetsOpts
+
+      if (vars?.hnt.mint) {
+        const hnt = new PublicKey(vars.hnt.mint)
+        const key = entityCreatorKey(daoKey(hnt)[0])[0].toString()
+        searchParams.creatorAddress = key.toString()
+      }
+
+      if (opts.makerName && hemProgram) {
+        // TODO: Verify this works
+        const maker = makerKey(opts.makerName)[0]
+        const makerAcc = await hemProgram.account.makerV0.fetch(maker)
+        searchParams.collection = makerAcc.collection.toString()
+      }
+
+      return searchAssets(METAPLEX_URL, searchParams)
     },
-    [vars?.hnt.mint, wallet]
+    [hemProgram, vars?.hnt.mint, wallet]
   )
 
   const simulateTxn = useCallback(
@@ -207,8 +248,6 @@ const useSolana = ({
     vars,
   }
 }
-
-export default useSolana
 
 const SOL_NATIVE_MINT = PublicKey.default.toString()
 const getBalances = async ({
@@ -357,3 +396,5 @@ const fetchSimulatedTxn = async ({
     ownerAccount: accounts[1],
   }
 }
+
+export default useSolana

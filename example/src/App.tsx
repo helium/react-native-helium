@@ -21,6 +21,7 @@ import TransferHotspot from './TransferHotspot/TransferHotspot'
 import CreateSolanaHotspot from './CreateSolanaHotspot/CreateSolanaHotspot'
 import OraclePrice from './OraclePrice/OraclePrice'
 import { getAddressStr } from './Account/secureAccount'
+import HotspotList from './HotspotList/HotspotList'
 
 const Stack = createNativeStackNavigator()
 
@@ -34,6 +35,7 @@ export type RootStackParamList = {
   AssertLocation: undefined
   TransferHotspot: undefined
   OraclePrice: undefined
+  HotspotList: undefined
 }
 
 export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>
@@ -88,6 +90,7 @@ export default function App() {
                 component={TransferHotspot}
               />
               <Stack.Screen name="OraclePrice" component={OraclePrice} />
+              <Stack.Screen name="HotspotList" component={HotspotList} />
             </Stack.Navigator>
           </NavigationContainer>
         </HotspotBleProvider>

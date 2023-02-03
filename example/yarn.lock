@@ -1089,7 +1089,7 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@coral-xyz/anchor@^0.26.0":
+"@coral-xyz/anchor@0.26.0", "@coral-xyz/anchor@^0.26.0":
   version "0.26.0"
   resolved "https://registry.yarnpkg.com/@coral-xyz/anchor/-/anchor-0.26.0.tgz#c8e4f7177e93441afd030f22d777d54d0194d7d1"
   integrity sha512-PxRl+wu5YyptWiR9F2MBHOLLibm87Z4IMUBPreX+DYBtPM+xggvcPi0KAN7+kIL4IrIhXI8ma5V0MCXxSN1pHg==
@@ -1517,10 +1517,10 @@
     create-hash "^1.2.0"
     libsodium-wrappers "^0.7.6"
 
-"@helium/currency-utils@^0.0.24":
-  version "0.0.24"
-  resolved "https://registry.yarnpkg.com/@helium/currency-utils/-/currency-utils-0.0.24.tgz#57b1f1ef3742c547ff0e6a870eb756fdc2476a71"
-  integrity sha512-WmNq7iwTN9DwGHzqF7r2O2s2xQ/+UOxPw0VP7Wv2knF7mDKUXCx9tQpCyMyNKzomk3s8aPJjLvX/oj7sZx37mg==
+"@helium/currency-utils@^0.0.26":
+  version "0.0.26"
+  resolved "https://registry.yarnpkg.com/@helium/currency-utils/-/currency-utils-0.0.26.tgz#9c135a57dae64ca30aade89ba07b2ef5c47414df"
+  integrity sha512-kaKygcrB3plCqy6RneI83X52ITFNDk9bIZwhr1/7YVSK6DgiKl7UTeZr4/BMJyw1XLkfJs+mgkwu2SRrD8a3EA==
   dependencies:
     "@pythnetwork/client" "^2.12.0"
     "@solana/spl-token" "^0.3.7"
@@ -1546,14 +1546,14 @@
     bn.js "^5.2.0"
     bs58 "^4.0.1"
 
-"@helium/hotspot-utils@^0.0.24":
-  version "0.0.24"
-  resolved "https://registry.yarnpkg.com/@helium/hotspot-utils/-/hotspot-utils-0.0.24.tgz#93e0611ce3ddd92d61e7992cd16f5116018d9d44"
-  integrity sha512-nZSXku48DAM5tOR6QClh8oDvaVg7jJXhXNvt7kSjvziAhqJbvjLFQNmpBd7785o5RuuslPoiUgdLdAvLfssgKw==
+"@helium/hotspot-utils@^0.0.26":
+  version "0.0.26"
+  resolved "https://registry.yarnpkg.com/@helium/hotspot-utils/-/hotspot-utils-0.0.26.tgz#8ebb5f786d2d987d933bf098388ea61adcf6c363"
+  integrity sha512-d+EXYP2Or5OwGsN5kDZhy1tB6j1F4HBw6dc/zm5kODxYdMEP9T30QrUFli0DV9WvQoXyXYmOeQ4j0NbgKduJMA==
   dependencies:
+    "@coral-xyz/anchor" "^0.26.0"
     "@helium/helium-sub-daos-sdk" "^0.0.22"
     "@helium/idls" "^0.0.22"
-    "@project-serum/anchor" "^0.26.0"
     "@solana/web3.js" "^1.73.0"
     bs58 "^5.0.0"
 
@@ -1616,13 +1616,13 @@
     borsh "^0.7.0"
     bs58 "^4.0.1"
 
-"@helium/spl-utils@^0.0.24":
-  version "0.0.24"
-  resolved "https://registry.yarnpkg.com/@helium/spl-utils/-/spl-utils-0.0.24.tgz#e714dbdd708cea9c4cacfcf4fa0bd45214a94c02"
-  integrity sha512-pkKwqUTjLVCA4jz+OSE+IE4yTFIQ+6R+yH6ic2dM+DdJlaOsdtnLqs3i8z72vp/HiaU8PHmjCptE4yfQrKr7aw==
+"@helium/spl-utils@^0.0.26":
+  version "0.0.26"
+  resolved "https://registry.yarnpkg.com/@helium/spl-utils/-/spl-utils-0.0.26.tgz#539adfa29b7c043296ea01af02896a7a37219ee9"
+  integrity sha512-P++DOlzoqNkgGgMIo0yH2NqLAxjVAjy9IoP1V7jV+w5VCZEzyqRn+VTmSOwaH2WMK6qSosk6ex1xOQa/yalmEA==
   dependencies:
+    "@coral-xyz/anchor" "0.26.0"
     "@helium/address" "^4.8.1"
-    "@project-serum/anchor" "0.26.0"
     "@solana/spl-token" "^0.3.6"
     "@solana/web3.js" "^1.43.4"
     bn.js "^5.2.0"

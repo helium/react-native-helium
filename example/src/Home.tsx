@@ -30,6 +30,10 @@ const Home = () => {
         title: 'Get Oracle Price',
         handler: () => navigation.push('OraclePrice'),
       },
+      {
+        title: 'Hotspot List',
+        handler: () => navigation.push('HotspotList'),
+      },
     ],
     [navigation]
   )
