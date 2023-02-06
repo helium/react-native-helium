@@ -18,7 +18,11 @@ import {
   sendAndConfirmWithRetry,
 } from '@helium/spl-utils'
 import * as Hotspot from '@helium/hotspot-utils'
-import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import {
+  AccountLayout,
+  getAssociatedTokenAddress,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token'
 import {
   entityCreatorKey,
   init,
@@ -198,7 +202,9 @@ const useSolana = ({
       if (opts.makerName && hemProgram) {
         // TODO: Verify this works
         const maker = makerKey(opts.makerName)[0]
-        const makerAcc = await hemProgram.account.makerV0.fetch(maker)
+        const makerAcc = await hemProgram.account.makerV0.fetch(
+          maker.toString()
+        )
         searchParams.collection = makerAcc.collection.toString()
       }
 
@@ -209,24 +215,40 @@ const useSolana = ({
 
   const simulateTxn = useCallback(
     async (buff: Buffer, { maker }: { maker: PublicKey }) => {
-      if (!wallet || !vars?.hnt.mint) return
+      if (!wallet || !vars?.hnt.mint || !vars?.dc.mint || !hemProgram) return
 
-      const { makerAccount, ownerAccount } = await fetchSimulatedTxn({
-        apiUrl: clusterApiUrl(cluster),
-        maker: maker.toString(),
-        owner: wallet.toString(),
-        txnBuff: buff,
-      })
-      const balances = estimateBalanceChanges({
+      const ownerATA = await getAssociatedTokenAddress(
+        new PublicKey(vars.dc.mint),
+        wallet
+      )
+
+      const makerATA = await getAssociatedTokenAddress(
+        new PublicKey(vars.dc.mint),
+        maker
+      )
+
+      const { makerAccount, ownerAccount, makerDcAccount, ownerDcAccount } =
+        await fetchSimulatedTxn({
+          apiUrl: clusterApiUrl(cluster),
+          maker: maker.toString(),
+          owner: wallet.toString(),
+          ownerDcAccount: ownerATA.toString(),
+          makerDcAccount: makerATA.toString(),
+          txnBuff: buff,
+        })
+      const balances = await estimateBalanceChanges({
         connection,
-        owner: { key: wallet, account: ownerAccount },
-        maker: { key: maker, account: makerAccount },
-        hntMint: new PublicKey(vars.hnt.mint),
+        owner: {
+          key: wallet,
+          account: ownerAccount,
+          dcAccount: ownerDcAccount,
+        },
+        maker: { key: maker, account: makerAccount, dcAccount: makerDcAccount },
+        dcMint: new PublicKey(vars.dc.mint),
       })
-      console.log(balances)
       return balances
     },
-    [cluster, connection, vars, wallet]
+    [cluster, connection, hemProgram, vars, wallet]
   )
 
   return {
@@ -249,50 +271,31 @@ const useSolana = ({
   }
 }
 
-const SOL_NATIVE_MINT = PublicKey.default.toString()
 const getBalances = async ({
+  dcAccount,
   account,
-  key,
-  hntMint,
 }: {
+  dcAccount: any
   account: any
-  key: PublicKey
-  hntMint: PublicKey
 }) => {
-  console.log({ account })
-  const balances = { sol: 0, hnt: 0 }
+  const balances = { sol: 0, dc: 0 }
 
-  const isToken = account.owner === TOKEN_PROGRAM_ID.toString()
-  const isNativeSol = account.owner === SOL_NATIVE_MINT
-  if (isToken || isNativeSol) {
-    try {
-      if (isToken) {
-        // parse token, should be hnt
-        const tokenAccount = AccountLayout.decode(
-          Buffer.from(account.data[0], account.data[1])
-        )
-        if (!new PublicKey(tokenAccount.owner).equals(key)) {
-          // This isn't a token account we care about
-          return balances
-        }
+  try {
+    if (dcAccount) {
+      const tokenAccount = AccountLayout.decode(
+        Buffer.from(dcAccount.data[0], dcAccount.data[1])
+      )
 
-        // token mint, should be hnt
-        const tokenMint = new PublicKey(tokenAccount.mint)
-        if (!tokenMint.equals(hntMint)) {
-          throw new Error('wut!!!!!!!!!')
-        }
-        const hntBalance = BigNumber(tokenAccount.amount.toString())
-        balances.hnt = hntBalance.toNumber()
-      } else {
-        // Parse changes in native SOL balances
-        const lamportsBalance = BigNumber(
-          account.lamports.toString()
-        ).toNumber()
-        balances.sol = lamportsBalance / LAMPORTS_PER_SOL
-      }
-    } catch (error) {
-      // Decoding of token account failed, not a token account
+      const dcBalance = BigNumber(tokenAccount.amount.toString())
+      balances.dc = dcBalance.toNumber()
     }
+
+    if (account) {
+      const lamportsBalance = BigNumber(account.lamports.toString()).toNumber()
+      balances.sol = lamportsBalance / LAMPORTS_PER_SOL
+    }
+  } catch (error) {
+    // Decoding of token account failed, not a token account
   }
   return balances
 }
@@ -301,56 +304,60 @@ const estimateBalanceChanges = async ({
   connection,
   owner,
   maker,
-  hntMint,
+  dcMint,
 }: {
-  owner: { key: PublicKey; account: any }
-  maker: { key: PublicKey; account: any }
+  owner: { key: PublicKey; account: any; dcAccount: any }
+  maker: { key: PublicKey; account: any; dcAccount: any }
   connection: Connection
-  hntMint: PublicKey
+  dcMint: PublicKey
 }) => {
   const balances = {
     maker: {
       before: {
         sol: 0,
-        hnt: 0,
+        dc: 0,
       },
       after: {
         sol: 0,
-        hnt: 0,
+        dc: 0,
       },
     },
     owner: {
       before: {
         sol: 0,
-        hnt: 0,
+        dc: 0,
       },
       after: {
         sol: 0,
-        hnt: 0,
+        dc: 0,
       },
     },
   }
 
-  balances.maker.before.sol = await connection.getBalance(maker.key)
-  balances.maker.before.hnt = Number(
+  balances.maker.before.sol =
+    (await connection.getBalance(maker.key)) / LAMPORTS_PER_SOL
+  balances.maker.before.dc = Number(
     await getBalance({
       pubKey: maker.key,
-      mint: hntMint,
+      mint: dcMint,
       connection,
     })
   )
 
-  balances.owner.before.sol = await connection.getBalance(owner.key)
-  balances.owner.before.hnt = Number(
+  balances.owner.before.sol =
+    (await connection.getBalance(owner.key)) / LAMPORTS_PER_SOL
+  balances.owner.before.dc = Number(
     await getBalance({
       pubKey: owner.key,
-      mint: hntMint,
+      mint: dcMint,
       connection,
     })
   )
 
-  balances.maker.after = await getBalances({ ...maker, hntMint })
-  balances.owner.after = await getBalances({ ...owner, hntMint })
+  balances.maker.after = await getBalances(maker)
+  balances.owner.after = await getBalances(owner)
+
+  return balances
 }
 
 const fetchSimulatedTxn = async ({
@@ -358,13 +365,16 @@ const fetchSimulatedTxn = async ({
   maker,
   owner,
   txnBuff,
+  makerDcAccount,
+  ownerDcAccount,
 }: {
   apiUrl: string
   maker: string
   owner: string
   txnBuff: Buffer
+  makerDcAccount: string
+  ownerDcAccount: string
 }) => {
-  console.log({ apiUrl })
   const body = {
     jsonrpc: '2.0',
     id: 1,
@@ -377,23 +387,22 @@ const fetchSimulatedTxn = async ({
         sigVerify: false,
         accounts: {
           encoding: 'jsonParsed',
-          addresses: [maker, owner],
+          addresses: [maker, owner, makerDcAccount, ownerDcAccount],
         },
       },
     ],
   }
-  console.log({ body })
   const response = await axios.post<{ result: { value: { accounts: any[] } } }>(
     apiUrl,
     body
   )
-  console.log(response.data.result.value)
-  // TODO: No idea if this is right
   const accounts = response.data.result.value.accounts
 
   return {
     makerAccount: accounts[0],
     ownerAccount: accounts[1],
+    makerDcAccount: accounts[2],
+    ownerDcAccount: accounts[3],
   }
 }
 
