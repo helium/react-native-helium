@@ -1,9 +1,16 @@
 import React, { memo, useCallback, useEffect, useState } from 'react'
-import { Text, FlatList, StyleSheet, View } from 'react-native'
+import {
+  Text,
+  FlatList,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+} from 'react-native'
 import { useSolana } from '@helium/react-native-sdk'
 import { getAddress } from '../Account/secureAccount'
 import animalName from 'angry-purple-tiger'
 import { Asset } from '@helium/spl-utils'
+import Clipboard from '@react-native-community/clipboard'
 
 const HotspotList = () => {
   const { getHotspots: getSolHotspots } = useSolana()
@@ -22,12 +29,14 @@ const HotspotList = () => {
   const renderItem = useCallback(({ item }: { item: Asset }) => {
     const address = item.content.json_uri.split('/').slice(-1)[0]
     return (
-      <View style={styles.listItem}>
-        <Text>{animalName(address)}</Text>
-        <Text numberOfLines={1} adjustsFontSizeToFit selectable>
-          {address}
-        </Text>
-      </View>
+      <TouchableOpacity onPress={() => Clipboard.setString(address)}>
+        <View style={styles.listItem}>
+          <Text>{animalName(address)}</Text>
+          <Text numberOfLines={1} adjustsFontSizeToFit selectable>
+            {address}
+          </Text>
+        </View>
+      </TouchableOpacity>
     )
   }, [])
 
@@ -39,6 +48,7 @@ const HotspotList = () => {
     <FlatList
       data={hotspots}
       renderItem={renderItem}
+      style={styles.container}
       keyExtractor={keyExtractor}
     />
   )
@@ -48,4 +58,5 @@ export default memo(HotspotList)
 
 const styles = StyleSheet.create({
   listItem: { paddingTop: 24, paddingHorizontal: 24 },
+  container: { marginTop: 24 },
 })
