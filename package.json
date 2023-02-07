@@ -52,7 +52,7 @@
     "@commitlint/config-conventional": "^11.0.0",
     "@helium/address": "^4.8.1",
     "@helium/crypto-react-native": "^4.5.0",
-    "@helium/currency": "^4.2.0",
+    "@helium/currency": "^4.9.0",
     "@helium/http": "^4.8.1",
     "@helium/onboarding": "^4.9.0",
     "@helium/proto-ble": "^4.8.1",

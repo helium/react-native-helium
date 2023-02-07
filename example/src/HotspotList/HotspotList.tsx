@@ -58,5 +58,5 @@ export default memo(HotspotList)
 
 const styles = StyleSheet.create({
   listItem: { paddingTop: 24, paddingHorizontal: 24 },
-  container: { marginTop: 24 },
+  container: { marginTop: 48 },
 })

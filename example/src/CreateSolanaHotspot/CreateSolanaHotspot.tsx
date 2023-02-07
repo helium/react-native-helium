@@ -26,13 +26,12 @@ const CreateSolanaHotspot = () => {
   const createHotspot = useCallback(async () => {
     setSubmitted(true)
     try {
-      const txIds = await create({ makerAddress, authorization })
-      console.log({ txIds, txn })
+      await create({ makerAddress, authorization })
     } catch (e) {
       console.error(e)
     }
     setSubmitted(false)
-  }, [authorization, create, makerAddress, txn])
+  }, [authorization, create, makerAddress])
 
   return (
     <View style={styles.container}>

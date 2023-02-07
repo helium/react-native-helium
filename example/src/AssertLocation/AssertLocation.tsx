@@ -246,21 +246,25 @@ const AssertLocation = () => {
           />
         </View>
 
-        {assertData?.fees && (
+        {assertData && (
           <>
             <Text style={styles.heading}>
               Amount to assert hotspot location
             </Text>
             <Text style={styles.text}>{`isFree: ${assertData.isFree}`}</Text>
-            <Text
-              style={styles.text}
-            >{`hasSufficientBalance: ${assertData.hasSufficientBalance}`}</Text>
-            <Text
-              style={styles.text}
-            >{`Helium Fees DC: ${assertData.fees.dc?.toString()}`}</Text>
-            <Text
-              style={styles.text}
-            >{`Sol Fee: ${assertData.fees.sol?.toString()}`}</Text>
+            {assertData.ownerFees && (
+              <>
+                <Text
+                  style={styles.text}
+                >{`hasSufficientBalance: ${assertData.hasSufficientBalance}`}</Text>
+                <Text
+                  style={styles.text}
+                >{`DC Fee: ${assertData.ownerFees.dc?.toString()}`}</Text>
+                <Text
+                  style={styles.text}
+                >{`Sol Fee: ${assertData.ownerFees.sol?.toString()}`}</Text>
+              </>
+            )}
           </>
         )}
 

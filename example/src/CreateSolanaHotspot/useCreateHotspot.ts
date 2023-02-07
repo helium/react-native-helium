@@ -29,11 +29,9 @@ const useCreateRandomHotspot = () => {
       })
 
       return solana.submitAllSolana({
-        txns: (createTxns.data?.solanaTransactions || []).map((t) => {
-          const buff = Buffer.from(t)
-          console.log(buff.toString('base64'))
-          return buff
-        }),
+        txns: (createTxns.data?.solanaTransactions || []).map((t) =>
+          Buffer.from(t)
+        ),
       })
     },
     [onboardingClient, solana]

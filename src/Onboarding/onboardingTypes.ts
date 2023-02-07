@@ -9,12 +9,17 @@ import { Maker } from '@helium/onboarding'
 
 export type AssertData = {
   balances?: {
+    dc: Balance<DataCredits> | undefined
     hnt: Balance<NetworkTokens | TestNetworkTokens> | undefined
-    sol: Balance<SolTokens>
+    sol: Balance<SolTokens> | undefined
   }
   hasSufficientBalance: boolean
   isFree: boolean
-  fees?: {
+  ownerFees?: {
+    dc?: Balance<DataCredits>
+    sol?: Balance<SolTokens>
+  }
+  makerFees?: {
     dc?: Balance<DataCredits>
     sol?: Balance<SolTokens>
   }

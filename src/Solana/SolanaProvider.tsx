@@ -14,6 +14,7 @@ const initialState = {
     new Promise<web3.VersionedTransaction | undefined>((resolve) =>
       resolve(undefined)
     ),
+  getDcBalance: () => new Promise<bigint>((resolve) => resolve(0n)),
   getHntBalance: () => new Promise<bigint>((resolve) => resolve(0n)),
   getBalances: () =>
     new Promise<{
@@ -35,12 +36,26 @@ const initialState = {
   getOraclePriceFromSolana: (_opts: { tokenType: 'HNT' }) =>
     new Promise<PriceData | undefined>((resolve) => resolve(undefined)),
   getSolBalance: () => new Promise<number>((resolve) => resolve(0)),
-  simulateTxn: (
+  estimateMetaTxnFees: (
     _buff: Buffer,
     _opts: {
       maker: web3.PublicKey
     }
-  ) => new Promise<any>((resolve) => resolve(undefined)),
+  ) =>
+    new Promise<
+      | {
+          makerFees: {
+            lamports: number
+            dc: number
+          }
+          ownerFees: {
+            lamports: number
+            dc: number
+          }
+          isFree: boolean
+        }
+      | undefined
+    >((resolve) => resolve(undefined)),
   status: {
     inProgress: false,
     isHelium: false,

@@ -11,6 +11,7 @@ import { heliumAddressToSolAddress, SodiumKeyPair } from '../Account/account'
 import { createLocationTxn, getH3Location } from '../utils/assertLocation'
 import Balance, {
   CurrencyType,
+  DataCredits,
   NetworkTokens,
   SolTokens,
   TestNetworkTokens,
@@ -142,17 +143,15 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       }
 
       const solResponses = await Promise.all(
-        hotspotTypes.map(async (type) => {
-          const onboardResponse = await onboardingClient.onboard({
+        hotspotTypes.map(async (type) =>
+          onboardingClient.onboard({
             hotspotAddress,
             type,
             gain,
             elevation,
             location,
           })
-          console.log({ onboardResponse })
-          return onboardResponse
-        })
+        )
       )
 
       const solanaTransactions = solResponses
@@ -247,10 +246,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         if (!solana.vars?.hnt.mint) {
           throw new Error('Hnt mint not found')
         }
-        const balance = await solana.getHntBalance()
+        const hntBalance = await solana.getHntBalance()
+        const dcBalance = await solana.getDcBalance()
 
         return {
-          hnt: Balance.fromIntAndTicker(Number(balance), 'HNT'),
+          hnt: Balance.fromIntAndTicker(Number(hntBalance), 'HNT'),
+          dc: new Balance(Number(dcBalance || 0), CurrencyType.dataCredit),
           sol: new Balance(solBalance, CurrencyType.solTokens),
         }
       } else {
@@ -258,6 +259,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         const client = httpClient || heliumHttpClient
         const heliumBalances = await client.accounts.get(heliumAddress)
         return {
+          dc: heliumBalances.dcBalance,
           hnt: heliumBalances.balance,
           sol: new Balance(solBalance, CurrencyType.solTokens),
         }
@@ -315,6 +317,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       oraclePrice: Balance<USDollars>
       nextLocation: string
       balances: {
+        dc: Balance<DataCredits> | undefined
         hnt: Balance<NetworkTokens | TestNetworkTokens> | undefined
         sol: Balance<SolTokens>
       }
@@ -359,13 +362,16 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         : (balances.hnt?.integerBalance || 0) >=
           totalStakingAmountHnt.integerBalance
 
+      const fees = {
+        dc: totalStakingAmountDC,
+      }
+
       return {
         balances,
         hasSufficientBalance,
         isFree,
-        fees: {
-          dc: totalStakingAmountDC,
-        },
+        makerFees: isFree ? fees : undefined,
+        ownerFees: isFree ? undefined : fees,
         oraclePrice,
         assertLocationTxn: txnStr,
         payer,
@@ -397,11 +403,11 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       balances: {
         hnt: Balance<NetworkTokens | TestNetworkTokens> | undefined
         sol: Balance<SolTokens>
+        dc: Balance<DataCredits> | undefined
       }
-    }) => {
+    }): Promise<AssertData> => {
       let solanaTransactions: Buffer[] | undefined
 
-      let hasSufficientBalance = true
       const maker = onboardingRecord.maker
 
       const solanaAddress = heliumAddressToSolAddress(owner)
@@ -426,32 +432,73 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       const makerKey = heliumAddressToSolPublicKey(maker.address)
 
-      const simulated = await Promise.all(
+      const simulatedFees = await Promise.all(
         solanaTransactions.map((t) =>
-          solana.simulateTxn(t, { maker: makerKey })
+          solana.estimateMetaTxnFees(t, { maker: makerKey })
         )
       )
-      console.log({ simulated })
 
-      ///////////////////////////////////////////////////////////////////////////
-      // TODO: Set all these based on simulated txn
-      let payer = maker.address
-      let isFree = true
-      let solFee = new Balance(0, CurrencyType.solTokens)
-      let totalStakingAmountDC = new Balance(0, CurrencyType.dataCredit)
-      // const txns = solanaTransactions.map(web3.Transaction.from)
-      ///////////////////////////////////////////////////////////////////////////
+      const fees = simulatedFees.reduce(
+        (acc, current) => {
+          if (!current) return acc
+
+          const makerSolFee = Balance.fromIntAndTicker(
+            current.makerFees.lamports,
+            'SOL'
+          )
+          const ownerSolFee = Balance.fromIntAndTicker(
+            current.ownerFees.lamports,
+            'SOL'
+          )
+
+          const makerDcFee = new Balance(
+            current.makerFees.dc,
+            CurrencyType.dataCredit
+          )
+          const ownerDcFee = new Balance(
+            current.ownerFees.dc,
+            CurrencyType.dataCredit
+          )
+
+          return {
+            makerFees: {
+              sol: acc.makerFees.sol.plus(makerSolFee),
+              dc: acc.makerFees.dc.plus(makerDcFee),
+            },
+            ownerFees: {
+              sol: acc.ownerFees.sol.plus(ownerSolFee),
+              dc: acc.ownerFees.dc.plus(ownerDcFee),
+            },
+          }
+        },
+        {
+          makerFees: {
+            sol: new Balance(0, CurrencyType.solTokens),
+            dc: new Balance(0, CurrencyType.dataCredit),
+          },
+          ownerFees: {
+            sol: new Balance(0, CurrencyType.solTokens),
+            dc: new Balance(0, CurrencyType.dataCredit),
+          },
+        }
+      )
+      const isFree =
+        fees.ownerFees.dc.integerBalance <= 0 &&
+        fees.ownerFees.sol.integerBalance <= 0
+      let hasSufficientBalance = true
+      const hasSufficientSol =
+        balances.sol.integerBalance >= fees.ownerFees.sol.integerBalance
+      const hasSufficientDc =
+        (balances.dc?.integerBalance || 0) >= fees.ownerFees.dc.integerBalance
+      hasSufficientBalance = hasSufficientDc && hasSufficientSol
 
       return {
         balances,
         hasSufficientBalance,
-        fees: {
-          dc: totalStakingAmountDC,
-          sol: solFee,
-        },
+        ...fees,
         isFree,
         maker,
-        payer,
+        payer: isFree ? maker.address : owner,
         solanaTransactions: solanaTransactions.map((tx) =>
           tx.toString('base64')
         ),
