@@ -32,8 +32,8 @@ import BigNumber from 'bignumber.js'
 import { getBalance } from '@helium/currency-utils'
 import axios from 'axios'
 import { AnchorProvider, Wallet, Program } from '@coral-xyz/anchor'
-import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
 import { daoKey } from '@helium/helium-sub-daos-sdk'
+import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
 
 type Account = AccountInfo<string[]>
 
@@ -209,16 +209,17 @@ const useSolana = ({
 
       if (vars?.hnt.mint) {
         const hnt = new PublicKey(vars.hnt.mint)
-        const key = entityCreatorKey(daoKey(hnt)[0])[0].toString()
+        const hntDaoKey = daoKey(hnt)[0]
+        const key = entityCreatorKey(hntDaoKey)[0].toString()
         searchParams.creatorAddress = key.toString()
-      }
 
-      if (opts.makerName && hemProgram) {
-        const maker = makerKey(opts.makerName)[0]
-        const makerAcc = await hemProgram.account.makerV0.fetch(
-          maker.toString()
-        )
-        searchParams.collection = makerAcc.collection.toString()
+        if (opts.makerName && hemProgram) {
+          const maker = makerKey(hntDaoKey, opts.makerName)[0]
+          const makerAcc = await hemProgram.account.makerV0.fetch(
+            maker.toString()
+          )
+          searchParams.collection = makerAcc.collection.toString()
+        }
       }
 
       return searchAssets(METAPLEX_URL, searchParams)

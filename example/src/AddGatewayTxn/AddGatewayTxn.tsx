@@ -22,6 +22,7 @@ import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
 import { Buffer } from 'buffer'
 import Input from '../Input'
 import Address from '@helium/address'
+import animalName from 'angry-purple-tiger'
 
 const AddGatewayTxn = () => {
   const [txnStr, setTxnStr] = useState('')
@@ -219,6 +220,7 @@ const AddGatewayTxn = () => {
         <View>
           <Text style={styles.topMargin}>Hotspot Address:</Text>
           <Text>{hotspotAddress}</Text>
+          <Text>{animalName(hotspotAddress)}</Text>
         </View>
       </TouchableOpacity>
 
