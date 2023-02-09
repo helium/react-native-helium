@@ -22,6 +22,8 @@ const initialState = {
       transferHotspotTxn?: string | undefined
       solanaTransactions?: string[] | undefined
     }>((resolve) => resolve({})),
+  createHotspotNFT: (_signedTxn: string) =>
+    new Promise<string[]>((resolve) => resolve([])),
   getAssertData: (_opts: {
     gateway: string
     owner: string

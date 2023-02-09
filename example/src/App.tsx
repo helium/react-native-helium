@@ -66,7 +66,7 @@ export default function App() {
       heliumWallet={heliumWallet}
       solanaStatusOverride="complete"
     >
-      <OnboardingProvider baseUrl="https://onboarding.oracle.test-helium.com/api">
+      <OnboardingProvider baseUrl="https://onboarding.web.test-helium.com/api">
         <HotspotBleProvider>
           <NavigationContainer>
             <Stack.Navigator

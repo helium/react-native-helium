@@ -1,14 +1,7 @@
 import Address from '@helium/address'
-import {
-  AddGatewayV1,
-  Keypair,
-  useOnboarding,
-  useSolana,
-} from '@helium/react-native-sdk'
+import { AddGatewayV1, Keypair, useOnboarding } from '@helium/react-native-sdk'
 import axios from 'axios'
-import { useCallback, useState } from 'react'
-import { getKeypairRaw } from '../Account/secureAccount'
-import { Buffer } from 'buffer'
+import { useState } from 'react'
 
 function random(len: number): string {
   return new Array(len).join().replace(/(.|$)/g, function () {
@@ -17,37 +10,24 @@ function random(len: number): string {
   })
 }
 
-const useCreateRandomHotspot = () => {
+const useCreateHotspot = () => {
   const [txn, setTxn] = useState('')
-  const { baseUrl, onboardingClient } = useOnboarding()
-  const solana = useSolana()
-
-  const createHotspot = useCallback(
-    async (signedTxn: AddGatewayV1) => {
-      const createTxns = await onboardingClient.createHotspot({
-        transaction: signedTxn.toString(),
-      })
-
-      return solana.submitAllSolana({
-        txns: (createTxns.data?.solanaTransactions || []).map((t) =>
-          Buffer.from(t)
-        ),
-      })
-    },
-    [onboardingClient, solana]
-  )
+  const { baseUrl } = useOnboarding()
 
   const create = async ({
     authorization,
     makerAddress,
+    ownerAddress,
   }: {
+    ownerAddress?: string
     makerAddress: string
     authorization: string
   }) => {
-    const me = new Keypair(await getKeypairRaw())
     const gateway = await Keypair.makeRandom()
     const maker = Address.fromB58(makerAddress)
+    const owner = ownerAddress ? Address.fromB58(ownerAddress) : undefined
 
+    // Adds hotspot to onboarding server db
     await axios.post(
       `${baseUrl}/v3/hotspots`,
       {
@@ -66,7 +46,7 @@ const useCreateRandomHotspot = () => {
     )
 
     const nextTxn = new AddGatewayV1({
-      owner: me.address,
+      owner,
       gateway: gateway.address,
       payer: maker,
     })
@@ -76,11 +56,9 @@ const useCreateRandomHotspot = () => {
     })
 
     setTxn(signedTxn.toString())
-
-    return createHotspot(signedTxn)
   }
 
   return { txn, create }
 }
 
-export default useCreateRandomHotspot
+export default useCreateHotspot

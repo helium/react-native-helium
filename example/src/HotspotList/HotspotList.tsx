@@ -11,6 +11,7 @@ import { getAddress } from '../Account/secureAccount'
 import animalName from 'angry-purple-tiger'
 import { Asset } from '@helium/spl-utils'
 import Clipboard from '@react-native-community/clipboard'
+import Config from 'react-native-config'
 
 const HotspotList = () => {
   const { getHotspots: getSolHotspots } = useSolana()
@@ -21,7 +22,7 @@ const HotspotList = () => {
     const heliumAddress = await getAddress()
     const solHotspots = await getSolHotspots({
       heliumAddress,
-      // makerName: 'your_maker_name',
+      makerName: Config.ONBOARDING_MAKER_NAME,
     })
     setHotspots(solHotspots || [])
   }, [getSolHotspots])

@@ -8,13 +8,20 @@ import {
   TouchableOpacity,
   Switch,
 } from 'react-native'
-import { AddGateway, useOnboarding, useSolana } from '@helium/react-native-sdk'
+import {
+  AddGateway,
+  AddGatewayV1,
+  useOnboarding,
+  useSolana,
+} from '@helium/react-native-sdk'
 import { getPendingTxn } from '../../appDataClient'
 import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
 import Clipboard from '@react-native-community/clipboard'
 import { HotspotType } from '@helium/onboarding'
 import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
 import { Buffer } from 'buffer'
+import Input from '../Input'
+import Address from '@helium/address'
 
 const AddGatewayTxn = () => {
   const [txnStr, setTxnStr] = useState('')
@@ -27,8 +34,12 @@ const AddGatewayTxn = () => {
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
   const [hotspotTypes, setHotspotTypes] = useState<HotspotType[]>([])
-  const { getOnboardingRecord, submitTransactions, getOnboardTransactions } =
-    useOnboarding()
+  const {
+    createHotspotNFT,
+    getOnboardingRecord,
+    getOnboardTransactions,
+    submitTransactions,
+  } = useOnboarding()
   const {
     status: { isSolana },
   } = useSolana()
@@ -36,9 +47,10 @@ const AddGatewayTxn = () => {
   useEffect(() => {
     if (!hotspotAddress) return
 
-    getOnboardingRecord(hotspotAddress).then((r) =>
+    getOnboardingRecord(hotspotAddress).then((r) => {
+      console.log(r)
       setMacAddress(r?.macEth0 || 'unknown')
-    )
+    })
   }, [getOnboardingRecord, hotspotAddress])
 
   useEffect(() => {
@@ -57,28 +69,21 @@ const AddGatewayTxn = () => {
   const submitOnboardingTxns = useCallback(async () => {
     setSubmitted(true)
 
-    // construct and publish add gateway
-    const keypair = await getKeypairRaw()
+    const createResponse = await createHotspotNFT(txnStr)
+    if (!createResponse?.length) {
+      throw new Error('Could not create hotspot')
+    }
+
     const { addGatewayTxn, solanaTransactions } = await getOnboardTransactions({
       txn: txnStr,
       hotspotAddress,
       hotspotTypes,
     })
 
-    let addGatewaySignedTxn: string | undefined
     let solanaSignedTransactions: string[] | undefined
 
-    if (addGatewayTxn) {
-      const txnOwnerSigned = await AddGateway.signGatewayTxn(
-        addGatewayTxn,
-        keypair
-      )
-      if (!txnOwnerSigned.gateway?.b58) {
-        throw new Error('Error signing gateway txn')
-      }
-
-      addGatewaySignedTxn = txnOwnerSigned.toString()
-    } else if (solanaTransactions) {
+    if (solanaTransactions) {
+      const keypair = await getKeypairRaw()
       const solanaKeypair = getSolanaKeypair(keypair.sk)
 
       solanaSignedTransactions = solanaTransactions.map((txn) => {
@@ -93,9 +98,15 @@ const AddGatewayTxn = () => {
       throw new Error('No user found')
     }
 
+    let txnOwnerSigned: AddGatewayV1 | undefined
+    if (addGatewayTxn) {
+      const keypair = await getKeypairRaw()
+      txnOwnerSigned = await AddGateway.signGatewayTxn(txnStr, keypair)
+    }
+
     const response = await submitTransactions({
       hotspotAddress,
-      addGatewayTxn: addGatewaySignedTxn,
+      addGatewayTxn: txnOwnerSigned?.toString(),
       solanaTransactions: solanaSignedTransactions,
     })
 
@@ -111,6 +122,7 @@ const AddGatewayTxn = () => {
       setStatus('Solana Success')
     }
   }, [
+    createHotspotNFT,
     getOnboardTransactions,
     hotspotAddress,
     hotspotTypes,
@@ -148,7 +160,18 @@ const AddGatewayTxn = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.topMargin}>{`mac: ${macAddress}`}</Text>
-      <Text style={styles.topMargin}>{`owner: ${ownerAddress}`}</Text>
+      {/* <Text style={styles.topMargin}>{`owner: ${ownerAddress}`}</Text> */}
+      <Input
+        title="Owner Address"
+        style={styles.innerContainer}
+        inputProps={{
+          editable: !submitted,
+          onChangeText: setOwnerAddress,
+          value: ownerAddress,
+          placeholder: 'Enter Owner Address',
+          style: styles.input,
+        }}
+      />
       <TextInput
         onChangeText={setTxnStr}
         value={txnStr}
@@ -183,7 +206,12 @@ const AddGatewayTxn = () => {
 
       <Button
         title="Submit Transaction"
-        disabled={!txnStr || submitted || (isSolana && !hotspotTypes.length)}
+        disabled={
+          !txnStr ||
+          submitted ||
+          (isSolana && !hotspotTypes.length) ||
+          !Address.isValid(ownerAddress)
+        }
         onPress={submitOnboardingTxns}
       />
 
@@ -228,6 +256,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 16,
     alignItems: 'center',
+  },
+  innerContainer: { marginTop: 16 },
+  input: {
+    borderRadius: 12,
+    fontSize: 11,
+    paddingVertical: 16,
+    paddingLeft: 4,
+    backgroundColor: 'white',
+    marginTop: 4,
   },
 })
 export default AddGatewayTxn

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   Button,
   Linking,
@@ -11,8 +11,11 @@ import Input from '../Input'
 import useCreateHotspot from './useCreateHotspot'
 import Clipboard from '@react-native-community/clipboard'
 import Config from 'react-native-config'
+import { getAddressStr } from '../Account/secureAccount'
 
 const CreateSolanaHotspot = () => {
+  const [ownerAddress, setOwnerAddress] = useState('')
+
   const [makerAddress, setMakerAddress] = useState(
     Config.ONBOARDING_MAKER_ADDRESS || ''
   )
@@ -23,15 +26,19 @@ const CreateSolanaHotspot = () => {
   const [submitted, setSubmitted] = useState(false)
   const { txn, create } = useCreateHotspot()
 
+  useEffect(() => {
+    getAddressStr().then(setOwnerAddress)
+  }, [])
+
   const createHotspot = useCallback(async () => {
     setSubmitted(true)
     try {
-      await create({ makerAddress, authorization })
+      await create({ makerAddress, authorization, ownerAddress })
     } catch (e) {
       console.error(e)
     }
     setSubmitted(false)
-  }, [authorization, create, makerAddress])
+  }, [authorization, create, makerAddress, ownerAddress])
 
   return (
     <View style={styles.container}>
@@ -44,6 +51,18 @@ const CreateSolanaHotspot = () => {
           onChangeText: setMakerAddress,
           value: makerAddress,
           placeholder: 'Enter Maker Address',
+          style: styles.input,
+        }}
+      />
+      <Input
+        title="Owner Address"
+        style={styles.innnerContainer}
+        inputProps={{
+          multiline: true,
+          editable: !submitted,
+          onChangeText: setOwnerAddress,
+          value: ownerAddress,
+          placeholder: 'Enter Owner Address',
           style: styles.input,
         }}
       />
@@ -73,9 +92,6 @@ const CreateSolanaHotspot = () => {
       <View style={styles.innnerContainer}>
         <Button title="Create" disabled={submitted} onPress={createHotspot} />
       </View>
-      <Text>
-        Note: You will need to wait at least a minute to onboard this hotspot
-      </Text>
       <TouchableOpacity
         style={styles.buttonContainer}
         disabled={!deepLinkScheme.includes('://') || !txn}

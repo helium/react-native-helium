@@ -113,6 +113,23 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     []
   )
 
+  const createHotspotNFT = useCallback(
+    async (signedTxn: string) => {
+      if (!solana.status.isSolana) return
+
+      const createTxns = await onboardingClient.createHotspot({
+        transaction: signedTxn.toString(),
+      })
+
+      return solana.submitAllSolana({
+        txns: (createTxns.data?.solanaTransactions || []).map((t) =>
+          Buffer.from(t)
+        ),
+      })
+    },
+    [onboardingClient, solana]
+  )
+
   const getOnboardTransactions = useCallback(
     async ({
       txn,
@@ -142,7 +159,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         location = new BN(getH3Location(lat, lng), 'hex').toString()
       }
 
-      const solResponses = await Promise.all(
+      const onboardResponses = await Promise.all(
         hotspotTypes.map(async (type) =>
           onboardingClient.onboard({
             hotspotAddress,
@@ -154,15 +171,15 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         )
       )
 
-      const solanaTransactions = solResponses
+      const onboardTxns = onboardResponses
         .flatMap((r) => r.data?.solanaTransactions || [])
         .map((tx) => Buffer.from(tx).toString('base64'))
 
-      if (!solanaTransactions?.length) {
+      if (!onboardTxns?.length) {
         throw new Error('failed to create solana onboard txns')
       }
 
-      return { solanaTransactions }
+      return { solanaTransactions: onboardTxns }
     },
     [onboardingClient, solana.status.isHelium]
   )
@@ -805,6 +822,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
   return {
     baseUrl,
+    createHotspotNFT,
     createTransferTransaction,
     getAssertData,
     getMinFirmware,

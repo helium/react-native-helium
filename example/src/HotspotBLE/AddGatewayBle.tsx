@@ -16,8 +16,12 @@ import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
 import { Buffer } from 'buffer'
 
 const AddGatewayBle = () => {
-  const { getOnboardingRecord, submitTransactions, getOnboardTransactions } =
-    useOnboarding()
+  const {
+    getOnboardingRecord,
+    submitTransactions,
+    getOnboardTransactions,
+    createHotspotNFT,
+  } = useOnboarding()
   const { createAndSignGatewayTxn, getOnboardingAddress } = useHotspotBle()
   const [hash, setHash] = useState('')
   const [solTxId, setSolTxId] = useState('')
@@ -53,9 +57,13 @@ const AddGatewayBle = () => {
       ownerKeypairRaw: keypair,
       payerAddress: onboardRecord?.maker.address,
     })
-
     if (!txnOwnerSigned?.gateway?.b58) {
       throw new Error('Error signing gateway txn')
+    }
+
+    const createResponse = await createHotspotNFT(txnOwnerSigned?.toString())
+    if (!createResponse?.length) {
+      throw new Error('Could not create hotspot')
     }
 
     const { addGatewayTxn, solanaTransactions } = await getOnboardTransactions({
@@ -70,7 +78,6 @@ const AddGatewayBle = () => {
       addGatewaySignedTxn = txnOwnerSigned.toString()
     } else if (solanaTransactions) {
       const solanaKeypair = getSolanaKeypair(keypair.sk)
-
       solanaSignedTransactions = solanaTransactions.map((txn) => {
         const tx = bufferToTransaction(Buffer.from(txn, 'base64'))
         tx.partialSign(solanaKeypair)
@@ -104,6 +111,7 @@ const AddGatewayBle = () => {
     getOnboardingAddress,
     getOnboardingRecord,
     createAndSignGatewayTxn,
+    createHotspotNFT,
     getOnboardTransactions,
     hotspotTypes,
     submitTransactions,
