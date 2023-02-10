@@ -20,7 +20,7 @@ const AddGatewayBle = () => {
     getOnboardingRecord,
     submitTransactions,
     getOnboardTransactions,
-    createHotspotNFT,
+    createHotspot,
   } = useOnboarding()
   const { createAndSignGatewayTxn, getOnboardingAddress } = useHotspotBle()
   const [hash, setHash] = useState('')
@@ -61,7 +61,7 @@ const AddGatewayBle = () => {
       throw new Error('Error signing gateway txn')
     }
 
-    const createResponse = await createHotspotNFT(txnOwnerSigned?.toString())
+    const createResponse = await createHotspot(txnOwnerSigned?.toString())
     if (!createResponse?.length) {
       throw new Error('Could not create hotspot')
     }
@@ -111,7 +111,7 @@ const AddGatewayBle = () => {
     getOnboardingAddress,
     getOnboardingRecord,
     createAndSignGatewayTxn,
-    createHotspotNFT,
+    createHotspot,
     getOnboardTransactions,
     hotspotTypes,
     submitTransactions,

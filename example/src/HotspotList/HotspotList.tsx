@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import { useOnboarding, useSolana } from '@helium/react-native-sdk'
-import { getAddress } from '../Account/secureAccount'
+import { getAddressStr } from '../Account/secureAccount'
 import animalName from 'angry-purple-tiger'
-import { Asset } from '@helium/spl-utils'
+import { Asset, heliumAddressToSolAddress } from '@helium/spl-utils'
 import Clipboard from '@react-native-community/clipboard'
 import Config from 'react-native-config'
 
@@ -19,9 +19,9 @@ const HotspotList = () => {
   const [hotspots, setHotspots] = useState<Asset[]>([])
 
   const fetchHotspots = useCallback(async () => {
-    const heliumAddress = await getAddress()
+    const heliumAddress = await getAddressStr()
     const solHotspots = await getSolHotspots({
-      heliumAddress,
+      ownerAddress: heliumAddressToSolAddress(heliumAddress),
       makerName: Config.ONBOARDING_MAKER_NAME,
     })
     setHotspots(solHotspots || [])

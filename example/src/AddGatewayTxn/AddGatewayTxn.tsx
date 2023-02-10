@@ -36,7 +36,7 @@ const AddGatewayTxn = () => {
   const [failedReason, setFailedReason] = useState('')
   const [hotspotTypes, setHotspotTypes] = useState<HotspotType[]>([])
   const {
-    createHotspotNFT,
+    createHotspot,
     getOnboardingRecord,
     getOnboardTransactions,
     submitTransactions,
@@ -70,7 +70,7 @@ const AddGatewayTxn = () => {
   const submitOnboardingTxns = useCallback(async () => {
     setSubmitted(true)
 
-    const createResponse = await createHotspotNFT(txnStr)
+    const createResponse = await createHotspot(txnStr)
     if (!createResponse?.length) {
       throw new Error('Could not create hotspot')
     }
@@ -123,7 +123,7 @@ const AddGatewayTxn = () => {
       setStatus('Solana Success')
     }
   }, [
-    createHotspotNFT,
+    createHotspot,
     getOnboardTransactions,
     hotspotAddress,
     hotspotTypes,

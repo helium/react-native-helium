@@ -10,7 +10,7 @@ export type SecureAccount = {
 }
 
 const stringKeys = ['mnemonic', 'keypair', 'address'] as const
-type StringKey = typeof stringKeys[number]
+type StringKey = (typeof stringKeys)[number]
 
 export const setSecureItem = async (key: StringKey, val: string | boolean) =>
   SecureStore.setItemAsync(key, String(val))

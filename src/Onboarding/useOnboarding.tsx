@@ -113,7 +113,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     []
   )
 
-  const createHotspotNFT = useCallback(
+  const createHotspot = useCallback(
     async (signedTxn: string) => {
       if (!solana.status.isSolana) return
 
@@ -822,7 +822,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
   return {
     baseUrl,
-    createHotspotNFT,
+    createHotspot,
     createTransferTransaction,
     getAssertData,
     getMinFirmware,
