@@ -21,7 +21,14 @@ import * as Transfer from '../utils/transferHotspot'
 import { Buffer } from 'buffer'
 import { BN } from 'bn.js'
 import { useSolanaContext } from '../Solana/SolanaProvider'
-import { heliumAddressToSolPublicKey } from '@helium/spl-utils'
+import {
+  getAsset,
+  heliumAddressToSolPublicKey,
+  HNT_MINT,
+} from '@helium/spl-utils'
+import { keyToAssetKey } from '@helium/helium-entity-manager-sdk'
+import { daoKey } from '@helium/helium-sub-daos-sdk'
+import { PublicKey } from '@solana/web3.js'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
@@ -710,20 +717,31 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         return { transferHotspotTxn: txn.toString() }
       }
 
-      // TODO: Add paging
-      const hotspots = await solana.getHotspots({ page: 0 })
+      const [dao] = daoKey(
+        solana.vars?.hnt.mint ? new PublicKey(solana.vars?.hnt.mint) : HNT_MINT
+      )
+      const [keyToAssetK] = await keyToAssetKey(dao, hotspotAddress)
+      const keyToAssetAcc =
+        await solana.hemProgram?.account.keyToAssetV0.fetchNullable(keyToAssetK)
+      if (!keyToAssetAcc) {
+        throw new Error(`Hotspot not found with address ${hotspotAddress}`)
+      }
 
-      const hotspot = hotspots?.find((h) => {
-        const addy = h.content.json_uri.split('/').slice(-1)[0]
-        return addy === hotspotAddress
-      })
+      if (!solana.connection) {
+        throw new Error('No solana connection')
+      }
+
+      const hotspot = await getAsset(
+        solana.connection.rpcEndpoint,
+        keyToAssetAcc.asset
+      )
 
       if (!hotspot) {
         throw new Error('Hotspot not found for user')
       }
 
       const txn = await solana.createTransferCompressedCollectableTxn({
-        newOwnerHeliumAddress: newOwnerAddress,
+        newOwnerSolanaOrHeliumAddresss: newOwnerAddress,
         collectable: hotspot,
       })
       if (!txn) {

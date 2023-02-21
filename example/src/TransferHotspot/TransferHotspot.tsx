@@ -7,6 +7,7 @@ import Input from '../Input'
 import Address from '@helium/address'
 import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
 import { Buffer } from 'buffer'
+import { PublicKey } from '@solana/web3.js'
 
 type Props = {}
 const TransferHotspot = ({}: Props) => {
@@ -71,6 +72,7 @@ const TransferHotspot = ({}: Props) => {
         setStatus('Unknown Failure')
       }
     } catch (e) {
+      console.error(e)
       setStatus((e as { toString: () => string }).toString())
     }
   }, [
@@ -81,7 +83,9 @@ const TransferHotspot = ({}: Props) => {
   ])
 
   const disabled = useMemo(
-    () => !Address.isValid(hotspotAddress) || !Address.isValid(newOwnerAddress),
+    () =>
+      !Address.isValid(hotspotAddress) ||
+      !(Address.isValid(newOwnerAddress) || isValidSolPubkey(newOwnerAddress)),
     [hotspotAddress, newOwnerAddress]
   )
 
@@ -153,3 +157,12 @@ const styles = StyleSheet.create({
   input: { fontSize: 14, marginBottom: 24 },
   topMargin: { marginTop: 16 },
 })
+function isValidSolPubkey(newOwnerAddress: string): boolean {
+  try {
+    // eslint-disable-next-line no-new
+    new PublicKey(newOwnerAddress)
+    return true
+  } catch {
+    return false
+  }
+}

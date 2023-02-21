@@ -1,15 +1,15 @@
 import React, { createContext, ReactNode, useContext } from 'react'
-import useSolana, { createConnection } from './useSolana'
+import useSolana from './useSolana'
 import * as web3 from '@solana/web3.js'
 import { PriceData } from '@helium/currency-utils'
 import { Asset, SearchAssetsOpts } from '@helium/spl-utils'
 import { SolanaStatus } from './solanaSentinel'
 
 const initialState = {
-  connection: createConnection('devnet'),
+  connection: undefined,
   createTransferCompressedCollectableTxn: async (_opts: {
     collectable: Asset
-    newOwnerHeliumAddress: string
+    newOwnerSolanaOrHeliumAddresss: string
   }) =>
     new Promise<web3.VersionedTransaction | undefined>((resolve) =>
       resolve(undefined)
@@ -66,6 +66,7 @@ const initialState = {
   submitAllSolana: (_opts: { txns: Buffer[] }) =>
     new Promise<string[]>((resolve) => resolve([])),
   vars: undefined,
+  hemProgram: undefined,
 }
 const SolanaContext = createContext<ReturnType<typeof useSolana>>(initialState)
 const { Provider } = SolanaContext
@@ -75,15 +76,22 @@ const SolanaProvider = ({
   heliumWallet,
   cluster,
   solanaStatusOverride,
+  rpcEndpoint,
 }: {
   children: ReactNode
   cluster?: 'devnet' | 'testnet' | 'mainnet-beta'
   heliumWallet?: string
   solanaStatusOverride?: SolanaStatus
+  rpcEndpoint: string
 }) => {
   return (
     <Provider
-      value={useSolana({ cluster, heliumWallet, solanaStatusOverride })}
+      value={useSolana({
+        cluster,
+        heliumWallet,
+        solanaStatusOverride,
+        rpcEndpoint,
+      })}
     >
       {children}
     </Provider>

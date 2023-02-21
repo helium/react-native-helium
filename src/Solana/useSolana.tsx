@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Buffer } from 'buffer'
+import Address from '@helium/address'
 import {
   Connection,
   PublicKey,
@@ -13,6 +14,7 @@ import * as Currency from '@helium/currency-utils'
 import {
   Asset,
   heliumAddressToSolPublicKey,
+  HNT_MINT,
   searchAssets,
   SearchAssetsOpts,
   sendAndConfirmWithRetry,
@@ -37,29 +39,25 @@ import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manage
 
 type Account = AccountInfo<string[]>
 
-// TODO: Get urls for each cluster
-const METAPLEX_URL = 'https://rpc-devnet.aws.metaplex.com/'
-
-export const createConnection = (cluster: Cluster) =>
-  new Connection(clusterApiUrl(cluster))
-
 const useSolana = ({
-  cluster: propsCluster = 'devnet',
   heliumWallet,
   solanaStatusOverride,
+  rpcEndpoint,
+  cluster: propsCluster = 'devnet',
 }: {
   cluster?: Cluster
   heliumWallet?: string
   solanaStatusOverride?: SolanaStatus
+  rpcEndpoint: string
 }) => {
   const { isHelium, isSolana, inProgress } =
     useSolanaStatus(solanaStatusOverride)
 
   const { data: vars } = useSolanaVars(propsCluster)
 
-  const [cluster, setCluster] = useState(propsCluster)
   const [wallet, setWallet] = useState<PublicKey>()
-  const [connection, setConnection] = useState(createConnection(propsCluster))
+  const [cluster, setCluster] = useState(propsCluster)
+  const connection = useMemo(() => new Connection(rpcEndpoint), [rpcEndpoint])
   const [hemProgram, setHemProgram] = useState<Program<HeliumEntityManager>>()
 
   useEffect(() => {
@@ -88,8 +86,6 @@ const useSolana = ({
       const update = async () => {
         setCluster(propsCluster)
         setWallet(nextPubKey)
-        const nextConnection = new Connection(clusterApiUrl(cluster))
-        setConnection(nextConnection)
       }
       update()
     } catch {}
@@ -176,22 +172,24 @@ const useSolana = ({
   const createTransferCompressedCollectableTxn = useCallback(
     async ({
       collectable,
-      newOwnerHeliumAddress,
+      newOwnerSolanaOrHeliumAddresss,
     }: {
       collectable: Asset
-      newOwnerHeliumAddress: string
+      newOwnerSolanaOrHeliumAddresss: string
     }): Promise<VersionedTransaction | undefined> => {
       if (!wallet) return
-      const recipient = heliumAddressToSolPublicKey(newOwnerHeliumAddress)
+      const recipient = Address.isValid(newOwnerSolanaOrHeliumAddresss)
+        ? heliumAddressToSolPublicKey(newOwnerSolanaOrHeliumAddresss)
+        : new PublicKey(newOwnerSolanaOrHeliumAddresss)
       return Hotspot.createTransferCompressedCollectableTxn({
         collectable,
         owner: wallet,
         recipient,
         connection,
-        url: METAPLEX_URL,
+        url: rpcEndpoint,
       })
     },
-    [connection, wallet]
+    [connection, wallet, rpcEndpoint]
   )
 
   const getHotspots = useCallback(
@@ -209,22 +207,24 @@ const useSolana = ({
 
       if (vars?.hnt.mint) {
         const hnt = new PublicKey(vars.hnt.mint)
-        const hntDaoKey = daoKey(hnt)[0]
-        const key = entityCreatorKey(hntDaoKey)[0].toString()
+        const key = entityCreatorKey(daoKey(hnt)[0])[0].toString()
         searchParams.creatorAddress = key.toString()
-
-        if (opts.makerName && hemProgram) {
-          const maker = makerKey(hntDaoKey, opts.makerName)[0]
-          const makerAcc = await hemProgram.account.makerV0.fetch(
-            maker.toString()
-          )
-          searchParams.collection = makerAcc.collection.toString()
-        }
       }
 
-      return searchAssets(METAPLEX_URL, searchParams)
+      if (opts.makerName && hemProgram) {
+        const maker = makerKey(
+          daoKey(vars?.hnt.mint ? new PublicKey(vars?.hnt.mint) : HNT_MINT)[0],
+          opts.makerName
+        )[0]
+        const makerAcc = await hemProgram.account.makerV0.fetch(
+          maker.toString()
+        )
+        searchParams.collection = makerAcc.collection.toString()
+      }
+
+      return searchAssets(rpcEndpoint, searchParams)
     },
-    [hemProgram, vars?.hnt.mint, wallet]
+    [hemProgram, vars?.hnt.mint, wallet, rpcEndpoint]
   )
 
   const estimateMetaTxnFees = useCallback(
@@ -269,7 +269,7 @@ const useSolana = ({
   )
 
   return {
-    connection,
+    connection: connection as Connection | undefined,
     createTransferCompressedCollectableTxn,
     estimateMetaTxnFees,
     getDcBalance,
@@ -286,6 +286,7 @@ const useSolana = ({
     submitSolana,
     submitAllSolana,
     vars,
+    hemProgram,
   }
 }
 

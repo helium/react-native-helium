@@ -96,7 +96,7 @@ PODS:
   - libevent (2.1.12)
   - MultiplatformBleAdapter (0.1.9)
   - OpenSSL-Universal (1.1.1100)
-  - Permission-BluetoothPeripheral (3.6.1):
+  - Permission-BluetoothPeripheral (3.7.2):
     - RNPermissions
   - RCT-Folly (2021.07.22.00):
     - boost
@@ -410,9 +410,9 @@ PODS:
     - React-perflogger (= 0.70.6)
   - RNCClipboard (1.5.1):
     - React-Core
-  - RNPermissions (3.6.1):
+  - RNPermissions (3.7.2):
     - React-Core
-  - RNScreens (3.19.0):
+  - RNScreens (3.20.0):
     - React-Core
     - React-RCTImage
   - SocketRocket (0.6.0)
@@ -657,7 +657,7 @@ SPEC CHECKSUMS:
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   MultiplatformBleAdapter: 5a6a897b006764392f9cef785e4360f54fb9477d
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
-  Permission-BluetoothPeripheral: 67708853584bb9208c76d36d0e0ea4eafb97ea5b
+  Permission-BluetoothPeripheral: e6a9e5853f5fb26808c56f845cf517d6ad14d438
   RCT-Folly: 0080d0a6ebf2577475bda044aa59e2ca1f909cda
   RCTRequired: e1866f61af7049eb3d8e08e8b133abd38bc1ca7a
   RCTTypeSafety: 27c2ac1b00609a432ced1ae701247593f07f901e
@@ -692,8 +692,8 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: 15437b576139df27635400de0599d9844f1ab817
   ReactCommon: 349be31adeecffc7986a0de875d7fb0dcf4e251c
   RNCClipboard: 41d8d918092ae8e676f18adada19104fa3e68495
-  RNPermissions: dcdb7b99796bbeda6975a6e79ad519c41b251b1c
-  RNScreens: ea4cd3a853063cda19a4e3c28d2e52180c80f4eb
+  RNPermissions: 2fbbcb7244357507f958d626d58eb15fb0013d85
+  RNScreens: 218801c16a2782546d30bd2026bb625c0302d70f
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 99caf8d5ab45e9d637ee6e0174ec16fbbb01bcfc
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
