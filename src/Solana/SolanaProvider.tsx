@@ -67,6 +67,7 @@ const initialState = {
     new Promise<string[]>((resolve) => resolve([])),
   vars: undefined,
   hemProgram: undefined,
+  hsdProgram: undefined,
 }
 const SolanaContext = createContext<ReturnType<typeof useSolana>>(initialState)
 const { Provider } = SolanaContext

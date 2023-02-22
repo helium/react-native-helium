@@ -19,15 +19,17 @@ import Balance, {
 } from '@helium/currency'
 import * as Transfer from '../utils/transferHotspot'
 import { Buffer } from 'buffer'
-import { BN } from 'bn.js'
+import BN from 'bn.js'
 import { useSolanaContext } from '../Solana/SolanaProvider'
 import {
   getAsset,
   heliumAddressToSolPublicKey,
   HNT_MINT,
+  IOT_MINT,
+  MOBILE_MINT,
 } from '@helium/spl-utils'
 import { keyToAssetKey } from '@helium/helium-entity-manager-sdk'
-import { daoKey } from '@helium/helium-sub-daos-sdk'
+import { daoKey, subDaoKey } from '@helium/helium-sub-daos-sdk'
 import { PublicKey } from '@solana/web3.js'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
@@ -313,11 +315,11 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         tokenType: 'HNT',
       })
 
-      if (!hntPrice?.price) {
+      if (!hntPrice?.aggregate.price) {
         throw new Error('Failed to fetch oracle price')
       }
 
-      return Balance.fromFloat(hntPrice.price, CurrencyType.usd)
+      return Balance.fromFloat(hntPrice?.aggregate.price, CurrencyType.usd)
     },
     [checkSolanaStatus, solana]
   )
@@ -462,14 +464,48 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       const makerKey = heliumAddressToSolPublicKey(maker.address)
 
-      const simulatedFees = await Promise.all(
-        solanaTransactions.map((t) =>
-          solana.estimateMetaTxnFees(t, { maker: makerKey })
+      let simulatedFees
+      try {
+        simulatedFees = await Promise.all(
+          solanaTransactions.map((t) =>
+            solana.estimateMetaTxnFees(t, { maker: makerKey })
+          )
         )
-      )
+      } catch (e: any) {
+        if (!e.message.includes('Transaction would fail')) {
+          throw e
+        }
+        simulatedFees = await Promise.all(
+          hotspotTypes.map(async (type) => {
+            const mint = type === 'iot' ? IOT_MINT : MOBILE_MINT
+            const subDao =
+              await solana.hsdProgram?.account.subDaoV0.fetchNullable(
+                subDaoKey(mint)[0]
+              )
+
+            if (!subDao) {
+              throw new Error(`No subdao found for mint ${mint}`)
+            }
+
+            const fee = subDao.onboardingDcFee
+
+            return {
+              makerFees: {
+                lamports: 0,
+                dc: 0,
+              },
+              ownerFees: {
+                lamports: 5000,
+                dc: fee.toNumber(),
+              },
+              isFree: false,
+            }
+          })
+        )
+      }
 
       const fees = simulatedFees.reduce(
-        (acc, current) => {
+        (acc: any, current: any) => {
           if (!current) return acc
 
           const makerSolFee = Balance.fromIntAndTicker(

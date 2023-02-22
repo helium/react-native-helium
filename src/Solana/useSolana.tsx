@@ -19,6 +19,7 @@ import {
   sendAndConfirmWithRetry,
 } from '@helium/spl-utils'
 import * as Hotspot from '@helium/hotspot-utils'
+import { init as initHsd } from '@helium/helium-sub-daos-sdk'
 import {
   AccountLayout,
   getAssociatedTokenAddress,
@@ -33,8 +34,9 @@ import BigNumber from 'bignumber.js'
 import { getBalance } from '@helium/currency-utils'
 import axios from 'axios'
 import { AnchorProvider, Wallet, Program } from '@coral-xyz/anchor'
-import { daoKey } from '@helium/helium-sub-daos-sdk'
 import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
+import { HeliumSubDaos } from '@helium/idls/lib/types/helium_sub_daos'
+import { daoKey } from '@helium/helium-sub-daos-sdk'
 
 type Account = AccountInfo<string[]>
 
@@ -56,6 +58,7 @@ const useSolana = ({
 
   const connection = useMemo(() => new Connection(rpcEndpoint), [rpcEndpoint])
   const [hemProgram, setHemProgram] = useState<Program<HeliumEntityManager>>()
+  const [hsdProgram, setHsdProgram] = useState<Program<HeliumSubDaos>>()
 
   const wallet = useMemo(
     () => heliumWallet && heliumAddressToSolPublicKey(heliumWallet),
@@ -76,6 +79,7 @@ const useSolana = ({
       preflightCommitment: 'confirmed',
     })
     init(provider).then(setHemProgram)
+    initHsd(provider).then(setHsdProgram)
   }, [connection, heliumWallet, wallet])
 
   const getHntBalance = useCallback(async () => {
@@ -274,6 +278,7 @@ const useSolana = ({
     submitAllSolana,
     vars,
     hemProgram,
+    hsdProgram,
   }
 }
 
