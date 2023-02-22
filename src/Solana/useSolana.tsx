@@ -4,10 +4,9 @@ import Address from '@helium/address'
 import {
   Connection,
   PublicKey,
-  clusterApiUrl,
-  Cluster,
   VersionedTransaction,
   AccountInfo,
+  Cluster,
 } from '@solana/web3.js'
 import { SolanaStatus, useSolanaStatus, useSolanaVars } from './solanaSentinel'
 import * as Currency from '@helium/currency-utils'
@@ -55,10 +54,13 @@ const useSolana = ({
 
   const { data: vars } = useSolanaVars(propsCluster)
 
-  const [wallet, setWallet] = useState<PublicKey>()
-  const [cluster, setCluster] = useState(propsCluster)
   const connection = useMemo(() => new Connection(rpcEndpoint), [rpcEndpoint])
   const [hemProgram, setHemProgram] = useState<Program<HeliumEntityManager>>()
+
+  const wallet = useMemo(
+    () => heliumWallet && heliumAddressToSolPublicKey(heliumWallet),
+    [heliumWallet]
+  )
 
   useEffect(() => {
     if (!heliumWallet) return
@@ -76,24 +78,9 @@ const useSolana = ({
     init(provider).then(setHemProgram)
   }, [connection, heliumWallet, wallet])
 
-  useEffect(() => {
-    try {
-      if (!heliumWallet) return
-      const nextPubKey = heliumAddressToSolPublicKey(heliumWallet)
-      if (wallet && nextPubKey.equals(wallet) && cluster === propsCluster)
-        return
-
-      const update = async () => {
-        setCluster(propsCluster)
-        setWallet(nextPubKey)
-      }
-      update()
-    } catch {}
-  }, [cluster, heliumWallet, propsCluster, wallet])
-
   const getHntBalance = useCallback(async () => {
     if (!vars?.hnt.mint)
-      throw Error('HNT mint not found for ' + cluster.toString())
+      throw Error('HNT mint not found for ' + propsCluster.toString())
     if (!wallet) return
 
     return Currency.getBalance({
@@ -101,11 +88,11 @@ const useSolana = ({
       connection,
       mint: new PublicKey(vars.hnt.mint),
     })
-  }, [cluster, connection, vars?.hnt.mint, wallet])
+  }, [propsCluster, connection, vars?.hnt.mint, wallet])
 
   const getDcBalance = useCallback(async () => {
     if (!vars?.dc.mint)
-      throw Error('DC mint not found for ' + cluster.toString())
+      throw Error('DC mint not found for ' + propsCluster.toString())
     if (!wallet) return
 
     return Currency.getBalance({
@@ -113,7 +100,7 @@ const useSolana = ({
       connection,
       mint: new PublicKey(vars.dc.mint),
     })
-  }, [cluster, connection, vars?.dc.mint, wallet])
+  }, [propsCluster, connection, vars?.dc.mint, wallet])
 
   const getBalances = useCallback(async () => {
     if (!wallet) return
@@ -165,8 +152,8 @@ const useSolana = ({
     }: {
       tokenType: 'HNT'
     }): Promise<Currency.PriceData | undefined> =>
-      Currency.getOraclePrice({ tokenType, cluster, connection }),
-    [cluster, connection]
+      Currency.getOraclePrice({ tokenType, cluster: propsCluster, connection }),
+    [propsCluster, connection]
   )
 
   const createTransferCompressedCollectableTxn = useCallback(
@@ -243,7 +230,7 @@ const useSolana = ({
 
       const [makerAccount, makerDcAccount, ownerAccount, ownerDcAccount] =
         await fetchSimulatedTxn({
-          apiUrl: clusterApiUrl(cluster),
+          apiUrl: rpcEndpoint,
           accountAddresses: [
             maker.toString(),
             makerDC.toString(),
@@ -265,7 +252,7 @@ const useSolana = ({
       })
       return fees
     },
-    [cluster, connection, vars, wallet]
+    [rpcEndpoint, connection, vars, wallet]
   )
 
   return {
@@ -313,6 +300,8 @@ export const getAccountFees = async ({
 
   if (account) {
     lamportsAfter = BigNumber(account.lamports.toString()).toNumber()
+  } else {
+    lamportsAfter = lamportsBefore
   }
 
   const lamportFee = lamportsBefore - lamportsAfter
@@ -383,9 +372,13 @@ export const fetchSimulatedTxn = async ({
     ],
   }
   const response = await axios.post<{
-    result: { value: { accounts: Account[] } }
+    result: { value: { accounts: Account[]; logs: string[]; err?: any } }
   }>(apiUrl, body)
 
+  if (response.data.result.value.err) {
+    console.error(response.data.result.value.logs.join('\n'))
+    throw new Error('Transaction would fail')
+  }
   return response.data.result.value.accounts
 }
 
