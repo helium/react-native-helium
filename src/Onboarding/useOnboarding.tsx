@@ -170,6 +170,10 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
           })
         )
       )
+      const error = onboardResponses?.find((or) => or.errorMessage)
+      if (error) {
+        throw new Error(error.errorMessage)
+      }
 
       const onboardTxns = onboardResponses
         .flatMap((r) => r.data?.solanaTransactions || [])
@@ -446,6 +450,8 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       solanaTransactions = solResponses
         .flatMap((r) => r.data?.solanaTransactions || [])
         .map((txn) => Buffer.from(txn))
+
+      console.log(solResponses)
 
       const makerKey = heliumAddressToSolPublicKey(maker.address)
 
