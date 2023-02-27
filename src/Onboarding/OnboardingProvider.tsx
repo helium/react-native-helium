@@ -1,17 +1,86 @@
+import Client, { PendingTransaction } from '@helium/http'
 import React, { createContext, ReactNode, useContext } from 'react'
-import { OnboardingManager } from './onboardingTypes'
+import { AssertData } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
+import { SodiumKeyPair } from '../Account/account'
+import Balance, { CurrencyType, USDollars } from '@helium/currency'
+import OnboardingClient, {
+  HotspotType,
+  OnboardingRecord,
+} from '@helium/onboarding'
+import { Transaction } from '@solana/web3.js'
 
 const initialState = {
+  baseUrl: '',
+  createTransferTransaction: async (_opts: {
+    hotspotAddress: string
+    userAddress: string
+    newOwnerAddress: string
+    httpClient?: Client
+    ownerKeypairRaw?: SodiumKeyPair
+  }) =>
+    new Promise<{
+      transferHotspotTxn?: string | undefined
+      solanaTransactions?: string[] | undefined
+    }>((resolve) => resolve({})),
+  createHotspot: (_signedTxn: string) =>
+    new Promise<string[]>((resolve) => resolve([])),
+  getAssertData: (_opts: {
+    gateway: string
+    owner: string
+    lat: number
+    lng: number
+    decimalGain?: number
+    elevation?: number
+    httpClient?: Client
+    dataOnly?: boolean
+    hotspotTypes: HotspotType[]
+    onboardingRecord?: OnboardingRecord | null
+  }) =>
+    new Promise<AssertData>((resolve) =>
+      resolve({
+        hasSufficientBalance: true,
+        isFree: true,
+        payer: '',
+        oraclePrice: new Balance(0, CurrencyType.usd),
+      })
+    ),
   getMinFirmware: async () => '',
-  getMakers: async () => [],
   getOnboardingRecord: async (_hotspotAddress: string) => null,
-  postPaymentTransaction: async (
-    _hotspotAddress: string,
-    _transaction: string
-  ) => '',
+  getOnboardTransactions: async (_opts: {
+    txn: string
+    hotspotAddress: string
+    hotspotTypes: HotspotType[]
+    lat?: number
+    lng?: number
+    decimalGain?: number
+    elevation?: number
+  }) =>
+    new Promise<{ heliumTxn?: string; solanaTransactions?: string[] }>(
+      (resolve) => resolve({})
+    ),
+  getOraclePrice: (_httpClient?: Client) =>
+    new Promise<Balance<USDollars>>((resolve) =>
+      resolve(new Balance(0, CurrencyType.usd))
+    ),
+  onboardingClient: new OnboardingClient(''),
+  submitTransactions: (_opts: {
+    solanaTransactions?: string[] | undefined
+    hotspotAddress: string
+    addGatewayTxn?: string | undefined
+    httpClient?: Client | undefined
+    transferHotspotTxn?: string | undefined
+    assertLocationTxn?: string | undefined
+  }) =>
+    new Promise<{
+      pendingTransferTxn?: PendingTransaction
+      pendingAssertTxn?: PendingTransaction
+      pendingGatewayTxn?: PendingTransaction
+      solanaTxnIds?: string[]
+    }>((resolve) => resolve({})),
+  burnHNTForDataCredits: (_dcAmount: number) =>
+    new Promise<Transaction | undefined>((resolve) => resolve(undefined)),
 }
-
 const OnboardingContext =
   createContext<ReturnType<typeof useOnboarding>>(initialState)
 const { Provider } = OnboardingContext
@@ -29,7 +98,7 @@ const { Provider } = OnboardingContext
  * or if you will be using your own onboarding server
  *
  * ```tsx
- * <OnboardingProvider baseUrl="https://youronboardingserver.com">
+ * <OnboardingProvider baseUrl="https://youronboardingserver.com" solanaCluster="devnet">
  *     <YourRootAppComponent />
  * </OnboardingProvider>
  * ```
@@ -39,9 +108,9 @@ const OnboardingProvider = ({
   baseUrl,
 }: {
   children: ReactNode
-  baseUrl?: string
+  baseUrl: string
 }) => {
-  return <Provider value={useOnboarding(baseUrl)}>{children}</Provider>
+  return <Provider value={useOnboarding({ baseUrl })}>{children}</Provider>
 }
 
 /**
@@ -53,6 +122,7 @@ const OnboardingProvider = ({
     const { getOnboardingRecord, postPaymentTransaction } = useOnboarding()}
  * ```
  */
+export type OnboardingManager = ReturnType<typeof useOnboarding>
 export const useOnboardingContext = (): OnboardingManager =>
   useContext(OnboardingContext)
 

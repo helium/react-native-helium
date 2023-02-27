@@ -12,14 +12,19 @@ import {
   TransferHotspotV2,
 } from '@helium/transactions'
 import HotspotBleProvider, {
+  HotspotBleManager,
   useHotspotBleContext as useHotspotBle,
 } from './HotspotBle/HotspotBleProvider'
 import OnboardingProvider, {
+  OnboardingManager,
   useOnboardingContext as useOnboarding,
 } from './Onboarding/OnboardingProvider'
-import { OnboardingManager } from './Onboarding/onboardingTypes'
+import SolanaProvider, {
+  useSolanaContext as useSolana,
+  SolanaManager,
+} from './Solana/SolanaProvider'
+import { AssertData } from './Onboarding/onboardingTypes'
 import { Keypair } from '@helium/crypto-react-native'
-import { HotspotBleManager } from './HotspotBle/bleTypes'
 import { State } from 'react-native-ble-plx'
 import Balance, {
   NetworkTokens,
@@ -30,6 +35,7 @@ import Balance, {
 import { HotspotErrorCode } from './HotspotBle/useHotspotBle'
 import { heliumHttpClient, createHttpClient } from './utils/httpClient'
 export { DiagnosticInfo } from './HotspotBle/bleParse'
+import { useSolanaStatus, useSolanaVars } from './Solana/solanaSentinel'
 
 type HeliumNativeType = {
   multiply(a: number, b: number): Promise<number>
@@ -42,28 +48,34 @@ const heliumNativeModules = Helium as HeliumNativeType
 const { multiply } = heliumNativeModules
 
 export {
-  multiply,
-  HotspotBleProvider,
-  HotspotBleManager,
-  OnboardingManager,
-  OnboardingProvider,
-  useOnboarding,
-  useHotspotBle,
-  HotspotErrorCode,
   Account,
-  Keypair,
-  State,
-  AddGatewayV1,
   AddGateway,
-  Location,
-  heliumHttpClient,
-  createHttpClient,
+  AddGatewayV1,
+  AssertData,
   AssertLocationV2,
   Balance,
-  NetworkTokens,
+  createHttpClient,
   DataCredits,
+  heliumHttpClient,
+  HotspotBleManager,
+  HotspotBleProvider,
+  HotspotErrorCode,
+  Keypair,
+  Location,
+  multiply,
+  NetworkTokens,
+  OnboardingManager,
+  OnboardingProvider,
   SecurityTokens,
-  USDollars,
+  SolanaManager,
+  SolanaProvider,
+  State,
   Transfer,
   TransferHotspotV2,
+  USDollars,
+  useHotspotBle,
+  useOnboarding,
+  useSolana,
+  useSolanaStatus,
+  useSolanaVars,
 }

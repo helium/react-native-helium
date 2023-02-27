@@ -1,171 +1,137 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Button, StyleSheet, Text, View } from 'react-native'
 import {
-  AssertLocationV2,
+  Button,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native'
+import {
   Location,
+  AssertData,
   useOnboarding,
+  useSolana,
 } from '@helium/react-native-sdk'
 import Address from '@helium/address'
-import {
-  getAccount,
-  getHotspotDetails,
-  getPendingTxn,
-  submitPendingTxn,
-} from '../../appDataClient'
-import type { Account, Hotspot } from '@helium/http'
-import { getKeypair, getSecureItem } from '../Account/secureAccount'
-import type {
-  Balance,
-  DataCredits,
-  NetworkTokens,
-  USDollars,
-} from '@helium/currency'
-import { OnboardingRecord } from '@helium/onboarding'
+import { getPendingTxn } from '../../appDataClient'
+import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
 import Input from '../Input'
 import animalName from 'angry-purple-tiger'
+import Config from 'react-native-config'
+import { HotspotType } from '@helium/onboarding'
+import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
+import { Buffer } from 'buffer'
 
 const AssertLocation = () => {
-  const { getOnboardingRecord, postPaymentTransaction } = useOnboarding()
-  const [account, setAccount] = useState<Account>()
+  const { getOnboardingRecord, submitTransactions, getAssertData } =
+    useOnboarding()
+  const {
+    status: { isSolana },
+  } = useSolana()
   const [gatewayAddress, setGatewayAddress] = useState('')
   const [gatewayName, setGatewayName] = useState('')
-  const [lat, setLat] = useState('')
-  const [lng, setLng] = useState('')
-  const [gain, setGain] = useState('')
-  const [elevation, setElevation] = useState('')
+  const [lat, setLat] = useState<string>()
+  const [lng, setLng] = useState<string>()
+  const [gain, setGain] = useState<string>()
+  const [elevation, setElevation] = useState<string>()
   const [submitted, setSubmitted] = useState(false)
   const [hash, setHash] = useState('')
   const [status, setStatus] = useState('')
   const [failedReason, setFailedReason] = useState('')
-  const [ownerAddress, setOwnerAddress] = useState<string | null>(null)
-  const [hotspot, setHotspot] = useState<Hotspot>()
-  const [onboardingRecord, setOnboardingRecord] =
-    useState<OnboardingRecord | null>(null)
-  const [feeData, setFeeData] = useState<{
-    isFree: boolean
-    hasSufficientBalance: boolean
-    remainingFreeAsserts: number
-    totalStakingAmount: Balance<NetworkTokens>
-    totalStakingAmountDC: Balance<DataCredits>
-    totalStakingAmountUsd: Balance<USDollars>
-  }>()
+  const [assertData, setAssertData] = useState<AssertData>()
+  const [hotspotTypes, setHotspotTypes] = useState<HotspotType[]>([])
 
-  useEffect(() => {
-    getSecureItem('address').then(setOwnerAddress)
-  }, [])
+  const updateAssertData = useCallback(async () => {
+    if (!gatewayAddress || !lat || !lng) {
+      setAssertData(undefined)
+      return
+    }
 
-  useEffect(() => {
-    if (!ownerAddress) return
-    getAccount(ownerAddress).then(setAccount)
-  }, [ownerAddress])
+    const userAddress = await getAddressStr()
+
+    const data = await getAssertData({
+      decimalGain: gain ? parseFloat(gain) : undefined,
+      elevation: elevation ? parseFloat(elevation) : undefined,
+      gateway: gatewayAddress,
+      lat: parseFloat(lat),
+      lng: parseFloat(lng),
+      owner: userAddress,
+      hotspotTypes,
+    })
+    setAssertData(data)
+  }, [elevation, gain, gatewayAddress, getAssertData, hotspotTypes, lat, lng])
 
   useEffect(() => {
     if (!Address.isValid(gatewayAddress)) {
-      setFeeData(undefined)
-      setLat('')
-      setLng('')
-      setGain('')
-      setElevation('')
       return
     }
 
     setGatewayName(animalName(gatewayAddress))
-    getHotspotDetails(gatewayAddress)
-      .then(setHotspot)
-      .catch((e) => console.log(e))
-
-    getOnboardingRecord(gatewayAddress)
-      .then((d) => setOnboardingRecord(d))
-      .catch((e) => console.log(e))
   }, [gatewayAddress, getOnboardingRecord])
-
-  useEffect(() => {
-    if (!hotspot || !onboardingRecord || !ownerAddress || !account?.balance) {
-      return
-    }
-
-    Location.loadLocationFeeData({
-      nonce: 0,
-      accountIntegerBalance: account.balance.integerBalance,
-      dataOnly: false,
-      owner: ownerAddress,
-      locationNonceLimit: onboardingRecord.maker.locationNonceLimit,
-      makerAddress: onboardingRecord.maker.address,
-    }).then(setFeeData)
-  }, [hotspot, onboardingRecord, ownerAddress, account])
-
-  useEffect(() => {
-    if (!hotspot || !hotspot.lat || !hotspot.lng) {
-      return
-    }
-
-    setLat(hotspot.lat.toString())
-    setLng(hotspot.lng.toString())
-    setGain(hotspot.gain ? (hotspot.gain / 10).toString() : '')
-    setElevation(hotspot.elevation?.toString() || '')
-  }, [hotspot])
 
   const handleAssert = useCallback(async () => {
     if (
-      !gatewayAddress ||
-      !ownerAddress ||
-      !lat ||
-      !lng ||
-      !gain ||
-      !elevation ||
-      !onboardingRecord
-    )
+      !assertData?.assertLocationTxn &&
+      !assertData?.solanaTransactions?.length
+    ) {
       return
-
-    setSubmitted(true)
-    const ownerKeypairRaw = await getKeypair()
-    const { isFree, signedTxn } = await Location.createAndSignAssertLocationTxn(
-      {
-        gateway: gatewayAddress,
-        owner: ownerAddress,
-        lat: parseFloat(lat),
-        lng: parseFloat(lng),
-        decimalGain: parseFloat(gain),
-        elevation: parseFloat(elevation),
-        locationNonceLimit: onboardingRecord.maker.locationNonceLimit,
-        makerAddress: onboardingRecord.maker.address,
-        ownerKeypairRaw,
-        currentLocation: hotspot?.location,
-      }
-    )
-
-    let finalTxn = signedTxn
-
-    if (isFree) {
-      const onboardTxn = await postPaymentTransaction(
-        gatewayAddress,
-        finalTxn.toString()
-      )
-      if (!onboardTxn) {
-        throw new Error('Could not sign txn')
-      }
-      finalTxn = AssertLocationV2.fromString(onboardTxn)
     }
 
-    const pendingTxn = await submitPendingTxn(finalTxn.toString())
-    setHash(pendingTxn.hash)
-    setStatus(pendingTxn.status)
-    setFailedReason(pendingTxn.failedReason || '')
-  }, [
-    elevation,
-    gain,
-    gatewayAddress,
-    hotspot?.location,
-    lat,
-    lng,
-    onboardingRecord,
-    ownerAddress,
-    postPaymentTransaction,
-  ])
+    setSubmitted(true)
+    const ownerKeypairRaw = await getKeypairRaw()
+    const userAddress = await getAddressStr()
+
+    let assertLocationTxn = ''
+    let solanaTransactions: string[] | undefined
+
+    if (assertData.assertLocationTxn) {
+      const txnOwnerSigned = await Location.signAssertTxn({
+        ownerKeypairRaw,
+        assertLocationTxn: assertData.assertLocationTxn,
+        payer:
+          assertData.isFree && Config.ONBOARDING_MAKER_ADDRESS
+            ? Config.ONBOARDING_MAKER_ADDRESS
+            : userAddress,
+        owner: userAddress,
+      })
+      if (!txnOwnerSigned.gateway?.b58) {
+        throw new Error('Error signing gateway txn')
+      }
+
+      assertLocationTxn = txnOwnerSigned.toString()
+    } else if (assertData.solanaTransactions) {
+      const solanaKeypair = getSolanaKeypair(ownerKeypairRaw.sk)
+
+      solanaTransactions = assertData.solanaTransactions.map((txn) => {
+        const tx = bufferToTransaction(Buffer.from(txn, 'base64'))
+        tx.partialSign(solanaKeypair)
+        return tx.serialize().toString('base64')
+      })
+    }
+
+    const { solanaTxnIds, pendingAssertTxn } = await submitTransactions({
+      assertLocationTxn,
+      solanaTransactions,
+      hotspotAddress: gatewayAddress,
+    })
+
+    if (pendingAssertTxn) {
+      setHash(pendingAssertTxn.hash)
+      setStatus(pendingAssertTxn.status)
+      setFailedReason(pendingAssertTxn.failedReason || '')
+    } else if (solanaTxnIds?.length) {
+      setHash(solanaTxnIds.join(', '))
+      setStatus('complete')
+    } else {
+      setStatus('fail')
+    }
+    setSubmitted(false)
+  }, [assertData, gatewayAddress, submitTransactions])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
-    const pendingTxns = await (await getPendingTxn(hash)).data
+    const pendingTxns = (await getPendingTxn(hash)).data
     if (!pendingTxns.length) return
     setStatus(pendingTxns[0].status)
     setFailedReason(pendingTxns[0].failedReason || '')
@@ -178,153 +144,173 @@ const AssertLocation = () => {
     return () => clearInterval(interval)
   }, [updateTxnStatus])
 
-  const canAssert = useMemo(() => {
-    if (
-      !hotspot ||
-      !onboardingRecord ||
-      !lat ||
-      !lng ||
-      !feeData?.hasSufficientBalance ||
-      submitted
-    )
-      return false
-    const h3Location = Location.getH3Location(parseFloat(lat), parseFloat(lng))
+  const disabled = useMemo(() => {
+    if (!assertData || submitted) {
+      return true
+    }
+    return false
+  }, [assertData, submitted])
 
-    // location hasn't changed, just update antenna info, no charge
-    if (h3Location === hotspot.location) return false
-    return true
-  }, [
-    feeData?.hasSufficientBalance,
-    hotspot,
-    lat,
-    lng,
-    onboardingRecord,
-    submitted,
-  ])
-
-  const canUpdateAntenna = useMemo(() => {
-    if (
-      !hotspot ||
-      !onboardingRecord ||
-      !feeData ||
-      !gain ||
-      !elevation ||
-      submitted
-    )
-      return false
-
-    const h3Location = Location.getH3Location(parseFloat(lat), parseFloat(lng))
-    // location has changed, assert will be charged
-    if (h3Location !== hotspot.location) return false
-
-    return true
-  }, [elevation, feeData, gain, hotspot, lat, lng, onboardingRecord, submitted])
+  const handleHotspotTypeChange = useCallback(
+    (hotspotType: HotspotType) => (val: boolean) => {
+      const next = hotspotTypes.filter((t) => t !== hotspotType)
+      if (!val) {
+        setHotspotTypes(next)
+      } else {
+        setHotspotTypes([...next, hotspotType])
+      }
+    },
+    [hotspotTypes]
+  )
 
   return (
-    <View style={styles.container}>
-      <Input
-        title={`Gateway${gatewayName ? `: ${gatewayName}` : ''}`}
-        inputProps={{
-          editable: !submitted,
-          onChangeText: setGatewayAddress,
-          value: gatewayAddress,
-          placeholder: 'Enter Gateway Address',
-          style: styles.input,
-        }}
-      />
+    // eslint-disable-next-line react-native/no-inline-styles
+    <ScrollView style={{ marginTop: 48 }} canCancelContentTouches>
+      <View style={styles.container}>
+        <Input
+          title={`Gateway${gatewayName ? `: ${gatewayName}` : ''}`}
+          inputProps={{
+            editable: !submitted,
+            onChangeText: (t) => {
+              setAssertData(undefined)
+              setGatewayAddress(t)
+            },
+            value: gatewayAddress,
+            placeholder: 'Enter Gateway Address',
+            style: styles.input,
+          }}
+        />
 
-      <View style={styles.inputRow}>
-        <Input
-          style={{ ...styles.inputRowItem, ...styles.marginRight }}
-          title="Lat"
-          inputProps={{
-            editable: !submitted,
-            onChangeText: setLat,
-            value: lat,
-            placeholder: 'Lat',
-            style: styles.input,
-            keyboardType: 'decimal-pad',
-          }}
-        />
-        <Input
-          style={styles.inputRowItem}
-          title="Lng"
-          inputProps={{
-            editable: !submitted,
-            onChangeText: setLng,
-            value: lng,
-            placeholder: 'Lng',
-            style: styles.input,
-            keyboardType: 'decimal-pad',
-          }}
-        />
-      </View>
-      <View style={styles.inputRow}>
-        <Input
-          style={{ ...styles.inputRowItem, ...styles.marginRight }}
-          title="Gain"
-          inputProps={{
-            editable: !submitted,
-            onChangeText: setGain,
-            value: gain,
-            placeholder: 'Gain',
-            style: styles.input,
-            keyboardType: 'decimal-pad',
-          }}
-        />
-        <Input
-          style={styles.inputRowItem}
-          title="Elevation"
-          inputProps={{
-            editable: !submitted,
-            onChangeText: setElevation,
-            value: elevation,
-            placeholder: 'Elevation',
-            style: styles.input,
-            keyboardType: 'decimal-pad',
-          }}
-        />
-      </View>
+        <View style={styles.inputRow}>
+          <Input
+            style={{ ...styles.inputRowItem, ...styles.marginRight }}
+            title="Lat"
+            inputProps={{
+              editable: !submitted,
+              onChangeText: (t) => {
+                setAssertData(undefined)
+                setLat(t)
+              },
+              value: lat,
+              placeholder: 'Lat',
+              style: styles.input,
+              keyboardType: 'decimal-pad',
+            }}
+          />
+          <Input
+            style={styles.inputRowItem}
+            title="Lng"
+            inputProps={{
+              editable: !submitted,
+              onChangeText: (t) => {
+                setAssertData(undefined)
+                setLng(t)
+              },
+              value: lng,
+              placeholder: 'Lng',
+              style: styles.input,
+              keyboardType: 'decimal-pad',
+            }}
+          />
+        </View>
+        <View style={styles.inputRow}>
+          <Input
+            style={{ ...styles.inputRowItem, ...styles.marginRight }}
+            title="Gain"
+            inputProps={{
+              editable: !submitted,
+              onChangeText: (t) => {
+                setAssertData(undefined)
+                setGain(t)
+              },
+              value: gain,
+              placeholder: 'Gain',
+              style: styles.input,
+              keyboardType: 'decimal-pad',
+            }}
+          />
+          <Input
+            style={styles.inputRowItem}
+            title="Elevation"
+            inputProps={{
+              editable: !submitted,
+              onChangeText: (t) => {
+                setAssertData(undefined)
+                setElevation(t)
+              },
+              value: elevation,
+              placeholder: 'Elevation',
+              style: styles.input,
+              keyboardType: 'decimal-pad',
+            }}
+          />
+        </View>
 
-      {feeData && (
-        <>
-          <Text style={styles.heading}>Amount to assert hotspot location</Text>
-          <Text style={styles.text}>{`isFree: ${feeData.isFree}`}</Text>
-          <Text
-            style={styles.text}
-          >{`hasSufficientBalance: ${feeData.hasSufficientBalance}`}</Text>
-          <Text
-            style={styles.text}
-          >{`totalStakingAmount: ${feeData.totalStakingAmount.toString()}`}</Text>
-          <Text
-            style={styles.text}
-          >{`totalStakingAmountDC: ${feeData.totalStakingAmountDC.toString()}`}</Text>
-          <Text
-            style={styles.text}
-          >{`totalStakingAmountUSD: ${feeData.totalStakingAmountUsd.toString()}`}</Text>
-        </>
-      )}
-      <View style={styles.buttonRow}>
-        <Button
-          title="Assert Location"
-          onPress={handleAssert}
-          disabled={!canAssert}
-        />
-        <Button
-          title="Update Antenna"
-          onPress={handleAssert}
-          disabled={!canUpdateAntenna}
-        />
+        {assertData && (
+          <>
+            <Text style={styles.heading}>
+              Amount to assert hotspot location
+            </Text>
+            <Text style={styles.text}>{`isFree: ${assertData.isFree}`}</Text>
+            {assertData.ownerFees && (
+              <>
+                <Text
+                  style={styles.text}
+                >{`hasSufficientBalance: ${assertData.hasSufficientBalance}`}</Text>
+                <Text
+                  style={styles.text}
+                >{`DC Fee: ${assertData.ownerFees.dc?.toString()}`}</Text>
+                <Text
+                  style={styles.text}
+                >{`DC Needed: ${assertData.dcNeeded?.toString()}`}</Text>
+                <Text
+                  style={styles.text}
+                >{`Sol Fee: ${assertData.ownerFees.sol?.toString()}`}</Text>
+              </>
+            )}
+          </>
+        )}
+
+        {isSolana && (
+          <>
+            <View style={styles.switchRow}>
+              <Switch
+                onValueChange={handleHotspotTypeChange('iot')}
+                value={hotspotTypes.includes('iot')}
+              />
+              <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
+            </View>
+
+            <View style={styles.switchRow}>
+              <Switch
+                onValueChange={handleHotspotTypeChange('mobile')}
+                value={hotspotTypes.includes('mobile')}
+              />
+              <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
+            </View>
+          </>
+        )}
+        <View style={styles.buttonRow}>
+          <Button title="Update Assert Data" onPress={updateAssertData} />
+        </View>
+
+        <View style={styles.buttonRow}>
+          <Button
+            title="Assert Location"
+            onPress={handleAssert}
+            disabled={disabled}
+          />
+        </View>
+        <Text style={styles.topMargin}>Txn</Text>
+        <Text style={styles.topMargin} selectable>
+          {hash}
+        </Text>
+        <Text style={styles.topMargin}>{`Txn Status: ${status}`}</Text>
+        <Text
+          style={styles.topMargin}
+        >{`Pending Txn Failed Reason: ${failedReason}`}</Text>
       </View>
-      <Text style={styles.topMargin}>Pending Txn Hash:</Text>
-      <Text style={styles.topMargin} selectable>
-        {hash}
-      </Text>
-      <Text style={styles.topMargin}>{`Pending Txn Status: ${status}`}</Text>
-      <Text
-        style={styles.topMargin}
-      >{`Pending Txn Failed Reason: ${failedReason}`}</Text>
-    </View>
+    </ScrollView>
   )
 }
 
@@ -360,6 +346,12 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 15,
     marginLeft: 24,
+  },
+  leftMargin: { marginLeft: 8 },
+  switchRow: {
+    flexDirection: 'row',
+    marginTop: 16,
+    alignItems: 'center',
   },
 })
 

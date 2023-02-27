@@ -34,7 +34,7 @@ export enum HotspotErrorCode {
 }
 
 const WifiStatusKeys = ['connected', 'invalid', 'not_found'] as const
-export type WifiStatusType = typeof WifiStatusKeys[number]
+export type WifiStatusType = (typeof WifiStatusKeys)[number]
 
 const useHotspotBle = () => {
   const instanceRef = useRef<BleManager | null>(null)

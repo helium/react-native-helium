@@ -1,10 +1,10 @@
 import { useNavigation } from '@react-navigation/core'
 import React, { useCallback, useState } from 'react'
 import { Button, StyleSheet, Text, TextInput, View } from 'react-native'
-import { getMatchingWords } from '../../../src/Account/account'
 import { makeKeypair } from './secureAccount'
+import { Account } from '@helium/react-native-sdk'
 
-const TOTAL_WORDS = 12
+const TOTAL_WORDS = 24
 const AccountImport = () => {
   const navigation = useNavigation()
   const [word, setWord] = useState('')
@@ -31,7 +31,7 @@ const AccountImport = () => {
 
   const handleChangeText = (text: string) => {
     setWord(text)
-    setMatchingWords(getMatchingWords(text))
+    setMatchingWords(Account.getMatchingWords(text))
   }
 
   const suggestionButton = (index: number) => {
@@ -45,6 +45,12 @@ const AccountImport = () => {
     )
   }
 
+  const handleSubmit = useCallback(() => {
+    if (matchingWords.length === 0) return
+
+    handleSelectWord(matchingWords[0])()
+  }, [handleSelectWord, matchingWords])
+
   return (
     <View style={styles.container}>
       {words.length < TOTAL_WORDS && (
@@ -56,6 +62,10 @@ const AccountImport = () => {
           autoCapitalize="none"
           autoCompleteType="off"
           autoCorrect={false}
+          onSubmitEditing={handleSubmit}
+          blurOnSubmit={false}
+          returnKeyType={'next'}
+          autoFocus={true}
         />
       )}
       {words.length === TOTAL_WORDS && (
