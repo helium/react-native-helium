@@ -27,13 +27,23 @@ import {
   HNT_MINT,
   IOT_MINT,
   MOBILE_MINT,
+  DC_MINT,
+  toBN,
 } from '@helium/spl-utils'
-import { keyToAssetKey } from '@helium/helium-entity-manager-sdk'
+import {
+  keyToAssetKey,
+  rewardableEntityConfigKey,
+} from '@helium/helium-entity-manager-sdk'
 import { daoKey, subDaoKey } from '@helium/helium-sub-daos-sdk'
 import { PublicKey } from '@solana/web3.js'
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  getAssociatedTokenAddressSync,
+} from '@solana/spl-token'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
+export const FULL_LOCATION_STAKING_FEE = 1000000
 
 const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
   const solana = useSolanaContext()
@@ -120,6 +130,45 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       }
     },
     []
+  )
+
+  const burnHNTForDataCredits = useCallback(
+    async (dcAmount: number) => {
+      if (solana.status.isHelium || !solana.provider || !solana.connection) {
+        throw new Error('Helium not supported for this action')
+      }
+      const destinationWallet = solana.provider.wallet.publicKey
+
+      const txn = await solana.dcProgram?.methods
+        //  @ts-ignore  TODO: Figure out why dcAmount doesn't exist on mintDataCreditsV0
+        .mintDataCreditsV0({
+          hntAmount: null,
+          dcAmount: toBN(dcAmount, 0),
+        })
+        .preInstructions([
+          createAssociatedTokenAccountIdempotentInstruction(
+            solana.provider.wallet.publicKey,
+            getAssociatedTokenAddressSync(DC_MINT, destinationWallet, true),
+            destinationWallet,
+            DC_MINT
+          ),
+        ])
+        .accounts({
+          dcMint: DC_MINT,
+          recipient: destinationWallet,
+        })
+        .transaction()
+
+      if (!txn) return
+
+      let blockhash = (await solana.connection.getLatestBlockhash('finalized'))
+        .blockhash
+      txn.recentBlockhash = blockhash
+      txn.feePayer = destinationWallet
+
+      return txn
+    },
+    [solana]
   )
 
   const createHotspot = useCallback(
@@ -410,6 +459,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     },
     [getHeliumHotspotInfo, hasFreeAssert]
   )
+
   const getSolanaAssertData = useCallback(
     async ({
       balances,
@@ -460,11 +510,22 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         .flatMap((r) => r.data?.solanaTransactions || [])
         .map((txn) => Buffer.from(txn))
 
-      console.log(solResponses)
-
       const makerKey = heliumAddressToSolPublicKey(maker.address)
 
-      let simulatedFees
+      let simulatedFees: (
+        | {
+            makerFees: {
+              lamports: number
+              dc: number
+            }
+            ownerFees: {
+              lamports: number
+              dc: number
+            }
+            isFree: boolean
+          }
+        | undefined
+      )[]
       try {
         simulatedFees = await Promise.all(
           solanaTransactions.map((t) =>
@@ -478,16 +539,21 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         simulatedFees = await Promise.all(
           hotspotTypes.map(async (type) => {
             const mint = type === 'iot' ? IOT_MINT : MOBILE_MINT
-            const subDao =
-              await solana.hsdProgram?.account.subDaoV0.fetchNullable(
-                subDaoKey(mint)[0]
+            const subDao = subDaoKey(mint)[0]
+
+            const configKey = rewardableEntityConfigKey(
+              subDao,
+              type.toUpperCase()
+            )
+
+            const entityConfig =
+              await solana.hemProgram?.account.rewardableEntityConfigV0.fetchNullable(
+                configKey[0]
               )
-
-            if (!subDao) {
-              throw new Error(`No subdao found for mint ${mint}`)
-            }
-
-            const fee = subDao.onboardingDcFee
+            const config =
+              type === 'iot'
+                ? entityConfig?.settings.iotConfig
+                : entityConfig?.settings.mobileConfig
 
             return {
               makerFees: {
@@ -496,7 +562,11 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
               },
               ownerFees: {
                 lamports: 5000,
-                dc: fee.toNumber(),
+                dc: toBN(
+                  config?.full_location_staking_fee ||
+                    FULL_LOCATION_STAKING_FEE,
+                  0
+                ).toNumber(),
               },
               isFree: false,
             }
@@ -505,7 +575,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       }
 
       const fees = simulatedFees.reduce(
-        (acc: any, current: any) => {
+        (acc, current) => {
           if (!current) return acc
 
           const makerSolFee = Balance.fromIntAndTicker(
@@ -558,9 +628,26 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         (balances.dc?.integerBalance || 0) >= fees.ownerFees.dc.integerBalance
       hasSufficientBalance = hasSufficientDc && hasSufficientSol
 
+      let dcNeeded: Balance<DataCredits> | undefined
+      if (!hasSufficientDc) {
+        const dcFee = fees.ownerFees.dc
+        const dcBalance = balances.dc || new Balance(0, CurrencyType.dataCredit)
+        dcNeeded = dcFee.minus(dcBalance)
+        const txn = await burnHNTForDataCredits(dcNeeded.integerBalance)
+        if (txn) {
+          solanaTransactions = [
+            txn.serialize({ verifySignatures: false }),
+            ...solanaTransactions,
+          ]
+        }
+      }
+
       return {
         balances,
         hasSufficientBalance,
+        hasSufficientSol,
+        hasSufficientDc,
+        dcNeeded,
         ...fees,
         isFree,
         maker,
@@ -569,9 +656,9 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
           tx.toString('base64')
         ),
         oraclePrice,
-      }
+      } as AssertData
     },
-    [onboardingClient, solana]
+    [burnHNTForDataCredits, onboardingClient, solana]
   )
 
   const getAssertData = useCallback(
@@ -882,6 +969,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
   return {
     baseUrl,
+    burnHNTForDataCredits,
     createHotspot,
     createTransferTransaction,
     getAssertData,

@@ -14,6 +14,9 @@ export type AssertData = {
     sol: Balance<SolTokens> | undefined
   }
   hasSufficientBalance: boolean
+  hasSufficientSol?: boolean
+  hasSufficientDc?: boolean
+  dcNeeded?: Balance<DataCredits>
   isFree: boolean
   ownerFees?: {
     dc?: Balance<DataCredits>

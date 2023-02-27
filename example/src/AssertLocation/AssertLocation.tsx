@@ -131,7 +131,7 @@ const AssertLocation = () => {
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
-    const pendingTxns = await (await getPendingTxn(hash)).data
+    const pendingTxns = (await getPendingTxn(hash)).data
     if (!pendingTxns.length) return
     setStatus(pendingTxns[0].status)
     setFailedReason(pendingTxns[0].failedReason || '')
@@ -260,6 +260,9 @@ const AssertLocation = () => {
                 <Text
                   style={styles.text}
                 >{`DC Fee: ${assertData.ownerFees.dc?.toString()}`}</Text>
+                <Text
+                  style={styles.text}
+                >{`DC Needed: ${assertData.dcNeeded?.toString()}`}</Text>
                 <Text
                   style={styles.text}
                 >{`Sol Fee: ${assertData.ownerFees.sol?.toString()}`}</Text>

@@ -39,6 +39,7 @@ const HotspotList = () => {
           onPress={() => {
             Clipboard.setString(address)
             getOnboardingRecord(address).then(console.log)
+            console.log(JSON.stringify(item, null, 2))
           }}
         >
           <View style={styles.listItem}>

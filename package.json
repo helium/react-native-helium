@@ -196,6 +196,7 @@
   "dependencies": {
     "@coral-xyz/anchor": "^0.26.0",
     "@helium/currency-utils": "^0.0.40",
+    "@helium/data-credits-sdk": "^0.0.41",
     "@helium/helium-entity-manager-sdk": "^0.0.40",
     "@helium/helium-sub-daos-sdk": "^0.0.40",
     "@helium/hotspot-utils": "^0.0.40",

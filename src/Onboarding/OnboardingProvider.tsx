@@ -8,6 +8,7 @@ import OnboardingClient, {
   HotspotType,
   OnboardingRecord,
 } from '@helium/onboarding'
+import { Transaction } from '@solana/web3.js'
 
 const initialState = {
   baseUrl: '',
@@ -77,6 +78,8 @@ const initialState = {
       pendingGatewayTxn?: PendingTransaction
       solanaTxnIds?: string[]
     }>((resolve) => resolve({})),
+  burnHNTForDataCredits: (_dcAmount: number) =>
+    new Promise<Transaction | undefined>((resolve) => resolve(undefined)),
 }
 const OnboardingContext =
   createContext<ReturnType<typeof useOnboarding>>(initialState)

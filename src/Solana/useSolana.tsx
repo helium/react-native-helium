@@ -20,6 +20,7 @@ import {
 } from '@helium/spl-utils'
 import * as Hotspot from '@helium/hotspot-utils'
 import { init as initHsd } from '@helium/helium-sub-daos-sdk'
+import { init as initDc } from '@helium/data-credits-sdk'
 import {
   AccountLayout,
   getAssociatedTokenAddress,
@@ -36,6 +37,7 @@ import axios from 'axios'
 import { AnchorProvider, Wallet, Program } from '@coral-xyz/anchor'
 import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
 import { HeliumSubDaos } from '@helium/idls/lib/types/helium_sub_daos'
+import { DataCredits } from '@helium/idls/lib/types/data_credits'
 import { daoKey } from '@helium/helium-sub-daos-sdk'
 
 type Account = AccountInfo<string[]>
@@ -57,6 +59,7 @@ const useSolana = ({
   const { data: vars } = useSolanaVars(propsCluster)
 
   const connection = useMemo(() => new Connection(rpcEndpoint), [rpcEndpoint])
+  const [dcProgram, setDcProgram] = useState<Program<DataCredits>>()
   const [hemProgram, setHemProgram] = useState<Program<HeliumEntityManager>>()
   const [hsdProgram, setHsdProgram] = useState<Program<HeliumSubDaos>>()
 
@@ -65,9 +68,7 @@ const useSolana = ({
     [heliumWallet]
   )
 
-  useEffect(() => {
-    if (!heliumWallet) return
-
+  const provider = useMemo(() => {
     // TODO: Is this right?
     const anchorWallet = {
       get publicKey() {
@@ -75,12 +76,18 @@ const useSolana = ({
       },
     } as Wallet
 
-    const provider = new AnchorProvider(connection, anchorWallet, {
+    return new AnchorProvider(connection, anchorWallet, {
       preflightCommitment: 'confirmed',
     })
+  }, [connection, wallet])
+
+  useEffect(() => {
+    if (!provider) return
+
     init(provider).then(setHemProgram)
     initHsd(provider).then(setHsdProgram)
-  }, [connection, heliumWallet, wallet])
+    initDc(provider).then(setDcProgram)
+  }, [provider])
 
   const getHntBalance = useCallback(async () => {
     if (!vars?.hnt.mint)
@@ -145,8 +152,13 @@ const useSolana = ({
   )
 
   const submitAllSolana = useCallback(
-    ({ txns }: { txns: Buffer[] }) =>
-      Promise.all(txns.map((txn) => submitSolana({ txn }))),
+    async ({ txns }: { txns: Buffer[] }) => {
+      const results = [] as string[]
+      for (const txn of txns) {
+        results.push(await submitSolana({ txn }))
+      }
+      return results
+    },
     [submitSolana]
   )
 
@@ -279,6 +291,8 @@ const useSolana = ({
     vars,
     hemProgram,
     hsdProgram,
+    dcProgram,
+    provider: provider as AnchorProvider | undefined,
   }
 }
 
@@ -320,10 +334,6 @@ export const getAccountFees = async ({
     const dcBalance = BigNumber(tokenAccount.amount.toString())
     dcAfter = dcBalance.toNumber()
     dcFee = dcBefore - dcAfter
-    // TODO: will dc show as negative if they don't have enough?
-  } else if (lamportFee) {
-    // TODO: they have no dc and they are the payer, now what?
-    dcFee = 1000000
   }
 
   return { lamports: lamportFee, dc: dcFee }
