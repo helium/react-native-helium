@@ -31,7 +31,9 @@ import {
   toBN,
 } from '@helium/spl-utils'
 import {
+  iotInfoKey,
   keyToAssetKey,
+  mobileInfoKey,
   rewardableEntityConfigKey,
 } from '@helium/helium-entity-manager-sdk'
 import { daoKey, subDaoKey } from '@helium/helium-sub-daos-sdk'
@@ -140,14 +142,13 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       const destinationWallet = solana.provider.wallet.publicKey
 
       const txn = await solana.dcProgram?.methods
-        //  @ts-ignore  TODO: Figure out why dcAmount doesn't exist on mintDataCreditsV0
         .mintDataCreditsV0({
           hntAmount: null,
           dcAmount: toBN(dcAmount, 0),
         })
         .preInstructions([
           createAssociatedTokenAccountIdempotentInstruction(
-            solana.provider.wallet.publicKey,
+            destinationWallet,
             getAssociatedTokenAddressSync(DC_MINT, destinationWallet, true),
             destinationWallet,
             DC_MINT
@@ -555,6 +556,33 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
                 ? entityConfig?.settings.iotConfig
                 : entityConfig?.settings.mobileConfig
 
+            let prevLocation: BN | null | undefined
+            if (type === 'iot') {
+              const [info] = iotInfoKey(configKey[0], gateway)
+              const iot =
+                await solana.hemProgram?.account.iotHotspotInfoV0.fetch(info)
+              prevLocation = iot?.location
+            } else {
+              const [info] = await mobileInfoKey(configKey[0], gateway)
+              const mobile =
+                await solana.hemProgram?.account.mobileHotspotInfoV0.fetch(info)
+              prevLocation = mobile?.location
+            }
+
+            let locationChanged = true
+
+            if (nextLocation && prevLocation) {
+              locationChanged = !prevLocation.eq(new BN(nextLocation, 'hex'))
+            }
+
+            let dcFee = 0
+            if (locationChanged) {
+              dcFee = toBN(
+                config?.full_location_staking_fee || FULL_LOCATION_STAKING_FEE,
+                0
+              ).toNumber()
+            }
+
             return {
               makerFees: {
                 lamports: 0,
@@ -562,11 +590,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
               },
               ownerFees: {
                 lamports: 5000,
-                dc: toBN(
-                  config?.full_location_staking_fee ||
-                    FULL_LOCATION_STAKING_FEE,
-                  0
-                ).toNumber(),
+                dc: dcFee,
               },
               isFree: false,
             }
@@ -621,19 +645,18 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       const isFree =
         fees.ownerFees.dc.integerBalance <= 0 &&
         fees.ownerFees.sol.integerBalance <= 0
-      let hasSufficientBalance = true
       const hasSufficientSol =
         balances.sol.integerBalance >= fees.ownerFees.sol.integerBalance
       const hasSufficientDc =
         (balances.dc?.integerBalance || 0) >= fees.ownerFees.dc.integerBalance
-      hasSufficientBalance = hasSufficientDc && hasSufficientSol
 
       let dcNeeded: Balance<DataCredits> | undefined
       if (!hasSufficientDc) {
         const dcFee = fees.ownerFees.dc
         const dcBalance = balances.dc || new Balance(0, CurrencyType.dataCredit)
         dcNeeded = dcFee.minus(dcBalance)
-        const txn = await burnHNTForDataCredits(dcNeeded.integerBalance)
+        const dcToHnt = dcNeeded.toNetworkTokens(oraclePrice)
+        const txn = await burnHNTForDataCredits(dcToHnt.floatBalance)
         if (txn) {
           solanaTransactions = [
             txn.serialize({ verifySignatures: false }),
@@ -642,11 +665,34 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         }
       }
 
+      let hasSufficientHnt = true
+      if (!hasSufficientDc) {
+        const dcFee = fees.ownerFees.dc
+        const dcBalance = balances.dc || new Balance(0, CurrencyType.dataCredit)
+        dcNeeded = dcFee.minus(dcBalance)
+        const hntNeeded = dcNeeded.toNetworkTokens(oraclePrice)
+        hasSufficientHnt =
+          (balances.hnt?.integerBalance || 0) >= hntNeeded.integerBalance
+
+        if (hasSufficientHnt) {
+          const txn = await burnHNTForDataCredits(dcNeeded.floatBalance)
+          if (txn) {
+            solanaTransactions = [
+              txn.serialize({ verifySignatures: false }),
+              ...solanaTransactions,
+            ]
+          }
+        }
+      }
+      const hasSufficientBalance =
+        (hasSufficientDc || hasSufficientHnt) && hasSufficientSol
+
       return {
         balances,
         hasSufficientBalance,
         hasSufficientSol,
         hasSufficientDc,
+        hasSufficientHnt,
         dcNeeded,
         ...fees,
         isFree,

@@ -22,6 +22,7 @@ import CreateSolanaHotspot from './CreateSolanaHotspot/CreateSolanaHotspot'
 import OraclePrice from './OraclePrice/OraclePrice'
 import { getAddressStr } from './Account/secureAccount'
 import HotspotList from './HotspotList/HotspotList'
+import Config from 'react-native-config'
 
 const Stack = createNativeStackNavigator()
 
@@ -63,11 +64,16 @@ export default function App() {
   return (
     <SolanaProvider
       cluster="devnet"
-      rpcEndpoint="https://api.devnet.rpcpool.com/95eb1755-7ea0-4512-acac-822a5f2f9931"
+      rpcEndpoint={`https://rpc-devnet.helius.xyz?api-key=${Config.HELIUS_API_KEY}`}
       heliumWallet={heliumWallet}
       solanaStatusOverride="complete"
     >
-      <OnboardingProvider baseUrl="https://onboarding.web.test-helium.com/api">
+      <OnboardingProvider
+        baseUrl={
+          Config.ONBOARDING_BASE_URL ||
+          'https://onboarding.web.test-helium.com/api'
+        }
+      >
         <HotspotBleProvider>
           <NavigationContainer>
             <Stack.Navigator

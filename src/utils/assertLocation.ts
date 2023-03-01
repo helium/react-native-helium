@@ -7,7 +7,7 @@
 import Address from '@helium/address'
 import { AssertLocationV2 } from '@helium/transactions'
 import { getKeypair, SodiumKeyPair } from '../Account/account'
-import { geoToH3 } from 'h3-js'
+import { latLngToCell } from 'h3-js'
 import { Hotspot } from '@helium/http'
 import { isSolHotspot } from './isSolHotspot'
 import { Asset } from '@helium/spl-utils'
@@ -23,7 +23,7 @@ const DEFAULT_H3_RES = 12
  * @param res
  */
 export const getH3Location = (lat: number, lng: number, res = DEFAULT_H3_RES) =>
-  geoToH3(lat, lng, res)
+  latLngToCell(lat, lng, res)
 
 export const getStakingFee = ({
   updatingLocation,

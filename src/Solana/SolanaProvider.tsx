@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext } from 'react'
-import useSolana from './useSolana'
+import useSolana, { HotspotMeta } from './useSolana'
 import * as web3 from '@solana/web3.js'
 import { PriceData } from '@helium/currency-utils'
 import { Asset, SearchAssetsOpts } from '@helium/spl-utils'
@@ -30,6 +30,8 @@ const initialState = {
         mobileBalance: 0n,
       })
     ),
+  getHotspotDetails: (_opts: { address: string; type?: 'MOBILE' | 'IOT' }) =>
+    new Promise<HotspotMeta | undefined>((resolve) => resolve(undefined)),
   getHotspots: (
     _opts: Omit<SearchAssetsOpts, 'ownerAddress' | 'creatorAddress'>
   ) => new Promise<Asset[]>((resolve) => resolve([])),
