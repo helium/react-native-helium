@@ -645,26 +645,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       const isFree =
         fees.ownerFees.dc.integerBalance <= 0 &&
         fees.ownerFees.sol.integerBalance <= 0
-      const hasSufficientSol =
+      let hasSufficientSol =
         balances.sol.integerBalance >= fees.ownerFees.sol.integerBalance
       const hasSufficientDc =
         (balances.dc?.integerBalance || 0) >= fees.ownerFees.dc.integerBalance
 
       let dcNeeded: Balance<DataCredits> | undefined
-      if (!hasSufficientDc) {
-        const dcFee = fees.ownerFees.dc
-        const dcBalance = balances.dc || new Balance(0, CurrencyType.dataCredit)
-        dcNeeded = dcFee.minus(dcBalance)
-        const dcToHnt = dcNeeded.toNetworkTokens(oraclePrice)
-        const txn = await burnHNTForDataCredits(dcToHnt.floatBalance)
-        if (txn) {
-          solanaTransactions = [
-            txn.serialize({ verifySignatures: false }),
-            ...solanaTransactions,
-          ]
-        }
-      }
-
       let hasSufficientHnt = true
       if (!hasSufficientDc) {
         const dcFee = fees.ownerFees.dc
@@ -675,12 +661,18 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
           (balances.hnt?.integerBalance || 0) >= hntNeeded.integerBalance
 
         if (hasSufficientHnt) {
-          const txn = await burnHNTForDataCredits(dcNeeded.floatBalance)
+          const txn = await burnHNTForDataCredits(dcNeeded.integerBalance)
           if (txn) {
             solanaTransactions = [
               txn.serialize({ verifySignatures: false }),
               ...solanaTransactions,
             ]
+            fees.ownerFees.sol = fees.ownerFees.sol.plus(
+              Balance.fromIntAndTicker(TXN_FEE_IN_LAMPORTS, 'SOL')
+            )
+
+            hasSufficientSol =
+              balances.sol.integerBalance >= fees.ownerFees.sol.integerBalance
           }
         }
       }
