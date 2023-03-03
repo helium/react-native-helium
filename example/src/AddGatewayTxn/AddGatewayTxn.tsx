@@ -70,10 +70,7 @@ const AddGatewayTxn = () => {
   const submitOnboardingTxns = useCallback(async () => {
     setSubmitted(true)
 
-    const createResponse = await createHotspot(txnStr)
-    if (!createResponse?.length) {
-      throw new Error('Could not create hotspot')
-    }
+    await createHotspot(txnStr)
 
     const { addGatewayTxn, solanaTransactions } = await getOnboardTransactions({
       txn: txnStr,

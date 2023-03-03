@@ -37,11 +37,11 @@ import {
   rewardableEntityConfigKey,
 } from '@helium/helium-entity-manager-sdk'
 import { daoKey, subDaoKey } from '@helium/helium-sub-daos-sdk'
-import { PublicKey } from '@solana/web3.js'
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
 } from '@solana/spl-token'
+import { AddGateway } from '..'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
@@ -172,9 +172,37 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     [solana]
   )
 
+  const getKeyToAsset = useCallback(
+    async (hotspotAddress: string) => {
+      const [dao] = daoKey(HNT_MINT)
+      const [keyToAssetK] = keyToAssetKey(dao, hotspotAddress)
+      const keyToAssetAcc =
+        await solana.hemProgram?.account.keyToAssetV0.fetchNullable(keyToAssetK)
+      if (!keyToAssetAcc) {
+        return
+      }
+
+      return keyToAssetAcc.asset
+    },
+    [solana.hemProgram?.account.keyToAssetV0]
+  )
+
   const createHotspot = useCallback(
     async (signedTxn: string) => {
       if (!solana.status.isSolana) return
+
+      const gatewayTxn = AddGateway.txnFromString(signedTxn)
+
+      const address = gatewayTxn.gateway?.b58
+      if (!address) {
+        throw Error('Invalid add gateway txn')
+      }
+
+      const hotspotPubKey = await getKeyToAsset(address)
+
+      if (hotspotPubKey) {
+        return []
+      }
 
       const createTxns = await onboardingClient.createHotspot({
         transaction: signedTxn.toString(),
@@ -186,7 +214,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         ),
       })
     },
-    [onboardingClient, solana]
+    [getKeyToAsset, onboardingClient, solana]
   )
 
   const getOnboardTransactions = useCallback(
@@ -878,23 +906,18 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         return { transferHotspotTxn: txn.toString() }
       }
 
-      const [dao] = daoKey(
-        solana.vars?.hnt.mint ? new PublicKey(solana.vars?.hnt.mint) : HNT_MINT
-      )
-      const [keyToAssetK] = await keyToAssetKey(dao, hotspotAddress)
-      const keyToAssetAcc =
-        await solana.hemProgram?.account.keyToAssetV0.fetchNullable(keyToAssetK)
-      if (!keyToAssetAcc) {
-        throw new Error(`Hotspot not found with address ${hotspotAddress}`)
-      }
-
       if (!solana.connection) {
         throw new Error('No solana connection')
       }
 
+      const hotspotPubKey = await getKeyToAsset(hotspotAddress)
+      if (!hotspotPubKey) {
+        throw Error('Hotspot not found')
+      }
+
       const hotspot = await getAsset(
         solana.connection.rpcEndpoint,
-        keyToAssetAcc.asset
+        hotspotPubKey
       )
 
       if (!hotspot) {
@@ -912,7 +935,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         solanaTransactions: [Buffer.from(txn.serialize()).toString('base64')],
       }
     },
-    [checkSolanaStatus, solana]
+    [checkSolanaStatus, getKeyToAsset, solana]
   )
 
   const submitSolanaTransactions = useCallback(
