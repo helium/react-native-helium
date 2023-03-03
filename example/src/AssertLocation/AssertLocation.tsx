@@ -255,6 +255,7 @@ const AssertLocation = () => {
             {`SOL Fee to Owner: ${assertData.ownerFees?.sol?.toString()}\n`}
             {`DC Fee to Maker: ${assertData.makerFees?.dc?.toString()}\n`}
             {`SOL Fee to Maker: ${assertData.makerFees?.sol?.toString()}\n`}
+            {`Amount to Burn: ${assertData.dcNeeded?.toString()}\n`}
           </Text>
         )}
 
