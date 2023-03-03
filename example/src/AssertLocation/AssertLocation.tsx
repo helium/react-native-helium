@@ -145,7 +145,7 @@ const AssertLocation = () => {
   }, [updateTxnStatus])
 
   const disabled = useMemo(() => {
-    if (!assertData || submitted) {
+    if (!assertData?.hasSufficientBalance || submitted) {
       return true
     }
     return false
@@ -247,28 +247,15 @@ const AssertLocation = () => {
         </View>
 
         {assertData && (
-          <>
-            <Text style={styles.heading}>
-              Amount to assert hotspot location
-            </Text>
-            <Text style={styles.text}>{`isFree: ${assertData.isFree}`}</Text>
-            {assertData.ownerFees && (
-              <>
-                <Text
-                  style={styles.text}
-                >{`hasSufficientBalance: ${assertData.hasSufficientBalance}`}</Text>
-                <Text
-                  style={styles.text}
-                >{`DC Fee: ${assertData.ownerFees.dc?.toString()}`}</Text>
-                <Text
-                  style={styles.text}
-                >{`DC Needed: ${assertData.dcNeeded?.toString()}`}</Text>
-                <Text
-                  style={styles.text}
-                >{`Sol Fee: ${assertData.ownerFees.sol?.toString()}`}</Text>
-              </>
-            )}
-          </>
+          <Text style={[styles.text, styles.topMargin]}>
+            {`isFree: ${assertData.isFree}\n`}
+            {`hasSufficientBalance: ${assertData.hasSufficientBalance}\n`}
+            {`hasSufficientHnt: ${assertData.hasSufficientHnt}\n`}
+            {`DC Fee to Owner: ${assertData.ownerFees?.dc?.toString()}\n`}
+            {`SOL Fee to Owner: ${assertData.ownerFees?.sol?.toString()}\n`}
+            {`DC Fee to Maker: ${assertData.makerFees?.dc?.toString()}\n`}
+            {`SOL Fee to Maker: ${assertData.makerFees?.sol?.toString()}\n`}
+          </Text>
         )}
 
         {isSolana && (

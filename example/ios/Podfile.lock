@@ -90,13 +90,13 @@ PODS:
     - FlipperKit/FlipperKitNetworkPlugin
   - fmt (6.2.1)
   - glog (0.3.5)
-  - helium-react-native-sdk (1.0.0):
+  - helium-react-native-sdk (2.0.1):
     - React-Core
   - hermes-engine (0.70.6)
   - libevent (2.1.12)
   - MultiplatformBleAdapter (0.1.9)
   - OpenSSL-Universal (1.1.1100)
-  - Permission-BluetoothPeripheral (3.7.2):
+  - Permission-BluetoothPeripheral (3.7.3):
     - RNPermissions
   - RCT-Folly (2021.07.22.00):
     - boost
@@ -410,7 +410,7 @@ PODS:
     - React-perflogger (= 0.70.6)
   - RNCClipboard (1.5.1):
     - React-Core
-  - RNPermissions (3.7.2):
+  - RNPermissions (3.7.3):
     - React-Core
   - RNScreens (3.20.0):
     - React-Core
@@ -652,12 +652,12 @@ SPEC CHECKSUMS:
   FlipperKit: cbdee19bdd4e7f05472a66ce290f1b729ba3cb86
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
-  helium-react-native-sdk: bbe6bc62f4ae96da00c4579a99af5e726e08c8b2
+  helium-react-native-sdk: 0799f39a8c73c0dd6e8ca5df3aafd3d2c408731a
   hermes-engine: 2af7b7a59128f250adfd86f15aa1d5a2ecd39995
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   MultiplatformBleAdapter: 5a6a897b006764392f9cef785e4360f54fb9477d
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
-  Permission-BluetoothPeripheral: e6a9e5853f5fb26808c56f845cf517d6ad14d438
+  Permission-BluetoothPeripheral: a5c0a5bbe7a741460605983579f78a0a9203d9f7
   RCT-Folly: 0080d0a6ebf2577475bda044aa59e2ca1f909cda
   RCTRequired: e1866f61af7049eb3d8e08e8b133abd38bc1ca7a
   RCTTypeSafety: 27c2ac1b00609a432ced1ae701247593f07f901e
@@ -692,7 +692,7 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: 15437b576139df27635400de0599d9844f1ab817
   ReactCommon: 349be31adeecffc7986a0de875d7fb0dcf4e251c
   RNCClipboard: 41d8d918092ae8e676f18adada19104fa3e68495
-  RNPermissions: 2fbbcb7244357507f958d626d58eb15fb0013d85
+  RNPermissions: 314155ed6ce65237e7bd9fb6239219cce83228d3
   RNScreens: 218801c16a2782546d30bd2026bb625c0302d70f
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 99caf8d5ab45e9d637ee6e0174ec16fbbb01bcfc

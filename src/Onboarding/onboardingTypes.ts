@@ -15,6 +15,7 @@ export type AssertData = {
   }
   hasSufficientBalance: boolean
   hasSufficientSol?: boolean
+  hasSufficientHnt?: boolean
   hasSufficientDc?: boolean
   dcNeeded?: Balance<DataCredits>
   isFree: boolean

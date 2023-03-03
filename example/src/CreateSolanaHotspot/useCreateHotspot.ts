@@ -1,5 +1,6 @@
 import Address from '@helium/address'
 import { AddGatewayV1, Keypair, useOnboarding } from '@helium/react-native-sdk'
+import { heliumAddressFromSolAddress } from '@helium/spl-utils'
 import axios from 'axios'
 import { useState } from 'react'
 
@@ -25,7 +26,14 @@ const useCreateHotspot = () => {
   }) => {
     const gateway = await Keypair.makeRandom()
     const maker = Address.fromB58(makerAddress)
-    const owner = ownerAddress ? Address.fromB58(ownerAddress) : undefined
+    let owner: Address | undefined
+    if (ownerAddress) {
+      try {
+        owner = Address.fromB58(ownerAddress)
+      } catch {
+        owner = Address.fromB58(heliumAddressFromSolAddress(ownerAddress))
+      }
+    }
 
     // Adds hotspot to onboarding server db
     await axios.post(

@@ -14,12 +14,14 @@ import {
   Asset,
   heliumAddressToSolPublicKey,
   HNT_MINT,
+  IOT_MINT,
+  MOBILE_MINT,
   searchAssets,
   SearchAssetsOpts,
   sendAndConfirmWithRetry,
 } from '@helium/spl-utils'
 import * as Hotspot from '@helium/hotspot-utils'
-import { init as initHsd } from '@helium/helium-sub-daos-sdk'
+import { init as initHsd, subDaoKey } from '@helium/helium-sub-daos-sdk'
 import { init as initDc } from '@helium/data-credits-sdk'
 import {
   AccountLayout,
@@ -29,18 +31,28 @@ import {
 import {
   entityCreatorKey,
   init,
+  iotInfoKey,
   makerKey,
+  mobileInfoKey,
+  rewardableEntityConfigKey,
 } from '@helium/helium-entity-manager-sdk'
-import BigNumber from 'bignumber.js'
 import { getBalance } from '@helium/currency-utils'
 import axios from 'axios'
-import { AnchorProvider, Wallet, Program } from '@coral-xyz/anchor'
+import { AnchorProvider, Wallet, Program, BN } from '@coral-xyz/anchor'
 import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
 import { HeliumSubDaos } from '@helium/idls/lib/types/helium_sub_daos'
 import { DataCredits } from '@helium/idls/lib/types/data_credits'
 import { daoKey } from '@helium/helium-sub-daos-sdk'
+import { cellToLatLng } from 'h3-js'
 
 type Account = AccountInfo<string[]>
+export type HotspotMeta = {
+  isFullHotspot: boolean
+  location?: string
+  numLocationAsserts: number
+  lat?: number
+  lng?: number
+}
 
 const useSolana = ({
   heliumWallet,
@@ -271,10 +283,44 @@ const useSolana = ({
     [rpcEndpoint, connection, vars, wallet]
   )
 
+  const getHotspotDetails = async ({
+    address,
+    type = 'MOBILE',
+  }: {
+    address: string
+    type?: 'MOBILE' | 'IOT'
+  }): Promise<HotspotMeta | undefined> => {
+    if (!hemProgram) return
+
+    const mint = type === 'IOT' ? IOT_MINT : MOBILE_MINT
+    const subDao = subDaoKey(mint)[0]
+
+    const configKey = rewardableEntityConfigKey(subDao, type)
+
+    const entityConfig =
+      await hemProgram.account.rewardableEntityConfigV0.fetchNullable(
+        configKey[0]
+      )
+    if (!entityConfig) return
+
+    if (type === 'IOT') {
+      const [info] = iotInfoKey(configKey[0], address)
+      return hotspotInfoToDetails(
+        await hemProgram.account.iotHotspotInfoV0.fetch(info)
+      )
+    }
+
+    const [info] = await mobileInfoKey(configKey[0], address)
+    return hotspotInfoToDetails(
+      await hemProgram.account.mobileHotspotInfoV0.fetch(info)
+    )
+  }
+
   return {
     connection: connection as Connection | undefined,
     createTransferCompressedCollectableTxn,
     estimateMetaTxnFees,
+    getHotspotDetails,
     getDcBalance,
     getHntBalance,
     getBalances,
@@ -318,7 +364,7 @@ export const getAccountFees = async ({
   let dcAfter = 0
 
   if (account) {
-    lamportsAfter = BigNumber(account.lamports.toString()).toNumber()
+    lamportsAfter = new BN(account.lamports.toString()).toNumber()
   } else {
     lamportsAfter = lamportsBefore
   }
@@ -331,7 +377,7 @@ export const getAccountFees = async ({
       Buffer.from(dcAccount.data[0], dcAccount.data[1] as BufferEncoding)
     )
 
-    const dcBalance = BigNumber(tokenAccount.amount.toString())
+    const dcBalance = new BN(tokenAccount.amount.toString())
     dcAfter = dcBalance.toNumber()
     dcFee = dcBefore - dcAfter
   }
@@ -395,6 +441,29 @@ export const fetchSimulatedTxn = async ({
     throw new Error('Transaction would fail')
   }
   return response.data.result.value.accounts
+}
+
+const hotspotInfoToDetails = (value: {
+  asset: PublicKey
+  bumpSeed: number
+  isFullHotspot: boolean
+  location: BN | null
+  numLocationAsserts: number
+}) => {
+  const location = value.location?.toString('hex')
+  const details = {
+    location,
+    isFullHotspot: value.isFullHotspot,
+    numLocationAsserts: value.numLocationAsserts,
+  } as HotspotMeta
+
+  if (location) {
+    const [lat, lng] = cellToLatLng(location)
+    details.lat = lat
+    details.lng = lng
+  }
+
+  return details
 }
 
 export default useSolana
