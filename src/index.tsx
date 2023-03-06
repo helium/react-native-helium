@@ -35,7 +35,6 @@ import Balance, {
 import { HotspotErrorCode } from './HotspotBle/useHotspotBle'
 import { heliumHttpClient, createHttpClient } from './utils/httpClient'
 export { DiagnosticInfo } from './HotspotBle/bleParse'
-import { useSolanaStatus, useSolanaVars } from './Solana/solanaSentinel'
 import { HotspotMeta } from './Solana/useSolana'
 import { Asset } from '@helium/spl-utils'
 
@@ -80,6 +79,4 @@ export {
   useHotspotBle,
   useOnboarding,
   useSolana,
-  useSolanaStatus,
-  useSolanaVars,
 }

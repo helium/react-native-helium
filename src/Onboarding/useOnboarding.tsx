@@ -50,23 +50,26 @@ export const FULL_LOCATION_STAKING_FEE = 1000000
 
 const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
   const solana = useSolanaContext()
+
   const [onboardingClient, setOnboardingClient] = useState(
-    new OnboardingClient(`${baseUrl}${solana.status.isHelium ? '/v2' : '/v3'}`)
+    new OnboardingClient('')
   )
 
-  useEffect(() => {
-    setOnboardingClient(
-      new OnboardingClient(
-        `${baseUrl}${solana.status.isHelium ? '/v2' : '/v3'}`
-      )
-    )
-  }, [baseUrl, solana.status.isHelium])
-
-  const checkSolanaStatus = useCallback(() => {
-    if (solana.status.inProgress) {
+  const getSolanaStatus = useCallback(async () => {
+    const status = await solana.getStatus()
+    if (status?.inProgress) {
       throw new Error('Chain migration in progress')
     }
-  }, [solana.status.inProgress])
+    return status
+  }, [solana])
+
+  useEffect(() => {
+    getSolanaStatus().then((status) => {
+      setOnboardingClient(
+        new OnboardingClient(`${baseUrl}${status?.isHelium ? '/v2' : '/v3'}`)
+      )
+    })
+  }, [baseUrl, getSolanaStatus])
 
   const handleError = useCallback(
     (
@@ -137,7 +140,8 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
   const burnHNTForDataCredits = useCallback(
     async (dcAmount: number) => {
-      if (solana.status.isHelium || !solana.provider || !solana.connection) {
+      const status = await getSolanaStatus()
+      if (status?.isHelium || !solana.provider || !solana.connection) {
         throw new Error('Helium not supported for this action')
       }
       const destinationWallet = solana.provider.wallet.publicKey
@@ -170,7 +174,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       return txn
     },
-    [solana]
+    [
+      getSolanaStatus,
+      solana.connection,
+      solana.dcProgram?.methods,
+      solana.provider,
+    ]
   )
 
   const getKeyToAsset = useCallback(
@@ -197,7 +206,8 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
   const createHotspot = useCallback(
     async (signedTxn: string) => {
       try {
-        if (!solana.status.isSolana) return
+        const status = await getSolanaStatus()
+        if (!status?.isSolana) return
 
         const gatewayTxn = AddGatewayV1.fromString(signedTxn)
 
@@ -225,7 +235,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         return []
       }
     },
-    [getKeyToAsset, onboardingClient, solana]
+    [getKeyToAsset, getSolanaStatus, onboardingClient, solana]
   )
 
   const getOnboardTransactions = useCallback(
@@ -246,7 +256,8 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       decimalGain?: number
       elevation?: number
     }): Promise<{ addGatewayTxn?: string; solanaTransactions?: string[] }> => {
-      if (solana.status.isHelium) {
+      const status = await getSolanaStatus()
+      if (status?.isHelium) {
         return { addGatewayTxn: txn }
       }
 
@@ -283,7 +294,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       return { solanaTransactions: onboardTxns }
     },
-    [onboardingClient, solana.status.isHelium]
+    [getSolanaStatus, onboardingClient]
   )
 
   const submitAddGateway = useCallback(
@@ -356,15 +367,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       heliumAddress: string
       httpClient?: Client
     }) => {
-      checkSolanaStatus()
+      const status = await getSolanaStatus()
 
       const solBalance = await solana.getSolBalance()
 
-      if (solana.status.isSolana) {
+      if (status?.isSolana) {
         // GET hnt Balance from solana
-        if (!solana.vars?.hnt.mint) {
-          throw new Error('Hnt mint not found')
-        }
         const hntBalance = await solana.getHntBalance()
         const dcBalance = await solana.getDcBalance()
 
@@ -384,15 +392,15 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         }
       }
     },
-    [checkSolanaStatus, solana]
+    [getSolanaStatus, solana]
   )
 
   const getOraclePrice = useCallback(
     async (httpClient?: Client): Promise<Balance<USDollars>> => {
-      checkSolanaStatus()
+      const status = await getSolanaStatus()
 
       const client = httpClient || heliumHttpClient
-      if (solana.status.isHelium) {
+      if (status?.isHelium) {
         const oraclePrice = await client.oracle.getCurrentPrice()
         if (!oraclePrice.price) {
           throw new Error('Failed to fetch oracle price from helium blockchain')
@@ -410,7 +418,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       return Balance.fromFloat(hntPrice?.aggregate.price, CurrencyType.usd)
     },
-    [checkSolanaStatus, solana]
+    [getSolanaStatus, solana]
   )
 
   const getHeliumAssertData = useCallback(
@@ -763,7 +771,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       hotspotTypes: HotspotType[]
       onboardingRecord?: OnboardingRecord | null
     }): Promise<AssertData> => {
-      checkSolanaStatus()
+      const status = await getSolanaStatus()
 
       const client = httpClient || heliumHttpClient
 
@@ -782,7 +790,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       const gain = Math.round(decimalGain * 10.0)
 
-      if (solana.status.isHelium) {
+      if (status?.isHelium) {
         return getHeliumAssertData({
           balances,
           dataOnly,
@@ -810,11 +818,10 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       })
     },
     [
-      checkSolanaStatus,
+      getSolanaStatus,
       getOnboardingRecord,
       getBalances,
       getOraclePrice,
-      solana.status.isHelium,
       getSolanaAssertData,
       getHeliumAssertData,
     ]
@@ -830,7 +837,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       httpClient?: Client
       gateway: string
     }): Promise<PendingTransaction | undefined> => {
-      checkSolanaStatus()
+      getSolanaStatus()
 
       const client = httpClient || heliumHttpClient
 
@@ -863,7 +870,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       return client.transactions.submit(txnStr)
     },
     [
-      checkSolanaStatus,
+      getSolanaStatus,
       getHeliumHotspotInfo,
       getOnboardingRecord,
       hasFreeAssert,
@@ -903,11 +910,11 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       transferHotspotTxn?: string | undefined
       solanaTransactions?: string[] | undefined
     }> => {
-      checkSolanaStatus()
+      const status = await getSolanaStatus()
 
       const client = httpClient || heliumHttpClient
 
-      if (solana.status.isHelium) {
+      if (status?.isHelium) {
         const txn = await Transfer.createTransferTransaction({
           hotspotAddress,
           userAddress,
@@ -947,7 +954,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         solanaTransactions: [Buffer.from(txn.serialize()).toString('base64')],
       }
     },
-    [checkSolanaStatus, getKeyToAsset, solana]
+    [getSolanaStatus, getKeyToAsset, solana]
   )
 
   const submitSolanaTransactions = useCallback(
@@ -986,8 +993,9 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       pendingGatewayTxn?: PendingTransaction
       solanaTxnIds?: string[]
     }> => {
+      const status = await getSolanaStatus()
       if (solanaTransactions?.length) {
-        if (!solana.status.isSolana) {
+        if (!status?.isSolana) {
           throw new Error('Solana transactions not yet supported')
         }
         const solanaTxnIds = await submitSolanaTransactions({
@@ -996,7 +1004,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         return { solanaTxnIds }
       }
 
-      if (!solana.status.isHelium) {
+      if (!status?.isHelium) {
         throw new Error('Helium transactions no longer supported')
       }
 
@@ -1032,7 +1040,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       return response
     },
     [
-      solana,
+      getSolanaStatus,
       submitAddGateway,
       submitAssertLocation,
       submitSolanaTransactions,
@@ -1050,11 +1058,11 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       httpClient?: Client
       makerName?: string
     }) => {
-      checkSolanaStatus()
+      const status = await getSolanaStatus()
 
       const client = httpClient || heliumHttpClient
 
-      if (solana.status.isHelium) {
+      if (status?.isHelium) {
         const newHotspotList = await client
           .account(heliumAddress)
           .hotspots.list()
@@ -1068,7 +1076,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       return solHotspots
     },
-    [checkSolanaStatus, solana]
+    [getSolanaStatus, solana]
   )
 
   const getHotspotDetails = useCallback(
@@ -1081,11 +1089,11 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       address: string
       type?: 'MOBILE' | 'IOT'
     }): Promise<HotspotMeta | undefined> => {
-      checkSolanaStatus()
+      const status = await getSolanaStatus()
 
       const client = httpClient || heliumHttpClient
 
-      if (solana.status.isHelium) {
+      if (status?.isHelium) {
         const hotspot = await client.hotspots.get(address)
         return {
           ...hotspot,
@@ -1100,7 +1108,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       return solana.getHotspotDetails({ address, type })
     },
-    [checkSolanaStatus, solana]
+    [getSolanaStatus, solana]
   )
 
   return {

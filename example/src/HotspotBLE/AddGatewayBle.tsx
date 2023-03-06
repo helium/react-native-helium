@@ -29,9 +29,12 @@ const AddGatewayBle = () => {
   const [failedReason, setFailedReason] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [hotspotTypes, setHotspotTypes] = useState<HotspotType[]>([])
-  const {
-    status: { isSolana },
-  } = useSolana()
+  const [isSolana, setIsSolana] = useState(false)
+  const { getStatus } = useSolana()
+
+  useEffect(() => {
+    getStatus().then(({ isSolana: nextSolana }) => setIsSolana(nextSolana))
+  }, [getStatus])
 
   const handleAddGateway = useCallback(async () => {
     setSubmitted(true)

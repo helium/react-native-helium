@@ -26,9 +26,6 @@ import { Buffer } from 'buffer'
 const AssertLocation = () => {
   const { getOnboardingRecord, submitTransactions, getAssertData } =
     useOnboarding()
-  const {
-    status: { isSolana },
-  } = useSolana()
   const [gatewayAddress, setGatewayAddress] = useState('')
   const [gatewayName, setGatewayName] = useState('')
   const [lat, setLat] = useState<string>()
@@ -41,6 +38,12 @@ const AssertLocation = () => {
   const [failedReason, setFailedReason] = useState('')
   const [assertData, setAssertData] = useState<AssertData>()
   const [hotspotTypes, setHotspotTypes] = useState<HotspotType[]>([])
+  const [isSolana, setIsSolana] = useState(false)
+  const { getStatus } = useSolana()
+
+  useEffect(() => {
+    getStatus().then(({ isSolana: nextSolana }) => setIsSolana(nextSolana))
+  }, [getStatus])
 
   const updateAssertData = useCallback(async () => {
     if (!gatewayAddress || !lat || !lng) {

@@ -58,16 +58,24 @@ const initialState = {
         }
       | undefined
     >((resolve) => resolve(undefined)),
-  status: {
-    inProgress: false,
-    isHelium: false,
-    isSolana: false,
-  },
+  getStatus: () =>
+    new Promise<{
+      inProgress: boolean
+      isHelium: boolean
+      isSolana: boolean
+      migrationStatus: SolanaStatus
+    }>((resolve) =>
+      resolve({
+        inProgress: false,
+        isHelium: true,
+        isSolana: true,
+        migrationStatus: 'not_started',
+      })
+    ),
   submitSolana: (_opts: { txn: Buffer }) =>
     new Promise<string>((resolve) => resolve('')),
   submitAllSolana: (_opts: { txns: Buffer[] }) =>
     new Promise<string[]>((resolve) => resolve([])),
-  vars: undefined,
   hemProgram: undefined,
   dcProgram: undefined,
   hsdProgram: undefined,
