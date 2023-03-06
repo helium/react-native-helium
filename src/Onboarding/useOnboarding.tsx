@@ -41,7 +41,8 @@ import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
 } from '@solana/spl-token'
-import { AddGateway } from '..'
+import { AddGatewayV1 } from '@helium/transactions'
+import { HotspotMeta } from '../Solana/useSolana'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
@@ -174,45 +175,55 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
   const getKeyToAsset = useCallback(
     async (hotspotAddress: string) => {
-      const [dao] = daoKey(HNT_MINT)
-      const [keyToAssetK] = keyToAssetKey(dao, hotspotAddress)
-      const keyToAssetAcc =
-        await solana.hemProgram?.account.keyToAssetV0.fetchNullable(keyToAssetK)
-      if (!keyToAssetAcc) {
+      try {
+        const [dao] = daoKey(HNT_MINT)
+        const [keyToAssetK] = keyToAssetKey(dao, hotspotAddress)
+        const keyToAssetAcc =
+          await solana.hemProgram?.account.keyToAssetV0.fetchNullable(
+            keyToAssetK
+          )
+        if (!keyToAssetAcc) {
+          return
+        }
+
+        return keyToAssetAcc.asset
+      } catch {
         return
       }
-
-      return keyToAssetAcc.asset
     },
     [solana.hemProgram?.account.keyToAssetV0]
   )
 
   const createHotspot = useCallback(
     async (signedTxn: string) => {
-      if (!solana.status.isSolana) return
+      try {
+        if (!solana.status.isSolana) return
 
-      const gatewayTxn = AddGateway.txnFromString(signedTxn)
+        const gatewayTxn = AddGatewayV1.fromString(signedTxn)
 
-      const address = gatewayTxn.gateway?.b58
-      if (!address) {
-        throw Error('Invalid add gateway txn')
-      }
+        const address = gatewayTxn.gateway?.b58
+        if (!address) {
+          throw Error('Invalid add gateway txn')
+        }
 
-      const hotspotPubKey = await getKeyToAsset(address)
+        const hotspotPubKey = await getKeyToAsset(address)
 
-      if (hotspotPubKey) {
+        if (hotspotPubKey) {
+          return []
+        }
+
+        const createTxns = await onboardingClient.createHotspot({
+          transaction: signedTxn.toString(),
+        })
+
+        return solana.submitAllSolana({
+          txns: (createTxns.data?.solanaTransactions || []).map((t) =>
+            Buffer.from(t)
+          ),
+        })
+      } catch (e) {
         return []
       }
-
-      const createTxns = await onboardingClient.createHotspot({
-        transaction: signedTxn.toString(),
-      })
-
-      return solana.submitAllSolana({
-        txns: (createTxns.data?.solanaTransactions || []).map((t) =>
-          Buffer.from(t)
-        ),
-      })
     },
     [getKeyToAsset, onboardingClient, solana]
   )
@@ -477,6 +488,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       return {
         balances,
         hasSufficientBalance,
+        hasSufficientHnt: hasSufficientBalance,
         isFree,
         makerFees: isFree ? fees : undefined,
         ownerFees: isFree ? undefined : fees,
@@ -567,7 +579,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         }
         simulatedFees = await Promise.all(
           hotspotTypes.map(async (type) => {
-            const mint = type === 'iot' ? IOT_MINT : MOBILE_MINT
+            const mint = type === 'IOT' ? IOT_MINT : MOBILE_MINT
             const subDao = subDaoKey(mint)[0]
 
             const configKey = rewardableEntityConfigKey(
@@ -580,12 +592,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
                 configKey[0]
               )
             const config =
-              type === 'iot'
+              type === 'IOT'
                 ? entityConfig?.settings.iotConfig
                 : entityConfig?.settings.mobileConfig
 
             let prevLocation: BN | null | undefined
-            if (type === 'iot') {
+            if (type === 'IOT') {
               const [info] = iotInfoKey(configKey[0], gateway)
               const iot =
                 await solana.hemProgram?.account.iotHotspotInfoV0.fetch(info)
@@ -1028,12 +1040,77 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     ]
   )
 
+  const getHotspots = useCallback(
+    async ({
+      httpClient,
+      heliumAddress,
+      makerName,
+    }: {
+      heliumAddress: string
+      httpClient?: Client
+      makerName?: string
+    }) => {
+      checkSolanaStatus()
+
+      const client = httpClient || heliumHttpClient
+
+      if (solana.status.isHelium) {
+        const newHotspotList = await client
+          .account(heliumAddress)
+          .hotspots.list()
+        return newHotspotList.takeJSON(100000)
+      }
+
+      const solHotspots = await solana.getHotspots({
+        heliumAddress,
+        makerName,
+      })
+
+      return solHotspots
+    },
+    [checkSolanaStatus, solana]
+  )
+
+  const getHotspotDetails = useCallback(
+    async ({
+      httpClient,
+      address,
+      type,
+    }: {
+      httpClient?: Client
+      address: string
+      type?: 'MOBILE' | 'IOT'
+    }): Promise<HotspotMeta | undefined> => {
+      checkSolanaStatus()
+
+      const client = httpClient || heliumHttpClient
+
+      if (solana.status.isHelium) {
+        const hotspot = await client.hotspots.get(address)
+        return {
+          ...hotspot,
+          isFullHotspot: hotspot.mode === 'full',
+          numLocationAsserts: hotspot.speculativeNonce || hotspot.nonce || 0,
+        }
+      }
+
+      if (!type) {
+        throw new Error('Network type must be specified (IOT | MOBILE)')
+      }
+
+      return solana.getHotspotDetails({ address, type })
+    },
+    [checkSolanaStatus, solana]
+  )
+
   return {
     baseUrl,
     burnHNTForDataCredits,
     createHotspot,
     createTransferTransaction,
     getAssertData,
+    getHotspotDetails,
+    getHotspots,
     getMinFirmware,
     getOnboardingRecord,
     getOnboardTransactions,

@@ -186,16 +186,16 @@ const AddGatewayTxn = () => {
         <>
           <View style={styles.switchRow}>
             <Switch
-              onValueChange={handleHotspotTypeChange('iot')}
-              value={hotspotTypes.includes('iot')}
+              onValueChange={handleHotspotTypeChange('IOT')}
+              value={hotspotTypes.includes('IOT')}
             />
             <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
           </View>
 
           <View style={styles.switchRow}>
             <Switch
-              onValueChange={handleHotspotTypeChange('mobile')}
-              value={hotspotTypes.includes('mobile')}
+              onValueChange={handleHotspotTypeChange('MOBILE')}
+              value={hotspotTypes.includes('MOBILE')}
             />
             <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
           </View>
