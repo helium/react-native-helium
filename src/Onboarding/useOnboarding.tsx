@@ -42,6 +42,7 @@ import {
   getAssociatedTokenAddressSync,
 } from '@solana/spl-token'
 import { AddGatewayV1 } from '@helium/transactions'
+import { HotspotMeta } from '../Solana/useSolana'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
@@ -1038,12 +1039,77 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     ]
   )
 
+  const getHotspots = useCallback(
+    async ({
+      httpClient,
+      heliumAddress,
+      makerName,
+    }: {
+      heliumAddress: string
+      httpClient?: Client
+      makerName?: string
+    }) => {
+      checkSolanaStatus()
+
+      const client = httpClient || heliumHttpClient
+
+      if (solana.status.isHelium) {
+        const newHotspotList = await client
+          .account(heliumAddress)
+          .hotspots.list()
+        return newHotspotList.takeJSON(100000)
+      }
+
+      const solHotspots = await solana.getHotspots({
+        heliumAddress,
+        makerName,
+      })
+
+      return solHotspots
+    },
+    [checkSolanaStatus, solana]
+  )
+
+  const getHotspotDetails = useCallback(
+    async ({
+      httpClient,
+      address,
+      type,
+    }: {
+      httpClient?: Client
+      address: string
+      type?: 'MOBILE' | 'IOT' | 'iot' | 'mobile'
+    }): Promise<HotspotMeta | undefined> => {
+      checkSolanaStatus()
+
+      const client = httpClient || heliumHttpClient
+
+      if (solana.status.isHelium) {
+        const hotspot = await client.hotspots.get(address)
+        return {
+          ...hotspot,
+          isFullHotspot: hotspot.mode === 'full',
+          numLocationAsserts: hotspot.speculativeNonce || hotspot.nonce || 0,
+        }
+      }
+
+      if (!type) {
+        throw new Error('Network type must be specified (IOT | MOBILE)')
+      }
+
+      return solana.getHotspotDetails({ address, type })
+    },
+    [checkSolanaStatus, solana]
+  )
+
   return {
     baseUrl,
     burnHNTForDataCredits,
     createHotspot,
     createTransferTransaction,
     getAssertData,
+    getHotspotDetails,
+    getHotspots,
     getMinFirmware,
     getOnboardingRecord,
     getOnboardTransactions,

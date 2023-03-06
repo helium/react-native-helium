@@ -1,4 +1,4 @@
-import Client, { PendingTransaction } from '@helium/http'
+import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import React, { createContext, ReactNode, useContext } from 'react'
 import { AssertData } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
@@ -9,6 +9,8 @@ import OnboardingClient, {
   OnboardingRecord,
 } from '@helium/onboarding'
 import { Transaction } from '@solana/web3.js'
+import { HotspotMeta } from '../Solana/useSolana'
+import { Asset } from '@helium/spl-utils'
 
 const initialState = {
   baseUrl: '',
@@ -44,6 +46,19 @@ const initialState = {
         payer: '',
         oraclePrice: new Balance(0, CurrencyType.usd),
       })
+    ),
+  getHotspotDetails: (_opts: {
+    httpClient?: Client | undefined
+    address: string
+    type?: 'MOBILE' | 'IOT' | 'mobile' | 'iot' | undefined
+  }) => new Promise<HotspotMeta | undefined>((resolve) => resolve(undefined)),
+  getHotspots: (_opts: {
+    heliumAddress: string
+    httpClient?: Client | undefined
+    makerName?: string | undefined
+  }) =>
+    new Promise<Asset[] | Hotspot[] | undefined>((resolve) =>
+      resolve(undefined)
     ),
   getMinFirmware: async () => '',
   getOnboardingRecord: async (_hotspotAddress: string) => null,

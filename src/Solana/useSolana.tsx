@@ -16,9 +16,11 @@ import {
   HNT_MINT,
   IOT_MINT,
   MOBILE_MINT,
+  getAsset,
   searchAssets,
   SearchAssetsOpts,
   sendAndConfirmWithRetry,
+  DC_MINT,
 } from '@helium/spl-utils'
 import * as Hotspot from '@helium/hotspot-utils'
 import { init as initHsd, subDaoKey } from '@helium/helium-sub-daos-sdk'
@@ -52,6 +54,7 @@ export type HotspotMeta = {
   numLocationAsserts: number
   lat?: number
   lng?: number
+  owner?: string
 }
 
 const useSolana = ({
@@ -102,28 +105,24 @@ const useSolana = ({
   }, [provider])
 
   const getHntBalance = useCallback(async () => {
-    if (!vars?.hnt.mint)
-      throw Error('HNT mint not found for ' + propsCluster.toString())
     if (!wallet) return
 
     return Currency.getBalance({
       pubKey: wallet,
       connection,
-      mint: new PublicKey(vars.hnt.mint),
+      mint: new PublicKey(HNT_MINT),
     })
-  }, [propsCluster, connection, vars?.hnt.mint, wallet])
+  }, [connection, wallet])
 
   const getDcBalance = useCallback(async () => {
-    if (!vars?.dc.mint)
-      throw Error('DC mint not found for ' + propsCluster.toString())
     if (!wallet) return
 
     return Currency.getBalance({
       pubKey: wallet,
       connection,
-      mint: new PublicKey(vars.dc.mint),
+      mint: new PublicKey(DC_MINT),
     })
-  }, [propsCluster, connection, vars?.dc.mint, wallet])
+  }, [connection, wallet])
 
   const getBalances = useCallback(async () => {
     if (!wallet) return
@@ -138,12 +137,12 @@ const useSolana = ({
     })
 
     return {
-      hntBalance: vars?.hnt.mint ? vals[vars.hnt.mint] : 0n,
-      iotBalance: vars?.iot.mint ? vals[vars.iot.mint] : 0n,
-      dcBalance: vars?.dc.mint ? vals[vars.dc.mint] : 0n,
-      mobileBalance: vars?.mobile.mint ? vals[vars.mobile.mint] : 0n,
+      hntBalance: vals[HNT_MINT.toBase58()],
+      iotBalance: vals[IOT_MINT.toBase58()],
+      dcBalance: vals[DC_MINT.toBase58()],
+      mobileBalance: vals[MOBILE_MINT.toBase58()],
     }
-  }, [connection, vars, wallet])
+  }, [connection, wallet])
 
   const getSolBalance = useCallback(async () => {
     if (!wallet) return 0
@@ -220,17 +219,12 @@ const useSolana = ({
         ...opts,
       } as SearchAssetsOpts
 
-      if (vars?.hnt.mint) {
-        const hnt = new PublicKey(vars.hnt.mint)
-        const key = entityCreatorKey(daoKey(hnt)[0])[0].toString()
-        searchParams.creatorAddress = key.toString()
-      }
+      const hnt = new PublicKey(HNT_MINT)
+      const key = entityCreatorKey(daoKey(hnt)[0])[0].toString()
+      searchParams.creatorAddress = key.toString()
 
       if (opts.makerName && hemProgram) {
-        const maker = makerKey(
-          daoKey(vars?.hnt.mint ? new PublicKey(vars?.hnt.mint) : HNT_MINT)[0],
-          opts.makerName
-        )[0]
+        const maker = makerKey(daoKey(HNT_MINT)[0], opts.makerName)[0]
         const makerAcc = await hemProgram.account.makerV0.fetch(
           maker.toString()
         )
@@ -239,20 +233,20 @@ const useSolana = ({
 
       return searchAssets(rpcEndpoint, searchParams)
     },
-    [hemProgram, vars?.hnt.mint, wallet, rpcEndpoint]
+    [hemProgram, wallet, rpcEndpoint]
   )
 
   const estimateMetaTxnFees = useCallback(
     async (buff: Buffer, { maker }: { maker: PublicKey }) => {
-      if (!wallet || !vars?.dc.mint) return
+      if (!wallet) return
 
       const walletDC = await getAssociatedTokenAddress(
-        new PublicKey(vars.dc.mint),
+        new PublicKey(DC_MINT),
         wallet
       )
 
       const makerDC = await getAssociatedTokenAddress(
-        new PublicKey(vars.dc.mint),
+        new PublicKey(DC_MINT),
         maker
       )
 
@@ -276,45 +270,50 @@ const useSolana = ({
           dcAccount: ownerDcAccount,
         },
         maker: { key: maker, account: makerAccount, dcAccount: makerDcAccount },
-        dcMint: new PublicKey(vars.dc.mint),
+        dcMint: new PublicKey(DC_MINT),
       })
       return fees
     },
-    [rpcEndpoint, connection, vars, wallet]
+    [rpcEndpoint, connection, wallet]
   )
 
-  const getHotspotDetails = async ({
-    address,
-    type = 'MOBILE',
-  }: {
-    address: string
-    type?: 'MOBILE' | 'IOT'
-  }): Promise<HotspotMeta | undefined> => {
-    if (!hemProgram) return
+  const getHotspotDetails = useCallback(
+    async ({
+      address,
+      type = 'MOBILE',
+    }: {
+      address: string
+      type: 'MOBILE' | 'IOT' | 'mobile' | 'iot'
+    }): Promise<HotspotMeta | undefined> => {
+      if (!hemProgram) return
 
-    const mint = type === 'IOT' ? IOT_MINT : MOBILE_MINT
-    const subDao = subDaoKey(mint)[0]
+      const mint = type === 'IOT' ? IOT_MINT : MOBILE_MINT
+      const subDao = subDaoKey(mint)[0]
 
-    const configKey = rewardableEntityConfigKey(subDao, type)
+      const configKey = rewardableEntityConfigKey(subDao, type)
 
-    const entityConfig =
-      await hemProgram.account.rewardableEntityConfigV0.fetchNullable(
-        configKey[0]
+      const entityConfig =
+        await hemProgram.account.rewardableEntityConfigV0.fetchNullable(
+          configKey[0]
+        )
+      if (!entityConfig) return
+
+      if (type.toUpperCase() === 'IOT') {
+        const [info] = iotInfoKey(configKey[0], address)
+        const iotInfo = await hemProgram.account.iotHotspotInfoV0.fetch(info)
+        const asset = await getAsset(rpcEndpoint, iotInfo.asset)
+        return hotspotInfoToDetails(iotInfo, asset)
+      }
+
+      const [info] = await mobileInfoKey(configKey[0], address)
+      const mobileInfo = await hemProgram.account.mobileHotspotInfoV0.fetch(
+        info
       )
-    if (!entityConfig) return
-
-    if (type === 'IOT') {
-      const [info] = iotInfoKey(configKey[0], address)
-      return hotspotInfoToDetails(
-        await hemProgram.account.iotHotspotInfoV0.fetch(info)
-      )
-    }
-
-    const [info] = await mobileInfoKey(configKey[0], address)
-    return hotspotInfoToDetails(
-      await hemProgram.account.mobileHotspotInfoV0.fetch(info)
-    )
-  }
+      const asset = await getAsset(rpcEndpoint, mobileInfo.asset)
+      return hotspotInfoToDetails(mobileInfo, asset)
+    },
+    [hemProgram, rpcEndpoint]
+  )
 
   return {
     connection: connection as Connection | undefined,
@@ -443,13 +442,16 @@ export const fetchSimulatedTxn = async ({
   return response.data.result.value.accounts
 }
 
-const hotspotInfoToDetails = (value: {
-  asset: PublicKey
-  bumpSeed: number
-  isFullHotspot: boolean
-  location: BN | null
-  numLocationAsserts: number
-}) => {
+const hotspotInfoToDetails = (
+  value: {
+    asset: PublicKey
+    bumpSeed: number
+    isFullHotspot: boolean
+    location: BN | null
+    numLocationAsserts: number
+  },
+  asset?: Asset
+) => {
   const location = value.location?.toString('hex')
   const details = {
     location,
@@ -462,6 +464,8 @@ const hotspotInfoToDetails = (value: {
     details.lat = lat
     details.lng = lng
   }
+
+  details.owner = asset?.ownership.owner.toBase58()
 
   return details
 }

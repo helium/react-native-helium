@@ -1,34 +1,42 @@
 import React, { memo, useCallback, useEffect, useState } from 'react'
 import { FlatList, StyleSheet } from 'react-native'
-import { useSolana } from '@helium/react-native-sdk'
+import { useOnboarding } from '@helium/react-native-sdk'
 import { getAddressStr } from '../Account/secureAccount'
-import { Asset, heliumAddressToSolAddress } from '@helium/spl-utils'
-import Config from 'react-native-config'
+import { Asset } from '@helium/spl-utils'
 import HotspotItem from './HotspotItem'
+import { Hotspot } from '@helium/http'
+
+const getAddress = (item: Asset | Hotspot) => {
+  const asset = item as Asset
+  if (asset?.content?.json_uri) {
+    return asset.content.json_uri.split('/').slice(-1)[0]
+  }
+
+  const hotspot = item as Hotspot
+  return hotspot.address
+}
 
 const HotspotList = () => {
-  const { getHotspots: getSolHotspots } = useSolana()
-  const [hotspots, setHotspots] = useState<Asset[]>([])
+  const { getHotspots } = useOnboarding()
+  const [hotspots, setHotspots] = useState<(Asset | Hotspot)[]>([])
 
   const fetchHotspots = useCallback(async () => {
     const heliumAddress = await getAddressStr()
-    const solHotspots = await getSolHotspots({
-      ownerAddress: heliumAddressToSolAddress(heliumAddress),
-      makerName: Config.ONBOARDING_MAKER_NAME,
-    })
-    setHotspots(solHotspots || [])
-  }, [getSolHotspots])
+    console.log({ heliumAddress })
+    const nextHotspots = await getHotspots({ heliumAddress })
+    setHotspots(nextHotspots || [])
+  }, [getHotspots])
 
   useEffect(() => {
     fetchHotspots()
   }, [fetchHotspots])
 
-  const renderItem = useCallback(({ item }: { item: Asset }) => {
-    return <HotspotItem item={item} />
+  const renderItem = useCallback(({ item }: { item: Asset | Hotspot }) => {
+    return <HotspotItem address={getAddress(item)} />
   }, [])
 
-  const keyExtractor = useCallback((item: Asset) => {
-    return item.content.json_uri
+  const keyExtractor = useCallback((item: Asset | Hotspot) => {
+    return getAddress(item)
   }, [])
 
   return (
