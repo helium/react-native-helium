@@ -194,6 +194,7 @@
     ]
   },
   "dependencies": {
+    "@azure/core-asynciterator-polyfill": "^1.0.2",
     "@coral-xyz/anchor": "^0.26.0",
     "@helium/currency-utils": "^0.0.41",
     "@helium/data-credits-sdk": "^0.0.41",

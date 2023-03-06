@@ -61,10 +61,7 @@ const AddGatewayBle = () => {
       throw new Error('Error signing gateway txn')
     }
 
-    const createResponse = await createHotspot(txnOwnerSigned?.toString())
-    if (!createResponse?.length) {
-      throw new Error('Could not create hotspot')
-    }
+    await createHotspot(txnOwnerSigned?.toString())
 
     const { addGatewayTxn, solanaTransactions } = await getOnboardTransactions({
       txn: txnOwnerSigned.toString(),

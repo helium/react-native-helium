@@ -488,6 +488,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       return {
         balances,
         hasSufficientBalance,
+        hasSufficientHnt: hasSufficientBalance,
         isFree,
         makerFees: isFree ? fees : undefined,
         ownerFees: isFree ? undefined : fees,

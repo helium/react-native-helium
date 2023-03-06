@@ -22,7 +22,6 @@ const HotspotList = () => {
 
   const fetchHotspots = useCallback(async () => {
     const heliumAddress = await getAddressStr()
-    console.log({ heliumAddress })
     const nextHotspots = await getHotspots({ heliumAddress })
     if (!nextHotspots) return
 
