@@ -1,6 +1,6 @@
 {
   "name": "@helium/react-native-sdk",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "Helium React Native SDK",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
@@ -55,7 +55,7 @@
     "@helium/currency": "^4.10.0",
     "@helium/http": "^4.10.0",
     "@helium/onboarding": "^4.10.0",
-    "@helium/proto-ble": "^4.10.0",
+    "@helium/proto-ble": "^4.8.1",
     "@helium/transactions": "^4.8.1",
     "@react-native-community/eslint-config": "^2.0.0",
     "@release-it/conventional-changelog": "^2.0.0",
