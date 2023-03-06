@@ -50,7 +50,7 @@ const initialState = {
   getHotspotDetails: (_opts: {
     httpClient?: Client | undefined
     address: string
-    type?: 'MOBILE' | 'IOT' | 'mobile' | 'iot' | undefined
+    type?: 'MOBILE' | 'IOT' | undefined
   }) => new Promise<HotspotMeta | undefined>((resolve) => resolve(undefined)),
   getHotspots: (_opts: {
     heliumAddress: string

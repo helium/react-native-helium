@@ -578,7 +578,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         }
         simulatedFees = await Promise.all(
           hotspotTypes.map(async (type) => {
-            const mint = type === 'iot' ? IOT_MINT : MOBILE_MINT
+            const mint = type === 'IOT' ? IOT_MINT : MOBILE_MINT
             const subDao = subDaoKey(mint)[0]
 
             const configKey = rewardableEntityConfigKey(
@@ -591,12 +591,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
                 configKey[0]
               )
             const config =
-              type === 'iot'
+              type === 'IOT'
                 ? entityConfig?.settings.iotConfig
                 : entityConfig?.settings.mobileConfig
 
             let prevLocation: BN | null | undefined
-            if (type === 'iot') {
+            if (type === 'IOT') {
               const [info] = iotInfoKey(configKey[0], gateway)
               const iot =
                 await solana.hemProgram?.account.iotHotspotInfoV0.fetch(info)
@@ -1078,7 +1078,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     }: {
       httpClient?: Client
       address: string
-      type?: 'MOBILE' | 'IOT' | 'iot' | 'mobile'
+      type?: 'MOBILE' | 'IOT'
     }): Promise<HotspotMeta | undefined> => {
       checkSolanaStatus()
 

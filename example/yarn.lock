@@ -1588,10 +1588,10 @@
     borsh "^0.7.0"
     bs58 "^4.0.1"
 
-"@helium/onboarding@^4.9.0":
-  version "4.9.0"
-  resolved "https://registry.yarnpkg.com/@helium/onboarding/-/onboarding-4.9.0.tgz#3327746d2f64dc640113f0587ce7be224557a824"
-  integrity sha512-6Ye4X2yc1SYh5m9cakO0tPCEUL1bpJBhVP6BxVwZmT0iIT3hv5XRuuYUFTJRvzJ6PcpM1i39ypx5kp2ZBQ6MDA==
+"@helium/onboarding@^4.10.0":
+  version "4.10.0"
+  resolved "https://registry.yarnpkg.com/@helium/onboarding/-/onboarding-4.10.0.tgz#ee61cca757303c057da7df6d648d454695063cd9"
+  integrity sha512-7IZa+53kRp2TbqKoBGD7/HKpIUzeU6cfFSEI+MWV2krM2wLEOI0lzhmgoMP8XSXGmryPHkVRnz6XWN3di2dEYA==
   dependencies:
     axios "^0.24.0"
     axios-retry "^3.4.0"

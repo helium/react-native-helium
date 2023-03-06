@@ -30,10 +30,8 @@ const initialState = {
         mobileBalance: 0n,
       })
     ),
-  getHotspotDetails: (_opts: {
-    address: string
-    type?: 'MOBILE' | 'IOT' | 'mobile' | 'iot'
-  }) => new Promise<HotspotMeta | undefined>((resolve) => resolve(undefined)),
+  getHotspotDetails: (_opts: { address: string; type?: 'MOBILE' | 'IOT' }) =>
+    new Promise<HotspotMeta | undefined>((resolve) => resolve(undefined)),
   getHotspots: (
     _opts: Omit<SearchAssetsOpts, 'ownerAddress' | 'creatorAddress'>
   ) => new Promise<Asset[]>((resolve) => resolve([])),

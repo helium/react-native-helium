@@ -16,7 +16,7 @@
     "@helium/currency-utils": "^0.0.38",
     "@helium/hotspot-utils": "^0.0.38",
     "@helium/http": "^4.8.1",
-    "@helium/onboarding": "^4.9.0",
+    "@helium/onboarding": "^4.10.0",
     "@helium/proto-ble": "^4.0.0",
     "@helium/spl-utils": "^0.0.38",
     "@helium/transactions": "^4.3.1",
