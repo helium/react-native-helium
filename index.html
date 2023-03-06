@@ -1,0 +1,321 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>@helium/react-native-sdk</title>
+	<meta name="description" content="Documentation for @helium/react-native-sdk">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+	<script async src="assets/js/search.js" id="search-script"></script>
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">@helium/react-native-sdk</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<h1>@helium/react-native-sdk</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<a href="#helium-react-native-sdk" id="helium-react-native-sdk" style="color: inherit; text-decoration: none;">
+					<h1>Helium React Native SDK</h1>
+				</a>
+				<p>The Helium React Native SDK is a collection of modules that can be used by a <a href="https://reactnative.dev/">React Native</a>
+					application to interact with <a href="https://docs.helium.com/mine-hnt">Hotspots</a> and the <a href="https://docs.helium.com/blockchain">Helium Blockchain</a>.
+				It has first class support for <a href="https://www.typescriptlang.org/">Typescript</a>.</p>
+				<p>For usage, refer to the <a href="https://github.com/helium/maker-starter-app">Helium Maker Starter App</a> which utilizes this
+				SDK to build out the base features needed to add Hotspots to the Helium Blockchain.</p>
+				<p>Along with this you may find the following Helium documentation useful:</p>
+				<ul>
+					<li><a href="https://docs.helium.com/">Helium Developer Site</a></li>
+					<li><a href="https://docs.helium.com/api/blockchain/introduction/">Helium Blockchain API</a></li>
+					<li><a href="https://helium.github.io/helium-js/">Helium JS</a></li>
+				</ul>
+				<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
+					<h2>Installation</h2>
+				</a>
+				<pre><code class="language-sh"><span style="color: #000000">yarn add @helium/react-native-sdk</span>
+<span style="color: #008000"># or</span>
+<span style="color: #000000">npm install @helium/react-native-sdk</span>
+</code></pre>
+				<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
+					<h2>Usage</h2>
+				</a>
+				<p>Please browse the <a href="https://helium.github.io/react-native-helium/index.html">documentation</a> for more information.</p>
+				<p>You can import the different modules such as <a href="https://helium.github.io/react-native-helium/modules/Account.html">Account</a>,
+					<a href="https://helium.github.io/react-native-helium/modules/Location.html">Location</a>,
+					<a href="https://helium.github.io/react-native-helium/interfaces/HotspotBleManager.html">HotspotBleManager</a>,
+					<a href="https://helium.github.io/react-native-helium/docs/modules.html#heliumHttpClient">heliumHttpClient</a>,
+				and <a href="https://helium.github.io/react-native-helium/modules/AddGateway.html">AddGateway</a> to get started.</p>
+				<pre><code class="language-ts"><span style="color: #AF00DB">import</span><span style="color: #000000"> { </span><span style="color: #001080">Account</span><span style="color: #000000">, </span><span style="color: #001080">Location</span><span style="color: #000000">, </span><span style="color: #001080">AddGateway</span><span style="color: #000000"> } </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;@helium/react-native-sdk&#039;</span><span style="color: #000000">;</span>
+
+<span style="color: #008000">// example usage of Account.createKeypair</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> { </span><span style="color: #0070C1">keypairRaw</span><span style="color: #000000">, </span><span style="color: #0070C1">address</span><span style="color: #000000">, </span><span style="color: #0070C1">mnemonic</span><span style="color: #000000"> } = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">Account</span><span style="color: #000000">.</span><span style="color: #795E26">createKeypair</span><span style="color: #000000">();</span>
+</code></pre>
+				<a href="#example-app" id="example-app" style="color: inherit; text-decoration: none;">
+					<h2>Example App</h2>
+				</a>
+				<p>There is an example app included with this SDK. It&#39;s intended for reference only and currently does not build on the Apple M1 processor.
+				A practical use of this SDK can be seen here <a href="https://github.com/helium/maker-starter-app">Helium Maker Starter App</a></p>
+				<a href="#using-bluetooth" id="using-bluetooth" style="color: inherit; text-decoration: none;">
+					<h2>Using Bluetooth</h2>
+				</a>
+				<p>Use the <a href="modules.html#HotspotBleManager">HotspotBleManager</a> to interact with a Hotspot via bluetooth.</p>
+				<a href="#import-the-bluetooth-modules" id="import-the-bluetooth-modules" style="color: inherit; text-decoration: none;">
+					<h3>Import the Bluetooth modules</h3>
+				</a>
+				<pre><code class="language-ts"><span style="color: #AF00DB">import</span><span style="color: #000000"> { </span><span style="color: #001080">HotspotBleProvider</span><span style="color: #000000">, </span><span style="color: #001080">useHotspotBle</span><span style="color: #000000"> } </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;@helium/react-native-sdk&#039;</span><span style="color: #000000">;</span>
+
+<span style="color: #008000">// some examples of the functions you may want to use</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> { </span><span style="color: #0070C1">startScan</span><span style="color: #000000">, </span><span style="color: #0070C1">stopScan</span><span style="color: #000000">, </span><span style="color: #0070C1">connect</span><span style="color: #000000">, </span><span style="color: #0070C1">scannedDevices</span><span style="color: #000000"> } = </span><span style="color: #795E26">useHotspotBle</span><span style="color: #000000">();</span>
+</code></pre>
+				<a href="#getting-started-with-bluetooth" id="getting-started-with-bluetooth" style="color: inherit; text-decoration: none;">
+					<h3>Getting Started with Bluetooth</h3>
+				</a>
+				<p>In order to get started with the <a href="modules.html#HotspotBleManager">HotspotBleManager</a> you must first wrap your root app component in a
+				<a href="modules.html#HotspotBleProvider">HotspotBleProvider</a>.</p>
+				<p>For example:</p>
+				<pre><code class="language-tsx"><span style="color: #AF00DB">import</span><span style="color: #000000"> </span><span style="color: #001080">React</span><span style="color: #000000"> </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;react&#039;</span><span style="color: #000000">;</span>
+<span style="color: #AF00DB">import</span><span style="color: #000000"> { </span><span style="color: #001080">HotspotBleProvider</span><span style="color: #000000"> } </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;@helium/react-native-sdk&#039;</span><span style="color: #000000">;</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #795E26">App</span><span style="color: #000000"> = () </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> (</span>
+<span style="color: #000000">  </span><span style="color: #800000">&lt;</span><span style="color: #267F99">HotspotBleProvider</span><span style="color: #800000">&gt;</span>
+<span style="color: #000000">    </span><span style="color: #800000">&lt;</span><span style="color: #267F99">YourRootAppComponent</span><span style="color: #000000"> </span><span style="color: #800000">/&gt;</span>
+<span style="color: #000000">  </span><span style="color: #800000">&lt;/</span><span style="color: #267F99">HotspotBleProvider</span><span style="color: #800000">&gt;</span>
+<span style="color: #000000">);</span>
+</code></pre>
+				<p>You are now ready to use the <a href="modules.html#HotspotBleManager">HotspotBleManager</a> throughout your application.</p>
+				<a href="#scanning-for-hotspots" id="scanning-for-hotspots" style="color: inherit; text-decoration: none;">
+					<h3>Scanning for Hotspots</h3>
+				</a>
+				<p>You can use the <a href="modules.html#HotspotBleManager">HotspotBleManager</a> to {@link startScan}, {@link stopScan}, and read information from {@link scannedDevices}. Check
+				out the <a href="classes/Device.html">Device</a> docs for more info on scanned devices.</p>
+				<p>For a full working example see the <a href="https://github.com/helium/react-native-helium/blob/main/example/src/HotspotBLE/ScanHotspots.tsx">example app</a>.</p>
+				<pre><code class="language-tsx"><span style="color: #AF00DB">import</span><span style="color: #000000"> </span><span style="color: #001080">React</span><span style="color: #000000">, { </span><span style="color: #001080">useEffect</span><span style="color: #000000"> } </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;react&#039;</span><span style="color: #000000">;</span>
+<span style="color: #AF00DB">import</span><span style="color: #000000"> { </span><span style="color: #001080">useHotspotBle</span><span style="color: #000000"> } </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;@helium/react-native-sdk&#039;</span><span style="color: #000000">;</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> { </span><span style="color: #0070C1">startScan</span><span style="color: #000000">, </span><span style="color: #0070C1">stopScan</span><span style="color: #000000">, </span><span style="color: #0070C1">scannedDevices</span><span style="color: #000000"> } = </span><span style="color: #795E26">useHotspotBle</span><span style="color: #000000">();</span>
+
+<span style="color: #795E26">useEffect</span><span style="color: #000000">(() </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">  </span><span style="color: #008000">// you would probably want to call this on a button click, we scan right away</span>
+<span style="color: #000000">  </span><span style="color: #795E26">startScan</span><span style="color: #000000">((</span><span style="color: #001080">error</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #AF00DB">if</span><span style="color: #000000"> (</span><span style="color: #001080">error</span><span style="color: #000000">) {</span>
+<span style="color: #000000">      </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">error</span><span style="color: #000000">(</span><span style="color: #001080">error</span><span style="color: #000000">);</span>
+<span style="color: #000000">    }</span>
+<span style="color: #000000">  });</span>
+<span style="color: #000000">}, []);</span>
+
+<span style="color: #795E26">useEffect</span><span style="color: #000000">(() </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">  </span><span style="color: #008000">// you would probably want to call this on a button click, but we stop after 10 seconds</span>
+<span style="color: #000000">  </span><span style="color: #795E26">setTimeout</span><span style="color: #000000">(</span><span style="color: #001080">stopScan</span><span style="color: #000000">, </span><span style="color: #098658">10000</span><span style="color: #000000">);</span>
+<span style="color: #000000">}, []);</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #795E26">ScanComponent</span><span style="color: #000000"> = () </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> </span><span style="color: #800000">&lt;</span><span style="color: #267F99">Text</span><span style="color: #800000">&gt;</span><span style="color: #0000FF">{</span><span style="color: #001080">scannedDevices</span><span style="color: #000000FF">[</span><span style="color: #098658">0</span><span style="color: #000000FF">]?.</span><span style="color: #001080">localName</span><span style="color: #0000FF">}</span><span style="color: #800000">&lt;/</span><span style="color: #267F99">Text</span><span style="color: #800000">&gt;</span><span style="color: #000000">;</span>
+</code></pre>
+				<a href="#connect-to-a-hotspot" id="connect-to-a-hotspot" style="color: inherit; text-decoration: none;">
+					<h3>Connect to a Hotspot</h3>
+				</a>
+				<p>After scanning, you can connect to {@link scannedDevices} by calling <a href="classes/Device.html#connect">connect</a>.</p>
+				<pre><code class="language-ts"><span style="color: #AF00DB">import</span><span style="color: #000000"> { </span><span style="color: #001080">useHotspotBle</span><span style="color: #000000"> } </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;@helium/react-native-sdk&#039;</span><span style="color: #000000">;</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> { </span><span style="color: #0070C1">connect</span><span style="color: #000000">, </span><span style="color: #0070C1">scannedDevices</span><span style="color: #000000"> } = </span><span style="color: #795E26">useHotspotBle</span><span style="color: #000000">();</span>
+<span style="color: #795E26">connect</span><span style="color: #000000">(</span><span style="color: #001080">scannedDevices</span><span style="color: #000000">[</span><span style="color: #098658">0</span><span style="color: #000000">]);</span>
+</code></pre>
+				<a href="#interact-with-a-connected-hotspot" id="interact-with-a-connected-hotspot" style="color: inherit; text-decoration: none;">
+					<h3>Interact with a connected Hotspot</h3>
+				</a>
+				<p>Once <a href="classes/Device.html#connect">connect</a> has been called you can use the other <a href="modules.html#HotspotBleManager">HotspotBleManager</a> to interact with a connected <a href="classes/Device.html">Device</a>. For
+					example, you may want to call {@link getDiagnosticInfo} to read the hotspot&#39;s diagnostic information or {@link readWifiNetworks}
+				to display available wifi networks the hotspot can see and then {@link setWifi} to set a network.</p>
+				<p>Visit the example app for full examples of
+					<a href="https://github.com/helium/react-native-helium/blob/main/example/src/HotspotBLE/WifiSetup.tsx">Wifi Setup</a>,
+					<a href="https://github.com/helium/react-native-helium/blob/main/example/src/HotspotBLE/WifiSettings.tsx">WifiSettings</a>, or
+				<a href="https://github.com/helium/react-native-helium/blob/main/example/src/HotspotBLE/Diagnostics.tsx">Diagnostics</a>.</p>
+				<a href="#contributing" id="contributing" style="color: inherit; text-decoration: none;">
+					<h2>Contributing</h2>
+				</a>
+				<p>See the <a href="CONTRIBUTING.md">contributing guide</a> to learn how to contribute to the repository and the development workflow.</p>
+				<a href="#license" id="license" style="color: inherit; text-decoration: none;">
+					<h2>License</h2>
+				</a>
+				<p><a href="https://github.com/helium/react-native-helium/blob/main/LICENSE">Apache License 2.0</a></p>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class=" ">
+						<a href="modules.html">Exports</a>
+					</li>
+					<li class=" tsd-kind-namespace">
+						<a href="modules/Account.html">Account</a>
+					</li>
+					<li class=" tsd-kind-namespace">
+						<a href="modules/AddGateway.html">Add<wbr>Gateway</a>
+					</li>
+					<li class=" tsd-kind-namespace">
+						<a href="modules/Location.html">Location</a>
+					</li>
+					<li class=" tsd-kind-namespace">
+						<a href="modules/Transfer.html">Transfer</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum">
+						<a href="enums/HotspotErrorCode.html" class="tsd-kind-icon">Hotspot<wbr>Error<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-enum tsd-is-external">
+						<a href="enums/State.html" class="tsd-kind-icon">State</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/AddGatewayV1.html" class="tsd-kind-icon">Add<wbr>Gateway<wbr>V1</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/AssertLocationV2.html" class="tsd-kind-icon">Assert<wbr>Location<wbr>V2</a>
+					</li>
+					<li class=" tsd-kind-class tsd-has-type-parameter tsd-is-external">
+						<a href="classes/Balance.html" class="tsd-kind-icon">Balance</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/BleError.html" class="tsd-kind-icon">Ble<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/DataCredits.html" class="tsd-kind-icon">Data<wbr>Credits</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/Device.html" class="tsd-kind-icon">Device</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/Keypair.html" class="tsd-kind-icon">Keypair</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/Mnemonic.html" class="tsd-kind-icon">Mnemonic</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/NetworkTokens.html" class="tsd-kind-icon">Network<wbr>Tokens</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/SecurityTokens.html" class="tsd-kind-icon">Security<wbr>Tokens</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/TransferHotspotV2.html" class="tsd-kind-icon">Transfer<wbr>Hotspot<wbr>V2</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/USDollars.html" class="tsd-kind-icon">USDollars</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#AssertData" class="tsd-kind-icon">Assert<wbr>Data</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="modules.html#Asset" class="tsd-kind-icon">Asset</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#DiagnosticInfo" class="tsd-kind-icon">Diagnostic<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#HotspotBleManager" class="tsd-kind-icon">Hotspot<wbr>Ble<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#HotspotMeta" class="tsd-kind-icon">Hotspot<wbr>Meta</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#OnboardingManager" class="tsd-kind-icon">Onboarding<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#SolanaManager" class="tsd-kind-icon">Solana<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="modules.html#heliumHttpClient" class="tsd-kind-icon">helium<wbr>Http<wbr>Client</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#HotspotBleProvider" class="tsd-kind-icon">Hotspot<wbr>Ble<wbr>Provider</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#OnboardingProvider" class="tsd-kind-icon">Onboarding<wbr>Provider</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#SolanaProvider" class="tsd-kind-icon">Solana<wbr>Provider</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#createHttpClient" class="tsd-kind-icon">create<wbr>Http<wbr>Client</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#multiply" class="tsd-kind-icon">multiply</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#useHotspotBle" class="tsd-kind-icon">use<wbr>Hotspot<wbr>Ble</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#useOnboarding" class="tsd-kind-icon">use<wbr>Onboarding</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#useSolana" class="tsd-kind-icon">use<wbr>Solana</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#useSolanaStatus" class="tsd-kind-icon">use<wbr>Solana<wbr>Status</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#useSolanaVars" class="tsd-kind-icon">use<wbr>Solana<wbr>Vars</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

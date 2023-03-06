@@ -1,0 +1,423 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Location | @helium/react-native-sdk</title>
+	<meta name="description" content="Documentation for @helium/react-native-sdk">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+	<script async src="../assets/js/search.js" id="search-script"></script>
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.json" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../index.html" class="title">@helium/react-native-sdk</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../modules.html">@helium/react-native-sdk</a>
+				</li>
+				<li>
+					<a href="Location.html">Location</a>
+				</li>
+			</ul>
+			<h1>Namespace Location</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<a href="#the-following-high-level-steps-need-to-be-taken-to-update-hotspot-location" id="the-following-high-level-steps-need-to-be-taken-to-update-hotspot-location" style="color: inherit; text-decoration: none;">
+							<h3>The following high level steps need to be taken to update hotspot location</h3>
+						</a>
+						<ol>
+							<li>Construct an AssertLocationV2 txn</li>
+							<li>Deep link to hotspot app for signing</li>
+							<li>If the assertion is to be paid for by the maker, send to onboarding server</li>
+							<li>Submit to helium api</li>
+						</ol>
+						<p>Use this module to assist asserting gateway locations on the Helium Network. You will be able to both change the
+						location of the hotspot, and update its antenna gain and elevation.</p>
+						<p>For example creating and signing an assert location transaction with <a href="../modules.html#AssertData.__type.assertLocationTxn">assertLocationTxn</a> and calculating its fees
+						with {@link calculateAssertLocFee}.</p>
+						<a href="#import-the-module" id="import-the-module" style="color: inherit; text-decoration: none;">
+							<h2>Import the module</h2>
+						</a>
+						<pre><code class="language-ts"><span style="color: #AF00DB">import</span><span style="color: #000000"> { </span><span style="color: #001080">Location</span><span style="color: #000000"> } </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;@helium/react-native-sdk&#039;</span><span style="color: #000000">;</span>
+</code></pre>
+						<a href="#create-the-assert-location-transaction" id="create-the-assert-location-transaction" style="color: inherit; text-decoration: none;">
+							<h2>Create the Assert Location Transaction</h2>
+						</a>
+						<pre><code class="language-ts"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">assertLocationTxn</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">Location</span><span style="color: #000000">.</span><span style="color: #795E26">createLocationTxn</span><span style="color: #000000">({</span>
+<span style="color: #000000">  </span><span style="color: #001080">gateway:</span><span style="color: #000000"> </span><span style="color: #001080">hotspotAddress</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">lat</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">lng</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">decimalGain:</span><span style="color: #000000"> </span><span style="color: #001080">params</span><span style="color: #000000">.</span><span style="color: #001080">gain</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">elevation:</span><span style="color: #000000"> </span><span style="color: #001080">params</span><span style="color: #000000">.</span><span style="color: #001080">elevation</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">dataOnly:</span><span style="color: #000000"> </span><span style="color: #0000FF">false</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">owner:</span><span style="color: #000000"> </span><span style="color: #001080">ownerAddress</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #008000">// currentLocation: &#039;&#039;, // If reasserting location, put previous location here</span>
+<span style="color: #000000">  </span><span style="color: #001080">makerAddress:</span><span style="color: #000000"> </span><span style="color: #001080">onboardingRecord</span><span style="color: #000000">.</span><span style="color: #001080">maker</span><span style="color: #000000">.</span><span style="color: #001080">address</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">location</span><span style="color: #000000">,</span>
+<span style="color: #000000">});</span>
+</code></pre>
+						<a href="#calculate-assert-location-fees" id="calculate-assert-location-fees" style="color: inherit; text-decoration: none;">
+							<h2>Calculate Assert Location Fees</h2>
+						</a>
+						<p>There are two fees associated with asserting hotspot location. These fees are paid by either the maker, or the hotspot
+							owner depending on how many free asserts the maker provides. If the payer account has no DC, HNT will be implicitly
+						burned to cover the transaction fees.</p>
+						<p>There are currently two fees that occur, if changing hotspot location a staking fee of 1,000,000 DC ($10) is added to
+						the base transaction fee of 55,000 DC ($0.55).</p>
+						<p>You can use the {@link calculateAssertLocFee} function to determine what fees the transaction will charge. The nonce
+						should be provided from the hotspot&#39;s nonce.</p>
+						<p>You can read more about transaction fees on the <a href="https://docs.helium.com/blockchain/transaction-fees">Helium Docs</a>.</p>
+					</div>
+				</div>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>Functions</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-function tsd-parent-kind-namespace"><a href="Location.html#createLocationTxn" class="tsd-kind-icon">create<wbr>Location<wbr>Txn</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-namespace"><a href="Location.html#getH3Location" class="tsd-kind-icon">get<wbr>H3Location</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-namespace"><a href="Location.html#getStakingFee" class="tsd-kind-icon">get<wbr>Staking<wbr>Fee</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-namespace"><a href="Location.html#signAssert" class="tsd-kind-icon">sign<wbr>Assert</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-namespace"><a href="Location.html#signAssertTxn" class="tsd-kind-icon">sign<wbr>Assert<wbr>Txn</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-namespace"><a href="Location.html#txnFromString" class="tsd-kind-icon">txn<wbr>From<wbr>String</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Functions</h2>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-namespace">
+					<a name="createLocationTxn" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> create<wbr>Location<wbr>Txn</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-namespace">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Location<wbr>Txn<span class="tsd-signature-symbol">(</span>__namedParameters<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>dataOnly<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span>elevation<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span>gain<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span>gateway<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>hotspot<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="../modules.html#Asset" class="tsd-signature-type" data-tsd-kind="Type alias">Asset</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HotspotData</span><span class="tsd-signature-symbol">; </span>isFree<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span>maker<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>nextLocation<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>owner<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>ownerKeypairRaw<span class="tsd-signature-symbol">?: </span><a href="../interfaces/Account.SodiumKeyPair.html" class="tsd-signature-type" data-tsd-kind="Interface">SodiumKeyPair</a><span class="tsd-signature-symbol">; </span>updatingLocation<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../classes/AssertLocationV2.html" class="tsd-signature-type" data-tsd-kind="Class">AssertLocationV2</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/9e529b5/src/utils/assertLocation.ts#L45">src/utils/assertLocation.ts:45</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>__namedParameters: <span class="tsd-signature-symbol">{ </span>dataOnly<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span>elevation<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span>gain<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span>gateway<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>hotspot<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="../modules.html#Asset" class="tsd-signature-type" data-tsd-kind="Type alias">Asset</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HotspotData</span><span class="tsd-signature-symbol">; </span>isFree<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span>maker<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>nextLocation<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>owner<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>ownerKeypairRaw<span class="tsd-signature-symbol">?: </span><a href="../interfaces/Account.SodiumKeyPair.html" class="tsd-signature-type" data-tsd-kind="Interface">SodiumKeyPair</a><span class="tsd-signature-symbol">; </span>updatingLocation<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter">
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> data<wbr>Only<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> elevation<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> gain<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>gateway<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> hotspot<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="../modules.html#Asset" class="tsd-signature-type" data-tsd-kind="Type alias">Asset</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HotspotData</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> is<wbr>Free<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>maker<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>next<wbr>Location<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>owner<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> owner<wbr>Keypair<wbr>Raw<span class="tsd-signature-symbol">?: </span><a href="../interfaces/Account.SodiumKeyPair.html" class="tsd-signature-type" data-tsd-kind="Interface">SodiumKeyPair</a></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>updating<wbr>Location<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../classes/AssertLocationV2.html" class="tsd-signature-type" data-tsd-kind="Class">AssertLocationV2</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-namespace">
+					<a name="getH3Location" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> get<wbr>H3Location</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-namespace">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>H3Location<span class="tsd-signature-symbol">(</span>lat<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, lng<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, res<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/9e529b5/src/utils/assertLocation.ts#L25">src/utils/assertLocation.ts:25</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Returns the H3 Hex of a lat lng location at a specific resolution.
+										The default resolution is 12. See <a href="https://github.com/uber/h3">Uber H3</a>
+									for more info.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>lat: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>lng: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>res: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = ...</span></h5>
+									<div class="tsd-comment tsd-typography">
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-namespace">
+					<a name="getStakingFee" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> get<wbr>Staking<wbr>Fee</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-namespace">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Staking<wbr>Fee<span class="tsd-signature-symbol">(</span>__namedParameters<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>dataOnly<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span>updatingLocation<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">0</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">500000</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">1000000</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/9e529b5/src/utils/assertLocation.ts#L28">src/utils/assertLocation.ts:28</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>__namedParameters: <span class="tsd-signature-symbol">{ </span>dataOnly<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span>updatingLocation<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter">
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> data<wbr>Only<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> updating<wbr>Location<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span></h5>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">0</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">500000</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">1000000</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-namespace">
+					<a name="signAssert" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> sign<wbr>Assert</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-namespace">
+						<li class="tsd-signature tsd-kind-icon">sign<wbr>Assert<span class="tsd-signature-symbol">(</span>__namedParameters<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>assertLocationTxn<span class="tsd-signature-symbol">: </span><a href="../classes/AssertLocationV2.html" class="tsd-signature-type" data-tsd-kind="Class">AssertLocationV2</a><span class="tsd-signature-symbol">; </span>owner<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>ownerKeypairRaw<span class="tsd-signature-symbol">: </span><a href="../interfaces/Account.SodiumKeyPair.html" class="tsd-signature-type" data-tsd-kind="Interface">SodiumKeyPair</a><span class="tsd-signature-symbol">; </span>payer<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../classes/AssertLocationV2.html" class="tsd-signature-type" data-tsd-kind="Class">AssertLocationV2</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/9e529b5/src/utils/assertLocation.ts#L101">src/utils/assertLocation.ts:101</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>__namedParameters: <span class="tsd-signature-symbol">{ </span>assertLocationTxn<span class="tsd-signature-symbol">: </span><a href="../classes/AssertLocationV2.html" class="tsd-signature-type" data-tsd-kind="Class">AssertLocationV2</a><span class="tsd-signature-symbol">; </span>owner<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>ownerKeypairRaw<span class="tsd-signature-symbol">: </span><a href="../interfaces/Account.SodiumKeyPair.html" class="tsd-signature-type" data-tsd-kind="Interface">SodiumKeyPair</a><span class="tsd-signature-symbol">; </span>payer<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter">
+											<h5>assert<wbr>Location<wbr>Txn<span class="tsd-signature-symbol">: </span><a href="../classes/AssertLocationV2.html" class="tsd-signature-type" data-tsd-kind="Class">AssertLocationV2</a></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>owner<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>owner<wbr>Keypair<wbr>Raw<span class="tsd-signature-symbol">: </span><a href="../interfaces/Account.SodiumKeyPair.html" class="tsd-signature-type" data-tsd-kind="Interface">SodiumKeyPair</a></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>payer<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../classes/AssertLocationV2.html" class="tsd-signature-type" data-tsd-kind="Class">AssertLocationV2</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-namespace">
+					<a name="signAssertTxn" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> sign<wbr>Assert<wbr>Txn</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-namespace">
+						<li class="tsd-signature tsd-kind-icon">sign<wbr>Assert<wbr>Txn<span class="tsd-signature-symbol">(</span>__namedParameters<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>assertLocationTxn<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>owner<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>ownerKeypairRaw<span class="tsd-signature-symbol">: </span><a href="../interfaces/Account.SodiumKeyPair.html" class="tsd-signature-type" data-tsd-kind="Interface">SodiumKeyPair</a><span class="tsd-signature-symbol">; </span>payer<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../classes/AssertLocationV2.html" class="tsd-signature-type" data-tsd-kind="Class">AssertLocationV2</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/9e529b5/src/utils/assertLocation.ts#L124">src/utils/assertLocation.ts:124</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>__namedParameters: <span class="tsd-signature-symbol">{ </span>assertLocationTxn<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>owner<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>ownerKeypairRaw<span class="tsd-signature-symbol">: </span><a href="../interfaces/Account.SodiumKeyPair.html" class="tsd-signature-type" data-tsd-kind="Interface">SodiumKeyPair</a><span class="tsd-signature-symbol">; </span>payer<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter">
+											<h5>assert<wbr>Location<wbr>Txn<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>owner<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>owner<wbr>Keypair<wbr>Raw<span class="tsd-signature-symbol">: </span><a href="../interfaces/Account.SodiumKeyPair.html" class="tsd-signature-type" data-tsd-kind="Interface">SodiumKeyPair</a></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>payer<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../classes/AssertLocationV2.html" class="tsd-signature-type" data-tsd-kind="Class">AssertLocationV2</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-namespace">
+					<a name="txnFromString" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> txn<wbr>From<wbr>String</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-namespace">
+						<li class="tsd-signature tsd-kind-icon">txn<wbr>From<wbr>String<span class="tsd-signature-symbol">(</span>txnStr<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/AssertLocationV2.html" class="tsd-signature-type" data-tsd-kind="Class">AssertLocationV2</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/helium/react-native-helium/blob/9e529b5/src/utils/assertLocation.ts#L137">src/utils/assertLocation.ts:137</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>txnStr: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="../classes/AssertLocationV2.html" class="tsd-signature-type" data-tsd-kind="Class">AssertLocationV2</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class=" ">
+						<a href="../modules.html">Exports</a>
+					</li>
+					<li class=" tsd-kind-namespace">
+						<a href="Account.html">Account</a>
+					</li>
+					<li class=" tsd-kind-namespace">
+						<a href="AddGateway.html">Add<wbr>Gateway</a>
+					</li>
+					<li class="current tsd-kind-namespace">
+						<a href="Location.html">Location</a>
+					</li>
+					<li class=" tsd-kind-namespace">
+						<a href="Transfer.html">Transfer</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-function tsd-parent-kind-namespace">
+						<a href="Location.html#createLocationTxn" class="tsd-kind-icon">create<wbr>Location<wbr>Txn</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-namespace">
+						<a href="Location.html#getH3Location" class="tsd-kind-icon">get<wbr>H3Location</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-namespace">
+						<a href="Location.html#getStakingFee" class="tsd-kind-icon">get<wbr>Staking<wbr>Fee</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-namespace">
+						<a href="Location.html#signAssert" class="tsd-kind-icon">sign<wbr>Assert</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-namespace">
+						<a href="Location.html#signAssertTxn" class="tsd-kind-icon">sign<wbr>Assert<wbr>Txn</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-namespace">
+						<a href="Location.html#txnFromString" class="tsd-kind-icon">txn<wbr>From<wbr>String</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+</body>
+</html>
