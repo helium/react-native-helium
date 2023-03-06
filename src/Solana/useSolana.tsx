@@ -72,6 +72,7 @@ const useSolana = ({
     useSolanaStatus(solanaStatusOverride)
 
   const { data: vars } = useSolanaVars(propsCluster)
+  console.log({ rpcEndpoint })
 
   const connection = useMemo(() => new Connection(rpcEndpoint), [rpcEndpoint])
   const [dcProgram, setDcProgram] = useState<Program<DataCredits>>()
@@ -285,32 +286,38 @@ const useSolana = ({
       address: string
       type: 'MOBILE' | 'IOT' | 'mobile' | 'iot'
     }): Promise<HotspotMeta | undefined> => {
-      if (!hemProgram) return
+      try {
+        if (!hemProgram) return
 
-      const mint = type === 'IOT' ? IOT_MINT : MOBILE_MINT
-      const subDao = subDaoKey(mint)[0]
+        const hotspotType = type.toUpperCase()
 
-      const configKey = rewardableEntityConfigKey(subDao, type)
+        const mint = hotspotType === 'IOT' ? IOT_MINT : MOBILE_MINT
+        const subDao = subDaoKey(mint)[0]
 
-      const entityConfig =
-        await hemProgram.account.rewardableEntityConfigV0.fetchNullable(
-          configKey[0]
+        const configKey = rewardableEntityConfigKey(subDao, hotspotType)
+
+        const entityConfig =
+          await hemProgram.account.rewardableEntityConfigV0.fetchNullable(
+            configKey[0]
+          )
+        if (!entityConfig) return
+
+        if (hotspotType === 'IOT') {
+          const [info] = iotInfoKey(configKey[0], address)
+          const iotInfo = await hemProgram.account.iotHotspotInfoV0.fetch(info)
+          const asset = await getAsset(rpcEndpoint, iotInfo.asset)
+          return hotspotInfoToDetails(iotInfo, asset)
+        }
+
+        const [info] = await mobileInfoKey(configKey[0], address)
+        const mobileInfo = await hemProgram.account.mobileHotspotInfoV0.fetch(
+          info
         )
-      if (!entityConfig) return
-
-      if (type.toUpperCase() === 'IOT') {
-        const [info] = iotInfoKey(configKey[0], address)
-        const iotInfo = await hemProgram.account.iotHotspotInfoV0.fetch(info)
-        const asset = await getAsset(rpcEndpoint, iotInfo.asset)
-        return hotspotInfoToDetails(iotInfo, asset)
+        const asset = await getAsset(rpcEndpoint, mobileInfo.asset)
+        return hotspotInfoToDetails(mobileInfo, asset)
+      } catch {
+        return
       }
-
-      const [info] = await mobileInfoKey(configKey[0], address)
-      const mobileInfo = await hemProgram.account.mobileHotspotInfoV0.fetch(
-        info
-      )
-      const asset = await getAsset(rpcEndpoint, mobileInfo.asset)
-      return hotspotInfoToDetails(mobileInfo, asset)
     },
     [hemProgram, rpcEndpoint]
   )

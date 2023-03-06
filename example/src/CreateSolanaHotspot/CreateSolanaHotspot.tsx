@@ -12,8 +12,11 @@ import useCreateHotspot from './useCreateHotspot'
 import Clipboard from '@react-native-community/clipboard'
 import Config from 'react-native-config'
 import { getAddressStr } from '../Account/secureAccount'
+import { AddGateway } from '@helium/react-native-sdk'
+import animalName from 'angry-purple-tiger'
 
 const CreateSolanaHotspot = () => {
+  const [hotspotAddress, setHotspotAddress] = useState('')
   const [ownerAddress, setOwnerAddress] = useState('')
 
   const [makerAddress, setMakerAddress] = useState(
@@ -29,6 +32,14 @@ const CreateSolanaHotspot = () => {
   useEffect(() => {
     getAddressStr().then(setOwnerAddress)
   }, [])
+
+  useEffect(() => {
+    if (!txn) return
+
+    const addGateway = AddGateway.txnFromString(txn)
+
+    setHotspotAddress(addGateway.gateway?.b58 || '')
+  }, [txn])
 
   const createHotspot = useCallback(async () => {
     setSubmitted(true)
@@ -89,6 +100,9 @@ const CreateSolanaHotspot = () => {
           style: styles.input,
         }}
       />
+      {hotspotAddress && (
+        <Text style={styles.container}>{animalName(hotspotAddress)}</Text>
+      )}
       <View style={styles.innnerContainer}>
         <Button title="Create" disabled={submitted} onPress={createHotspot} />
       </View>
@@ -99,7 +113,10 @@ const CreateSolanaHotspot = () => {
       >
         <Text style={styles.buttonText}>Open Url</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => Clipboard.setString(txn)}>
+      <TouchableOpacity
+        disabled={!txn}
+        onPress={() => Clipboard.setString(txn)}
+      >
         <View>
           <Text>{txn}</Text>
         </View>

@@ -10,6 +10,7 @@ const HotspotItem = ({ address }: Props) => {
   return (
     <TouchableOpacity
       onPress={() => {
+        console.log({ address })
         Clipboard.setString(address)
         getOnboardingRecord(address).then(console.log)
         getHotspotDetails({ address, type: 'IOT' }).then(console.log)
