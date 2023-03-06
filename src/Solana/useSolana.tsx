@@ -72,7 +72,6 @@ const useSolana = ({
     useSolanaStatus(solanaStatusOverride)
 
   const { data: vars } = useSolanaVars(propsCluster)
-  console.log({ rpcEndpoint })
 
   const connection = useMemo(() => new Connection(rpcEndpoint), [rpcEndpoint])
   const [dcProgram, setDcProgram] = useState<Program<DataCredits>>()
