@@ -41,9 +41,12 @@ const AddGatewayTxn = () => {
     getOnboardTransactions,
     submitTransactions,
   } = useOnboarding()
-  const {
-    status: { isSolana },
-  } = useSolana()
+  const [isSolana, setIsSolana] = useState(false)
+  const { getStatus } = useSolana()
+
+  useEffect(() => {
+    getStatus().then(({ isSolana: nextSolana }) => setIsSolana(nextSolana))
+  }, [getStatus])
 
   useEffect(() => {
     if (!hotspotAddress) return

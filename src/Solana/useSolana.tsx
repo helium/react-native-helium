@@ -8,7 +8,7 @@ import {
   AccountInfo,
   Cluster,
 } from '@solana/web3.js'
-import { SolanaStatus, useSolanaStatus, useSolanaVars } from './solanaSentinel'
+import { SolanaStatus, useSolanaStatus } from './solanaSentinel'
 import * as Currency from '@helium/currency-utils'
 import {
   Asset,
@@ -68,10 +68,7 @@ const useSolana = ({
   solanaStatusOverride?: SolanaStatus
   rpcEndpoint: string
 }) => {
-  const { isHelium, isSolana, inProgress } =
-    useSolanaStatus(solanaStatusOverride)
-
-  const { data: vars } = useSolanaVars(propsCluster)
+  const getStatus = useSolanaStatus(solanaStatusOverride)
 
   const connection = useMemo(() => new Connection(rpcEndpoint), [rpcEndpoint])
   const [dcProgram, setDcProgram] = useState<Program<DataCredits>>()
@@ -330,14 +327,9 @@ const useSolana = ({
     getHotspots,
     getOraclePriceFromSolana,
     getSolBalance,
-    status: {
-      inProgress,
-      isHelium,
-      isSolana,
-    },
+    getStatus,
     submitSolana,
     submitAllSolana,
-    vars,
     hemProgram,
     hsdProgram,
     dcProgram,
