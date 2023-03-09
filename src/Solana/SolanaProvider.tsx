@@ -14,22 +14,20 @@ const initialState = {
     new Promise<web3.VersionedTransaction | undefined>((resolve) =>
       resolve(undefined)
     ),
-  getDcBalance: () => new Promise<bigint>((resolve) => resolve(0n)),
-  getHntBalance: () => new Promise<bigint>((resolve) => resolve(0n)),
+  getDcBalance: () =>
+    new Promise<bigint | undefined>((resolve) => resolve(undefined)),
+  getHntBalance: () =>
+    new Promise<bigint | undefined>((resolve) => resolve(undefined)),
   getBalances: () =>
-    new Promise<{
-      hntBalance: bigint
-      iotBalance: bigint
-      mobileBalance: bigint
-      dcBalance: bigint
-    }>((resolve) =>
-      resolve({
-        hntBalance: 0n,
-        iotBalance: 0n,
-        dcBalance: 0n,
-        mobileBalance: 0n,
-      })
-    ),
+    new Promise<
+      | {
+          hntBalance: bigint
+          iotBalance: bigint
+          mobileBalance: bigint
+          dcBalance: bigint
+        }
+      | undefined
+    >((resolve) => resolve(undefined)),
   getHotspotDetails: (_opts: { address: string; type?: 'MOBILE' | 'IOT' }) =>
     new Promise<HotspotMeta | undefined>((resolve) => resolve(undefined)),
   getHotspots: (
