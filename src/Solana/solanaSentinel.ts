@@ -1,19 +1,24 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef } from 'react'
+import usePrevious from '../utils/usePrevious'
 
 export type SolanaStatus = 'not_started' | 'in_progress' | 'complete'
 
 const BASE_URL = 'https://solana-status.helium.com'
 
 export const useSolanaStatus = (solanaStatusOverride?: SolanaStatus) => {
-  const [status, setStatus] = useState<{
+  const status = useRef<{
     isSolana: boolean
     isHelium: boolean
     inProgress: boolean
     migrationStatus: SolanaStatus
   }>()
 
+  const prevOverrideStatus = usePrevious(solanaStatusOverride)
+
   const getStatus = useCallback(async () => {
-    if (status) return status
+    if (status.current && prevOverrideStatus === solanaStatusOverride) {
+      return status.current
+    }
 
     if (solanaStatusOverride) {
       const nextStatus = {
@@ -22,23 +27,32 @@ export const useSolanaStatus = (solanaStatusOverride?: SolanaStatus) => {
         inProgress: solanaStatusOverride === 'in_progress',
         migrationStatus: solanaStatusOverride,
       }
-      setStatus(nextStatus)
+      status.current = nextStatus
       return nextStatus
     }
 
-    const response = (await (await fetch(BASE_URL)).json()) as {
-      migrationStatus: SolanaStatus
+    let migrationStatus: SolanaStatus = 'complete'
+    try {
+      const response = (await (await fetch(BASE_URL)).json()) as {
+        migrationStatus: SolanaStatus
+      }
+
+      if (response?.migrationStatus) {
+        migrationStatus = response.migrationStatus
+      }
+    } catch (e) {
+      console.log(e)
     }
-    const migrationStatus = response?.migrationStatus
+
     const nextStatus = {
       isSolana: migrationStatus === 'complete',
       isHelium: migrationStatus === 'not_started',
       inProgress: migrationStatus === 'in_progress',
       migrationStatus,
     }
-    setStatus(nextStatus)
+    status.current = nextStatus
     return nextStatus
-  }, [solanaStatusOverride, status])
+  }, [prevOverrideStatus, solanaStatusOverride])
 
   return getStatus
 }
