@@ -303,13 +303,14 @@ const useSolana = ({
           return hotspotInfoToDetails(iotInfo, asset)
         }
 
-        const [info] = await mobileInfoKey(configKey[0], address)
+        const [info] = mobileInfoKey(configKey[0], address)
         const mobileInfo = await hemProgram.account.mobileHotspotInfoV0.fetch(
           info
         )
         const asset = await getAsset(rpcEndpoint, mobileInfo.asset)
         return hotspotInfoToDetails(mobileInfo, asset)
-      } catch {
+      } catch (e) {
+        console.error(e)
         return
       }
     },

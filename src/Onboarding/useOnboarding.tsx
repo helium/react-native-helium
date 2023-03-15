@@ -114,7 +114,9 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         )
 
         return response.data
-      } catch {}
+      } catch (e) {
+        console.error(e)
+      }
       return null
     },
     [handleError, onboardingClient]
