@@ -55,6 +55,8 @@ export type HotspotMeta = {
   lat?: number
   lng?: number
   owner?: string
+  elevation?: number
+  gain?: number
 }
 
 const useSolana = ({
@@ -446,11 +448,15 @@ const hotspotInfoToDetails = (
     isFullHotspot: boolean
     location: BN | null
     numLocationAsserts: number
+    elevation: number | null
+    gain: number | null
   },
   asset?: Asset
 ) => {
   const location = value.location?.toString('hex')
   const details = {
+    elevation: value.elevation || undefined,
+    gain: value.gain || undefined,
     location,
     isFullHotspot: value.isFullHotspot,
     numLocationAsserts: value.numLocationAsserts,
