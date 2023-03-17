@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import OnboardingClient, {
   OnboardingRecord,
   HotspotType,
@@ -8,7 +8,11 @@ import { Client, Hotspot, PendingTransaction } from '@helium/http'
 import { AssertData } from './onboardingTypes'
 import { heliumHttpClient } from '../utils/httpClient'
 import { heliumAddressToSolAddress, SodiumKeyPair } from '../Account/account'
-import { createLocationTxn, getH3Location } from '../utils/assertLocation'
+import {
+  createLocationTxn,
+  getH3Location,
+  getStakingFee,
+} from '../utils/assertLocation'
 import Balance, {
   CurrencyType,
   DataCredits,
@@ -41,7 +45,7 @@ import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
 } from '@solana/spl-token'
-import { AddGatewayV1 } from '@helium/transactions'
+import { AddGatewayV1, AssertLocationV2 } from '@helium/transactions'
 import { HotspotMeta } from '../Solana/useSolana'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
@@ -50,6 +54,7 @@ export const FULL_LOCATION_STAKING_FEE = 1000000
 
 const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
   const solana = useSolanaContext()
+  const url = useRef('')
 
   const [onboardingClient, setOnboardingClient] = useState(
     new OnboardingClient('')
@@ -65,9 +70,11 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
   useEffect(() => {
     getSolanaStatus().then((status) => {
-      setOnboardingClient(
-        new OnboardingClient(`${baseUrl}${status?.isHelium ? '/v2' : '/v3'}`)
-      )
+      const nextUrl = `${baseUrl}${status?.isHelium ? '/v2' : '/v3'}`
+      if (nextUrl === url.current) return
+
+      url.current = nextUrl
+      setOnboardingClient(new OnboardingClient(nextUrl))
     })
   }, [baseUrl, getSolanaStatus])
 
@@ -249,6 +256,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       lng,
       decimalGain,
       elevation,
+      httpClient,
     }: {
       txn: string
       hotspotAddress: string
@@ -257,13 +265,48 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       lng?: number
       decimalGain?: number
       elevation?: number
-    }): Promise<{ addGatewayTxn?: string; solanaTransactions?: string[] }> => {
+      httpClient?: Client
+    }): Promise<{
+      addGatewayTxn?: string
+      assertLocationTxn?: string
+      solanaTransactions?: string[]
+    }> => {
       const status = await getSolanaStatus()
-      if (status?.isHelium) {
-        return { addGatewayTxn: txn }
-      }
 
       const gain = decimalGain ? Math.round(decimalGain * 10.0) : undefined
+
+      if (status?.isHelium) {
+        const hotspot = await getHeliumHotspotInfo({
+          hotspotAddress,
+          httpClient,
+        })
+        let assertLocationTxn: string | undefined
+        if (lat && lng) {
+          const addGatewayTxn = AddGatewayV1.fromString(txn)
+
+          let nextNonce = (hotspot?.speculativeNonce || 0) + 1
+
+          const stakingFee = getStakingFee({
+            dataOnly: false,
+            updatingLocation: true,
+          })
+
+          const locTxn = new AssertLocationV2({
+            owner: addGatewayTxn.owner,
+            gateway: addGatewayTxn.gateway,
+            payer: addGatewayTxn.payer,
+            nonce: nextNonce,
+            gain,
+            elevation,
+            location: getH3Location(lat, lng),
+            stakingFee,
+          })
+
+          assertLocationTxn = locTxn.toString()
+        }
+
+        return { addGatewayTxn: txn, assertLocationTxn }
+      }
 
       let location: string | undefined
       if (lat && lng && lat !== 0 && lng !== 0) {
@@ -296,7 +339,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       return { solanaTransactions: onboardTxns }
     },
-    [getSolanaStatus, onboardingClient]
+    [getHeliumHotspotInfo, getSolanaStatus, onboardingClient]
   )
 
   const submitAddGateway = useCallback(
@@ -1016,19 +1059,19 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         pendingGatewayTxn?: PendingTransaction
       }
 
-      if (assertLocationTxn) {
-        response.pendingAssertTxn = await submitAssertLocation({
-          assertLocationTxn,
-          httpClient,
-          gateway: hotspotAddress,
-        })
-      }
-
       if (addGatewayTxn) {
         response.pendingGatewayTxn = await submitAddGateway({
           hotspotAddress,
           addGatewayTxn,
           httpClient,
+        })
+      }
+
+      if (assertLocationTxn) {
+        response.pendingAssertTxn = await submitAssertLocation({
+          assertLocationTxn,
+          httpClient,
+          gateway: hotspotAddress,
         })
       }
 
