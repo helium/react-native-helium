@@ -71,9 +71,11 @@ const initialState = {
     decimalGain?: number
     elevation?: number
   }) =>
-    new Promise<{ heliumTxn?: string; solanaTransactions?: string[] }>(
-      (resolve) => resolve({})
-    ),
+    new Promise<{
+      addGatewayTxn?: string
+      assertLocationTxn?: string
+      solanaTransactions?: string[]
+    }>((resolve) => resolve({})),
   getOraclePrice: (_httpClient?: Client) =>
     new Promise<Balance<USDollars>>((resolve) =>
       resolve(new Balance(0, CurrencyType.usd))
