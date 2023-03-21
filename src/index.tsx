@@ -23,7 +23,7 @@ import SolanaProvider, {
   useSolanaContext as useSolana,
   SolanaManager,
 } from './Solana/SolanaProvider'
-import { AssertData } from './Onboarding/onboardingTypes'
+export * from './Onboarding/onboardingTypes'
 import { Keypair } from '@helium/crypto-react-native'
 import { State } from 'react-native-ble-plx'
 import Balance, {
@@ -52,7 +52,6 @@ export {
   Account,
   AddGateway,
   AddGatewayV1,
-  AssertData,
   AssertLocationV2,
   Asset,
   Balance,
