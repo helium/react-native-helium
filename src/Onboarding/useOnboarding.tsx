@@ -5,7 +5,7 @@ import OnboardingClient, {
 } from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
 import { Client, Hotspot, PendingTransaction } from '@helium/http'
-import { AssertData } from './onboardingTypes'
+import { AssertData, CreateHotspotExistsError } from './onboardingTypes'
 import { heliumHttpClient } from '../utils/httpClient'
 import { heliumAddressToSolAddress, SodiumKeyPair } from '../Account/account'
 import {
@@ -193,56 +193,46 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
   const getKeyToAsset = useCallback(
     async (hotspotAddress: string) => {
-      try {
-        const [dao] = daoKey(HNT_MINT)
-        const [keyToAssetK] = keyToAssetKey(dao, hotspotAddress)
-        const keyToAssetAcc =
-          await solana.hemProgram?.account.keyToAssetV0.fetchNullable(
-            keyToAssetK
-          )
-        if (!keyToAssetAcc) {
-          return
-        }
+      const [dao] = daoKey(HNT_MINT)
+      const [keyToAssetK] = keyToAssetKey(dao, hotspotAddress)
+      const keyToAssetAcc =
+        await solana.hemProgram?.account.keyToAssetV0.fetchNullable(keyToAssetK)
 
-        return keyToAssetAcc.asset
-      } catch {
-        return
-      }
+      return keyToAssetAcc?.asset
     },
     [solana.hemProgram?.account.keyToAssetV0]
   )
 
   const createHotspot = useCallback(
     async (signedTxn: string) => {
-      try {
-        const status = await getSolanaStatus()
-        if (!status?.isSolana) return
+      const status = await getSolanaStatus()
+      if (!status?.isSolana) return
 
-        const gatewayTxn = AddGatewayV1.fromString(signedTxn)
+      const gatewayTxn = AddGatewayV1.fromString(signedTxn)
 
-        const address = gatewayTxn.gateway?.b58
-        if (!address) {
-          throw Error('Invalid add gateway txn')
-        }
-
-        const hotspotPubKey = await getKeyToAsset(address)
-
-        if (hotspotPubKey) {
-          return []
-        }
-
-        const createTxns = await onboardingClient.createHotspot({
-          transaction: signedTxn.toString(),
-        })
-
-        return solana.submitAllSolana({
-          txns: (createTxns.data?.solanaTransactions || []).map((t) =>
-            Buffer.from(t)
-          ),
-        })
-      } catch (e) {
-        return []
+      const address = gatewayTxn.gateway?.b58
+      if (!address) {
+        throw Error('Invalid add gateway txn')
       }
+
+      let hotspotPubKey: web3.PublicKey | undefined
+      try {
+        hotspotPubKey = await getKeyToAsset(address)
+      } catch {}
+
+      if (hotspotPubKey) {
+        throw CreateHotspotExistsError
+      }
+
+      const createTxns = await onboardingClient.createHotspot({
+        transaction: signedTxn.toString(),
+      })
+
+      return solana.submitAllSolana({
+        txns: (createTxns.data?.solanaTransactions || []).map((t) =>
+          Buffer.from(t)
+        ),
+      })
     },
     [getKeyToAsset, getSolanaStatus, onboardingClient, solana]
   )
@@ -974,9 +964,15 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         throw new Error('No solana connection')
       }
 
-      const hotspotPubKey = await getKeyToAsset(hotspotAddress)
+      let hotspotPubKey: web3.PublicKey | undefined
+      try {
+        hotspotPubKey = await getKeyToAsset(hotspotAddress)
+      } catch (e) {
+        throw Error('Hotspot asset not found - ' + String(e))
+      }
+
       if (!hotspotPubKey) {
-        throw Error('Hotspot not found')
+        throw new Error('Hotspot asset not found')
       }
 
       const hotspot = await getAsset(

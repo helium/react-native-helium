@@ -33,3 +33,7 @@ export type AssertData = {
   payer: string
   maker?: Maker
 }
+
+export const CreateHotspotExistsError = new Error(
+  'This hotspot has already been created'
+)
