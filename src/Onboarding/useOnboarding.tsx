@@ -1132,10 +1132,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     }): Promise<HotspotMeta | undefined> => {
       const status = await getSolanaStatus()
 
-      const client = httpClient || heliumHttpClient
-
       if (status?.isHelium) {
-        const hotspot = await client.hotspots.get(address)
+        const hotspot = await getHeliumHotspotInfo({
+          hotspotAddress: address,
+          httpClient,
+        })
+        if (!hotspot) return
         return {
           ...hotspot,
           isFullHotspot: hotspot.mode === 'full',
@@ -1149,7 +1151,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       return solana.getHotspotDetails({ address, type })
     },
-    [getSolanaStatus, solana]
+    [getHeliumHotspotInfo, getSolanaStatus, solana]
   )
 
   return {
