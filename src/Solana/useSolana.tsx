@@ -32,7 +32,7 @@ import {
 } from '@solana/spl-token'
 import {
   entityCreatorKey,
-  init,
+  init as initHem,
   iotInfoKey,
   makerKey,
   mobileInfoKey,
@@ -98,7 +98,7 @@ const useSolana = ({
   useEffect(() => {
     if (!provider) return
 
-    init(provider).then(setHemProgram)
+    initHem(provider).then(setHemProgram)
     initHsd(provider).then(setHsdProgram)
     initDc(provider).then(setDcProgram)
   }, [provider])

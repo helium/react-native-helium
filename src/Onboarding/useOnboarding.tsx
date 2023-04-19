@@ -51,7 +51,7 @@ import { HotspotMeta } from '../Solana/useSolana'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
-export const FULL_LOCATION_STAKING_FEE = 1000000
+export const FULL_LOCATION_STAKING_FEE = 500000
 
 const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
   const solana = useSolanaContext()
@@ -565,6 +565,32 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     [solana.connection]
   )
 
+  const getStakingFeeForType = useCallback(
+    async (type: 'IOT' | 'MOBILE') => {
+      const isIOT = type === 'IOT'
+      const mint = isIOT ? IOT_MINT : MOBILE_MINT
+      const subDao = subDaoKey(mint)[0]
+
+      const configKey = rewardableEntityConfigKey(subDao, type)
+
+      const entityConfig =
+        await solana.hemProgram?.account.rewardableEntityConfigV0.fetchNullable(
+          configKey[0]
+        )
+      const config = isIOT
+        ? entityConfig?.settings.iotConfig
+        : entityConfig?.settings.mobileConfig
+
+      // @ts-ignore
+      const configFee = config?.fullLocationStakingFee as BN
+      if (configFee) {
+        return toBN(configFee, 0).toNumber()
+      }
+      return FULL_LOCATION_STAKING_FEE
+    },
+    [solana.hemProgram]
+  )
+
   const getSolanaAssertData = useCallback(
     async ({
       balances,
@@ -651,15 +677,6 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
               type.toUpperCase()
             )
 
-            const entityConfig =
-              await solana.hemProgram?.account.rewardableEntityConfigV0.fetchNullable(
-                configKey[0]
-              )
-            const config =
-              type === 'IOT'
-                ? entityConfig?.settings.iotConfig
-                : entityConfig?.settings.mobileConfig
-
             let prevLocation: BN | null | undefined
             if (type === 'IOT') {
               const [info] = iotInfoKey(configKey[0], gateway)
@@ -681,10 +698,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
             let dcFee = 0
             if (locationChanged) {
-              dcFee = toBN(
-                config?.full_location_staking_fee || FULL_LOCATION_STAKING_FEE,
-                0
-              ).toNumber()
+              dcFee = await getStakingFeeForType(type)
             }
 
             return {
@@ -693,7 +707,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
                 dc: 0,
               },
               ownerFees: {
-                lamports: 5000,
+                lamports: TXN_FEE_IN_LAMPORTS,
                 dc: dcFee,
               },
               isFree: false,
@@ -806,7 +820,13 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         oraclePrice,
       } as AssertData
     },
-    [burnHNTForDataCredits, getAtaAccountCreationFee, onboardingClient, solana]
+    [
+      burnHNTForDataCredits,
+      getAtaAccountCreationFee,
+      getStakingFeeForType,
+      onboardingClient,
+      solana,
+    ]
   )
 
   const getAssertData = useCallback(
