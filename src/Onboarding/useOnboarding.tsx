@@ -43,6 +43,7 @@ import {
 import { daoKey, subDaoKey } from '@helium/helium-sub-daos-sdk'
 import {
   createAssociatedTokenAccountIdempotentInstruction,
+  getAccount,
   getAssociatedTokenAddressSync,
 } from '@solana/spl-token'
 import { AddGatewayV1, AssertLocationV2 } from '@helium/transactions'
@@ -544,6 +545,26 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     [getHeliumHotspotInfo, hasFreeAssert]
   )
 
+  const getAtaAccountCreationFee = useCallback(
+    async (solanaAddress: string) => {
+      if (!solana.connection) throw new Error('Connection is missing')
+
+      const ataAddress = getAssociatedTokenAddressSync(
+        DC_MINT,
+        new web3.PublicKey(solanaAddress),
+        true
+      )
+
+      try {
+        await getAccount(solana.connection, ataAddress)
+        return new Balance(0, CurrencyType.solTokens)
+      } catch {
+        return Balance.fromFloat(0.00203928, CurrencyType.solTokens)
+      }
+    },
+    [solana.connection]
+  )
+
   const getSolanaAssertData = useCallback(
     async ({
       balances,
@@ -646,7 +667,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
                 await solana.hemProgram?.account.iotHotspotInfoV0.fetch(info)
               prevLocation = iot?.location
             } else {
-              const [info] = await mobileInfoKey(configKey[0], gateway)
+              const [info] = mobileInfoKey(configKey[0], gateway)
               const mobile =
                 await solana.hemProgram?.account.mobileHotspotInfoV0.fetch(info)
               prevLocation = mobile?.location
@@ -728,6 +749,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       const isFree =
         fees.ownerFees.dc.integerBalance <= 0 &&
         fees.ownerFees.sol.integerBalance <= 0
+
+      if (!isFree) {
+        const ataFee = await getAtaAccountCreationFee(solanaAddress)
+        fees.ownerFees.sol = fees.ownerFees.sol.plus(ataFee)
+      }
+
       let hasSufficientSol =
         balances.sol.integerBalance >= fees.ownerFees.sol.integerBalance
       const hasSufficientDc =
@@ -779,7 +806,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         oraclePrice,
       } as AssertData
     },
-    [burnHNTForDataCredits, onboardingClient, solana]
+    [burnHNTForDataCredits, getAtaAccountCreationFee, onboardingClient, solana]
   )
 
   const getAssertData = useCallback(
