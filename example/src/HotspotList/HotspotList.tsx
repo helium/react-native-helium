@@ -4,6 +4,8 @@ import { useOnboarding } from '@helium/react-native-sdk'
 import { getAddressStr } from '../Account/secureAccount'
 import { Asset } from '@helium/spl-utils'
 import HotspotItem from './HotspotItem'
+import angryPurpleTiger from 'angry-purple-tiger'
+import { sortBy } from 'lodash'
 
 type HeliumHotspot = { address: string }
 const getAddress = (item: Asset | HeliumHotspot) => {
@@ -18,18 +20,27 @@ const getAddress = (item: Asset | HeliumHotspot) => {
 
 const HotspotList = () => {
   const { getHotspots } = useOnboarding()
-  const [hotspots, setHotspots] = useState<{ address: string }[]>([])
+  const [hotspots, setHotspots] = useState<{ address: string; name: string }[]>(
+    []
+  )
 
   const fetchHotspots = useCallback(async () => {
     const heliumAddress = await getAddressStr()
     const nextHotspots = await getHotspots({ heliumAddress })
     if (!nextHotspots) return
 
-    setHotspots(
-      nextHotspots.map((h) => ({
-        address: getAddress(h),
-      }))
-    )
+    const mapped = nextHotspots.map((h) => {
+      const address = getAddress(h)
+      const name = angryPurpleTiger(address)
+      return {
+        address,
+        name,
+      }
+    })
+
+    const sorted = sortBy(mapped, (h) => h.name)
+
+    setHotspots(sorted)
   }, [getHotspots])
 
   useEffect(() => {
@@ -37,9 +48,9 @@ const HotspotList = () => {
   }, [fetchHotspots])
 
   const renderItem = useCallback(
-    ({ item }: { item: Asset | HeliumHotspot }) => {
-      return <HotspotItem address={getAddress(item)} />
-    },
+    ({ item }: { item: { name: string; address: string } }) => (
+      <HotspotItem {...item} />
+    ),
     []
   )
 

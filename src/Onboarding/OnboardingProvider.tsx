@@ -1,8 +1,6 @@
-import Client, { Hotspot, PendingTransaction } from '@helium/http'
 import React, { createContext, ReactNode, useContext } from 'react'
 import { AssertData } from './onboardingTypes'
 import useOnboarding from './useOnboarding'
-import { SodiumKeyPair } from '../Account/account'
 import Balance, { CurrencyType, USDollars } from '@helium/currency'
 import OnboardingClient, {
   HotspotType,
@@ -16,13 +14,9 @@ const initialState = {
   baseUrl: '',
   createTransferTransaction: async (_opts: {
     hotspotAddress: string
-    userAddress: string
     newOwnerAddress: string
-    httpClient?: Client
-    ownerKeypairRaw?: SodiumKeyPair
   }) =>
     new Promise<{
-      transferHotspotTxn?: string | undefined
       solanaTransactions?: string[] | undefined
     }>((resolve) => resolve({})),
   createHotspot: (_signedTxn: string) =>
@@ -34,8 +28,6 @@ const initialState = {
     lng: number
     decimalGain?: number
     elevation?: number
-    httpClient?: Client
-    dataOnly?: boolean
     hotspotTypes: HotspotType[]
     onboardingRecord?: OnboardingRecord | null
   }) =>
@@ -48,22 +40,16 @@ const initialState = {
       })
     ),
   getHotspotDetails: (_opts: {
-    httpClient?: Client | undefined
     address: string
     type?: 'MOBILE' | 'IOT' | undefined
   }) => new Promise<HotspotMeta | undefined>((resolve) => resolve(undefined)),
   getHotspots: (_opts: {
     heliumAddress: string
-    httpClient?: Client | undefined
     makerName?: string | undefined
-  }) =>
-    new Promise<Asset[] | Hotspot[] | undefined>((resolve) =>
-      resolve(undefined)
-    ),
+  }) => new Promise<Asset[] | undefined>((resolve) => resolve(undefined)),
   getMinFirmware: async () => '',
   getOnboardingRecord: async (_hotspotAddress: string) => null,
   getOnboardTransactions: async (_opts: {
-    txn: string
     hotspotAddress: string
     hotspotTypes: HotspotType[]
     lat?: number
@@ -76,23 +62,13 @@ const initialState = {
       assertLocationTxn?: string
       solanaTransactions?: string[]
     }>((resolve) => resolve({})),
-  getOraclePrice: (_httpClient?: Client) =>
+  getOraclePrice: () =>
     new Promise<Balance<USDollars>>((resolve) =>
       resolve(new Balance(0, CurrencyType.usd))
     ),
   onboardingClient: new OnboardingClient(''),
-  submitTransactions: (_opts: {
-    solanaTransactions?: string[] | undefined
-    hotspotAddress: string
-    addGatewayTxn?: string | undefined
-    httpClient?: Client | undefined
-    transferHotspotTxn?: string | undefined
-    assertLocationTxn?: string | undefined
-  }) =>
+  submitTransactions: (_opts: { solanaTransactions?: string[] | undefined }) =>
     new Promise<{
-      pendingTransferTxn?: PendingTransaction
-      pendingAssertTxn?: PendingTransaction
-      pendingGatewayTxn?: PendingTransaction
       solanaTxnIds?: string[]
     }>((resolve) => resolve({})),
   burnHNTForDataCredits: (_dcAmount: number) =>

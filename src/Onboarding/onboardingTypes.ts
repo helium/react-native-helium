@@ -28,7 +28,6 @@ export type AssertData = {
     sol?: Balance<SolTokens>
   }
   oraclePrice: Balance<USDollars>
-  assertLocationTxn?: string
   solanaTransactions?: string[]
   payer: string
   maker?: Maker

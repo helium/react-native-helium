@@ -3,7 +3,6 @@ import useSolana, { HotspotMeta } from './useSolana'
 import * as web3 from '@solana/web3.js'
 import { PriceData } from '@helium/currency-utils'
 import { Asset, SearchAssetsOpts } from '@helium/spl-utils'
-import { SolanaStatus } from './solanaSentinel'
 
 const initialState = {
   connection: undefined,
@@ -56,20 +55,6 @@ const initialState = {
         }
       | undefined
     >((resolve) => resolve(undefined)),
-  getStatus: () =>
-    new Promise<{
-      inProgress: boolean
-      isHelium: boolean
-      isSolana: boolean
-      migrationStatus: SolanaStatus
-    }>((resolve) =>
-      resolve({
-        inProgress: false,
-        isHelium: true,
-        isSolana: true,
-        migrationStatus: 'not_started',
-      })
-    ),
   submitSolana: (_opts: { txn: Buffer }) =>
     new Promise<string>((resolve) => resolve('')),
   submitAllSolana: (_opts: { txns: Buffer[] }) =>
@@ -86,13 +71,11 @@ const SolanaProvider = ({
   children,
   heliumWallet,
   cluster,
-  solanaStatusOverride,
   rpcEndpoint,
 }: {
   children: ReactNode
   cluster?: 'devnet' | 'testnet' | 'mainnet-beta'
   heliumWallet?: string
-  solanaStatusOverride?: SolanaStatus
   rpcEndpoint: string
 }) => {
   return (
@@ -100,7 +83,6 @@ const SolanaProvider = ({
       value={useSolana({
         cluster,
         heliumWallet,
-        solanaStatusOverride,
         rpcEndpoint,
       })}
     >

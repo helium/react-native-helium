@@ -1,16 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { Button, StyleSheet, Text, View, Alert, Switch } from 'react-native'
-import { getPendingTxn } from '../../appDataClient'
 import {
   getAddressStr,
   getKeypairRaw,
   getSecureItem,
 } from '../Account/secureAccount'
-import {
-  useHotspotBle,
-  useOnboarding,
-  useSolana,
-} from '@helium/react-native-sdk'
+import { useHotspotBle, useOnboarding } from '@helium/react-native-sdk'
 import { HotspotType } from '@helium/onboarding'
 import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
 import { Buffer } from 'buffer'
@@ -23,18 +18,10 @@ const AddGatewayBle = () => {
     createHotspot,
   } = useOnboarding()
   const { createAndSignGatewayTxn, getOnboardingAddress } = useHotspotBle()
-  const [hash, setHash] = useState('')
   const [solTxId, setSolTxId] = useState('')
   const [status, setStatus] = useState('')
-  const [failedReason, setFailedReason] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [hotspotTypes, setHotspotTypes] = useState<HotspotType[]>([])
-  const [isSolana, setIsSolana] = useState(false)
-  const { getStatus } = useSolana()
-
-  useEffect(() => {
-    getStatus().then(({ isSolana: nextSolana }) => setIsSolana(nextSolana))
-  }, [getStatus])
 
   const handleAddGateway = useCallback(async () => {
     setSubmitted(true)
@@ -66,17 +53,13 @@ const AddGatewayBle = () => {
 
     await createHotspot(txnOwnerSigned?.toString())
 
-    const { addGatewayTxn, solanaTransactions } = await getOnboardTransactions({
-      txn: txnOwnerSigned.toString(),
+    const { solanaTransactions } = await getOnboardTransactions({
       hotspotAddress: onboardAddress,
       hotspotTypes,
     })
-    let addGatewaySignedTxn: string | undefined
     let solanaSignedTransactions: string[] | undefined
 
-    if (addGatewayTxn) {
-      addGatewaySignedTxn = txnOwnerSigned.toString()
-    } else if (solanaTransactions) {
+    if (solanaTransactions) {
       const solanaKeypair = getSolanaKeypair(keypair.sk)
       solanaSignedTransactions = solanaTransactions.map((txn) => {
         const tx = bufferToTransaction(Buffer.from(txn, 'base64'))
@@ -90,18 +73,9 @@ const AddGatewayBle = () => {
       throw new Error('No user found')
     }
 
-    const { solanaTxnIds, pendingGatewayTxn } = await submitTransactions({
-      hotspotAddress: onboardAddress,
-      addGatewayTxn: addGatewaySignedTxn,
+    const { solanaTxnIds } = await submitTransactions({
       solanaTransactions: solanaSignedTransactions,
     })
-
-    if (pendingGatewayTxn) {
-      setHash(pendingGatewayTxn.hash)
-      setStatus(pendingGatewayTxn.status)
-      setFailedReason(pendingGatewayTxn.failedReason || '')
-      return
-    }
 
     if (solanaTxnIds?.length) {
       setSolTxId(solanaTxnIds[0])
@@ -117,22 +91,6 @@ const AddGatewayBle = () => {
     submitTransactions,
   ])
 
-  const updateTxnStatus = useCallback(async () => {
-    if (!hash) return
-    const pendingTxns = (await getPendingTxn(hash)).data
-    if (!pendingTxns.length) return
-
-    setStatus(pendingTxns[0].status)
-    setFailedReason(pendingTxns[0].failedReason || '')
-  }, [hash])
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      updateTxnStatus()
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [updateTxnStatus])
-
   const handleHotspotTypeChange = useCallback(
     (hotspotType: HotspotType) => (val: boolean) => {
       const next = hotspotTypes.filter((t) => t !== hotspotType)
@@ -147,25 +105,23 @@ const AddGatewayBle = () => {
 
   return (
     <View style={styles.container}>
-      {isSolana && (
-        <>
-          <View style={styles.switchRow}>
-            <Switch
-              onValueChange={handleHotspotTypeChange('IOT')}
-              value={hotspotTypes.includes('IOT')}
-            />
-            <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
-          </View>
+      <>
+        <View style={styles.switchRow}>
+          <Switch
+            onValueChange={handleHotspotTypeChange('IOT')}
+            value={hotspotTypes.includes('IOT')}
+          />
+          <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
+        </View>
 
-          <View style={styles.switchRow}>
-            <Switch
-              onValueChange={handleHotspotTypeChange('MOBILE')}
-              value={hotspotTypes.includes('MOBILE')}
-            />
-            <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
-          </View>
-        </>
-      )}
+        <View style={styles.switchRow}>
+          <Switch
+            onValueChange={handleHotspotTypeChange('MOBILE')}
+            value={hotspotTypes.includes('MOBILE')}
+          />
+          <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
+        </View>
+      </>
 
       <Button
         title="Add Gateway"
@@ -177,13 +133,7 @@ const AddGatewayBle = () => {
         {solTxId}
       </Text>
       <Text style={styles.topMargin}>Pending Txn Hash:</Text>
-      <Text style={styles.topMargin} selectable>
-        {hash}
-      </Text>
       <Text style={styles.topMargin}>{`Pending Txn Status: ${status}`}</Text>
-      <Text
-        style={styles.topMargin}
-      >{`Pending Txn Failed Reason: ${failedReason}`}</Text>
     </View>
   )
 }
