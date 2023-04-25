@@ -8,7 +8,6 @@ import {
   AccountInfo,
   Cluster,
 } from '@solana/web3.js'
-import { SolanaStatus, useSolanaStatus } from './solanaSentinel'
 import * as Currency from '@helium/currency-utils'
 import {
   Asset,
@@ -61,17 +60,13 @@ export type HotspotMeta = {
 
 const useSolana = ({
   heliumWallet,
-  solanaStatusOverride,
   rpcEndpoint,
   cluster: propsCluster = 'devnet',
 }: {
   cluster?: Cluster
   heliumWallet?: string
-  solanaStatusOverride?: SolanaStatus
   rpcEndpoint: string
 }) => {
-  const getStatus = useSolanaStatus(solanaStatusOverride)
-
   const connection = useMemo(() => new Connection(rpcEndpoint), [rpcEndpoint])
   const [dcProgram, setDcProgram] = useState<Program<DataCredits>>()
   const [hemProgram, setHemProgram] = useState<Program<HeliumEntityManager>>()
@@ -311,8 +306,7 @@ const useSolana = ({
         )
         const asset = await getAsset(rpcEndpoint, mobileInfo.asset)
         return hotspotInfoToDetails(mobileInfo, asset)
-      } catch (e) {
-        console.error(e)
+      } catch {
         return
       }
     },
@@ -330,7 +324,6 @@ const useSolana = ({
     getHotspots,
     getOraclePriceFromSolana,
     getSolBalance,
-    getStatus,
     submitSolana,
     submitAllSolana,
     hemProgram,

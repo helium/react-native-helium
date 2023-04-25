@@ -1,24 +1,32 @@
 import Clipboard from '@react-native-community/clipboard'
 import React, { memo } from 'react'
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native'
-import { useOnboarding } from '@helium/react-native-sdk'
-import angryPurpleTiger from 'angry-purple-tiger'
+import { useOnboarding, useSolana } from '@helium/react-native-sdk'
 
-type Props = { address: string }
-const HotspotItem = ({ address }: Props) => {
-  const { getOnboardingRecord, getHotspotDetails } = useOnboarding()
+type Props = { address: string; name: string }
+const HotspotItem = ({ address, name }: Props) => {
+  const { getOnboardingRecord } = useOnboarding()
+  const { getHotspotDetails } = useSolana()
   return (
     <TouchableOpacity
       onPress={() => {
-        console.log({ address })
+        console.log(`Getting details for\n${name}\n${address}`)
         Clipboard.setString(address)
-        getOnboardingRecord(address).then(console.log)
-        getHotspotDetails({ address, type: 'IOT' }).then(console.log)
-        getHotspotDetails({ address, type: 'MOBILE' }).then(console.log)
+
+        getOnboardingRecord(address).then((r) =>
+          console.log(`\nOnboarding Record -\n${JSON.stringify(r, null, 2)}`)
+        )
+
+        getHotspotDetails({ address, type: 'IOT' }).then((d) =>
+          console.log(`\nIOT details -\n${JSON.stringify(d, null, 2)}`)
+        )
+        getHotspotDetails({ address, type: 'MOBILE' }).then((d) =>
+          console.log(`\nMOBILE details -\n${JSON.stringify(d, null, 2)}`)
+        )
       }}
     >
       <View style={styles.listItem}>
-        <Text>{angryPurpleTiger(address)}</Text>
+        <Text>{name}</Text>
         <Text numberOfLines={1} adjustsFontSizeToFit selectable>
           {address}
         </Text>

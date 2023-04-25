@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
-import { Transfer, useOnboarding } from '@helium/react-native-sdk'
-import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
+import { useOnboarding } from '@helium/react-native-sdk'
+import { getKeypairRaw } from '../Account/secureAccount'
 import animalName from 'angry-purple-tiger'
 import Input from '../Input'
 import Address from '@helium/address'
@@ -18,40 +18,18 @@ const TransferHotspot = ({}: Props) => {
   const [submitted, setSubmitted] = useState(false)
   const [hash, setHash] = useState('')
   const [status, setStatus] = useState('')
-  const [failedReason, setFailedReason] = useState('')
 
   const handleTransfer = useCallback(async () => {
     try {
       setSubmitted(true)
 
-      const address = await getAddressStr()
-      const { transferHotspotTxn, solanaTransactions } =
-        await createTransferTransaction({
-          userAddress: address,
-          hotspotAddress,
-          newOwnerAddress,
-        })
+      const { solanaTransactions } = await createTransferTransaction({
+        hotspotAddress,
+        newOwnerAddress,
+      })
 
       const keypairRaw = await getKeypairRaw()
-      if (transferHotspotTxn) {
-        const signedTxn = await Transfer.signTransferV2Txn(
-          transferHotspotTxn,
-          keypairRaw
-        )
-        if (!signedTxn.gateway?.b58) {
-          throw new Error('Error signing transfer txn')
-        }
-        const { pendingTransferTxn } = await submitTransactions({
-          hotspotAddress,
-          transferHotspotTxn: signedTxn.toString(),
-        })
-        if (pendingTransferTxn) {
-          setHash(pendingTransferTxn.hash)
-          setStatus(pendingTransferTxn.status)
-          setFailedReason(pendingTransferTxn.failedReason || '')
-          return
-        }
-      } else if (solanaTransactions) {
+      if (solanaTransactions) {
         const solanaKeypair = getSolanaKeypair(keypairRaw.sk)
         const solanaSignedTransactions = solanaTransactions.map((txn) => {
           const tx = bufferToTransaction(Buffer.from(txn, 'base64'))
@@ -60,7 +38,6 @@ const TransferHotspot = ({}: Props) => {
         })
 
         const { solanaTxnIds } = await submitTransactions({
-          hotspotAddress,
           solanaTransactions: solanaSignedTransactions,
         })
         if (solanaTxnIds?.length) {
@@ -136,9 +113,6 @@ const TransferHotspot = ({}: Props) => {
         {hash}
       </Text>
       <Text style={styles.topMargin}>{`Txn Status: ${status}`}</Text>
-      <Text
-        style={styles.topMargin}
-      >{`Pending Txn Failed Reason: ${failedReason}`}</Text>
     </View>
   )
 }

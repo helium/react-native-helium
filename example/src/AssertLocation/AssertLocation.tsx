@@ -7,18 +7,12 @@ import {
   Text,
   View,
 } from 'react-native'
-import {
-  Location,
-  AssertData,
-  useOnboarding,
-  useSolana,
-} from '@helium/react-native-sdk'
+import { AssertData, useOnboarding } from '@helium/react-native-sdk'
 import Address from '@helium/address'
 import { getPendingTxn } from '../../appDataClient'
 import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
 import Input from '../Input'
 import animalName from 'angry-purple-tiger'
-import Config from 'react-native-config'
 import { HotspotType } from '@helium/onboarding'
 import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
 import { Buffer } from 'buffer'
@@ -38,12 +32,6 @@ const AssertLocation = () => {
   const [failedReason, setFailedReason] = useState('')
   const [assertData, setAssertData] = useState<AssertData>()
   const [hotspotTypes, setHotspotTypes] = useState<HotspotType[]>([])
-  const [isSolana, setIsSolana] = useState(false)
-  const { getStatus } = useSolana()
-
-  useEffect(() => {
-    getStatus().then(({ isSolana: nextSolana }) => setIsSolana(nextSolana))
-  }, [getStatus])
 
   const updateAssertData = useCallback(async () => {
     if (!gatewayAddress || !lat || !lng) {
@@ -74,36 +62,16 @@ const AssertLocation = () => {
   }, [gatewayAddress, getOnboardingRecord])
 
   const handleAssert = useCallback(async () => {
-    if (
-      !assertData?.assertLocationTxn &&
-      !assertData?.solanaTransactions?.length
-    ) {
+    if (!assertData?.solanaTransactions?.length) {
       return
     }
 
     setSubmitted(true)
     const ownerKeypairRaw = await getKeypairRaw()
-    const userAddress = await getAddressStr()
 
-    let assertLocationTxn = ''
     let solanaTransactions: string[] | undefined
 
-    if (assertData.assertLocationTxn) {
-      const txnOwnerSigned = await Location.signAssertTxn({
-        ownerKeypairRaw,
-        assertLocationTxn: assertData.assertLocationTxn,
-        payer:
-          assertData.isFree && Config.ONBOARDING_MAKER_ADDRESS
-            ? Config.ONBOARDING_MAKER_ADDRESS
-            : userAddress,
-        owner: userAddress,
-      })
-      if (!txnOwnerSigned.gateway?.b58) {
-        throw new Error('Error signing gateway txn')
-      }
-
-      assertLocationTxn = txnOwnerSigned.toString()
-    } else if (assertData.solanaTransactions) {
+    if (assertData.solanaTransactions) {
       const solanaKeypair = getSolanaKeypair(ownerKeypairRaw.sk)
 
       solanaTransactions = assertData.solanaTransactions.map((txn) => {
@@ -113,24 +81,18 @@ const AssertLocation = () => {
       })
     }
 
-    const { solanaTxnIds, pendingAssertTxn } = await submitTransactions({
-      assertLocationTxn,
+    const { solanaTxnIds } = await submitTransactions({
       solanaTransactions,
-      hotspotAddress: gatewayAddress,
     })
 
-    if (pendingAssertTxn) {
-      setHash(pendingAssertTxn.hash)
-      setStatus(pendingAssertTxn.status)
-      setFailedReason(pendingAssertTxn.failedReason || '')
-    } else if (solanaTxnIds?.length) {
+    if (solanaTxnIds?.length) {
       setHash(solanaTxnIds.join(', '))
       setStatus('complete')
     } else {
       setStatus('fail')
     }
     setSubmitted(false)
-  }, [assertData, gatewayAddress, submitTransactions])
+  }, [assertData, submitTransactions])
 
   const updateTxnStatus = useCallback(async () => {
     if (!hash) return
@@ -262,25 +224,23 @@ const AssertLocation = () => {
           </Text>
         )}
 
-        {isSolana && (
-          <>
-            <View style={styles.switchRow}>
-              <Switch
-                onValueChange={handleHotspotTypeChange('IOT')}
-                value={hotspotTypes.includes('IOT')}
-              />
-              <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
-            </View>
+        <>
+          <View style={styles.switchRow}>
+            <Switch
+              onValueChange={handleHotspotTypeChange('IOT')}
+              value={hotspotTypes.includes('IOT')}
+            />
+            <Text style={styles.leftMargin}>is this an IOT Hotspot?</Text>
+          </View>
 
-            <View style={styles.switchRow}>
-              <Switch
-                onValueChange={handleHotspotTypeChange('MOBILE')}
-                value={hotspotTypes.includes('MOBILE')}
-              />
-              <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
-            </View>
-          </>
-        )}
+          <View style={styles.switchRow}>
+            <Switch
+              onValueChange={handleHotspotTypeChange('MOBILE')}
+              value={hotspotTypes.includes('MOBILE')}
+            />
+            <Text style={styles.leftMargin}>is this a MOBILE Hotspot?</Text>
+          </View>
+        </>
         <View style={styles.buttonRow}>
           <Button title="Update Assert Data" onPress={updateAssertData} />
         </View>

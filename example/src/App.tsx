@@ -66,7 +66,6 @@ export default function App() {
       cluster="devnet"
       rpcEndpoint={`https://rpc-devnet.helius.xyz?api-key=${Config.HELIUS_API_KEY}`}
       heliumWallet={heliumWallet}
-      solanaStatusOverride="complete"
     >
       <OnboardingProvider
         baseUrl={
