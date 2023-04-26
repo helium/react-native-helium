@@ -23,6 +23,7 @@ import OraclePrice from './OraclePrice/OraclePrice'
 import { getAddressStr } from './Account/secureAccount'
 import HotspotList from './HotspotList/HotspotList'
 import Config from 'react-native-config'
+import OpenDeepLink from './OpenDeepLink/OpenDeepLink'
 
 const Stack = createNativeStackNavigator()
 
@@ -37,6 +38,7 @@ export type RootStackParamList = {
   TransferHotspot: undefined
   OraclePrice: undefined
   HotspotList: undefined
+  OpenDeepLink: undefined
 }
 
 export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>
@@ -97,6 +99,7 @@ export default function App() {
               />
               <Stack.Screen name="OraclePrice" component={OraclePrice} />
               <Stack.Screen name="HotspotList" component={HotspotList} />
+              <Stack.Screen name="OpenDeepLink" component={OpenDeepLink} />
             </Stack.Navigator>
           </NavigationContainer>
         </HotspotBleProvider>

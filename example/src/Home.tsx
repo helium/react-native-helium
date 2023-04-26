@@ -34,6 +34,10 @@ const Home = () => {
         title: 'Hotspot List',
         handler: () => navigation.push('HotspotList'),
       },
+      {
+        title: 'Open Deep Link',
+        handler: () => navigation.push('OpenDeepLink'),
+      },
     ],
     [navigation]
   )
