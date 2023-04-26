@@ -702,31 +702,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     [submitSolanaTransactions]
   )
 
-  const getHotspots = useCallback(
-    async ({
-      heliumAddress,
-      makerName,
-    }: {
-      heliumAddress: string
-      makerName?: string
-    }) => {
-      const solHotspots = await solana.getHotspots({
-        heliumAddress,
-        makerName,
-      })
-
-      return solHotspots
-    },
-    [solana]
-  )
-
   return {
     baseUrl,
     burnHNTForDataCredits,
     createHotspot,
     createTransferTransaction,
     getAssertData,
-    getHotspots,
     getMinFirmware,
     getOnboardingRecord,
     getOnboardTransactions,

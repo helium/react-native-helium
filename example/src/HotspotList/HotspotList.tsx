@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useEffect, useState } from 'react'
 import { FlatList, StyleSheet } from 'react-native'
-import { useOnboarding } from '@helium/react-native-sdk'
+import { useSolana } from '@helium/react-native-sdk'
 import { getAddressStr } from '../Account/secureAccount'
 import { Asset } from '@helium/spl-utils'
 import HotspotItem from './HotspotItem'
@@ -19,7 +19,7 @@ const getAddress = (item: Asset | HeliumHotspot) => {
 }
 
 const HotspotList = () => {
-  const { getHotspots } = useOnboarding()
+  const { getHotspots } = useSolana()
   const [hotspots, setHotspots] = useState<{ address: string; name: string }[]>(
     []
   )
