@@ -727,6 +727,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     createTransferTransaction,
     getAssertData,
     getHotspots,
+    getKeyToAsset,
     getMinFirmware,
     getOnboardingRecord,
     getOnboardTransactions,

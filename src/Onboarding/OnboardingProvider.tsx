@@ -6,7 +6,7 @@ import OnboardingClient, {
   HotspotType,
   OnboardingRecord,
 } from '@helium/onboarding'
-import { Transaction } from '@solana/web3.js'
+import { PublicKey, Transaction } from '@solana/web3.js'
 import { HotspotMeta } from '../Solana/useSolana'
 import { Asset } from '@helium/spl-utils'
 
@@ -73,6 +73,8 @@ const initialState = {
     }>((resolve) => resolve({})),
   burnHNTForDataCredits: (_dcAmount: number) =>
     new Promise<Transaction | undefined>((resolve) => resolve(undefined)),
+  getKeyToAsset: (_hotspotAddress: string) =>
+    new Promise<PublicKey | undefined>((resolve) => resolve(undefined)),
 }
 const OnboardingContext =
   createContext<ReturnType<typeof useOnboarding>>(initialState)
