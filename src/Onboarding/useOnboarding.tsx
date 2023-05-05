@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import OnboardingClient, {
   OnboardingRecord,
   HotspotType,
@@ -53,6 +53,8 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     new OnboardingClient(`${baseUrl}${'/v3'}`)
   )
 
+  const onboardingRecords = useRef<Record<string, OnboardingRecord>>({})
+
   const handleError = useCallback(
     (
       {
@@ -85,6 +87,11 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
   const getOnboardingRecord = useCallback(
     async (hotspotAddress: string) => {
+      const prevRecord = onboardingRecords.current[hotspotAddress]
+      if (prevRecord) {
+        return prevRecord
+      }
+
       try {
         const response = await onboardingClient.getOnboardingRecord(
           hotspotAddress
@@ -100,6 +107,9 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
           `unable to get onboarding record for ${hotspotAddress}`
         )
 
+        if (response.data) {
+          onboardingRecords.current[hotspotAddress] = response.data
+        }
         return response.data
       } catch (e) {
         console.error(e)
