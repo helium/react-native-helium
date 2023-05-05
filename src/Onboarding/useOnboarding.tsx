@@ -4,7 +4,11 @@ import OnboardingClient, {
   HotspotType,
 } from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
-import { AssertData, CreateHotspotExistsError } from './onboardingTypes'
+import {
+  AlreadyOnboardedError,
+  AssertData,
+  CreateHotspotExistsError,
+} from './onboardingTypes'
 import { heliumAddressToSolAddress } from '../Account/account'
 import { getH3Location } from '../utils/assertLocation'
 import Balance, {
@@ -254,7 +258,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       const filtered = without(onboardResponses, undefined)
 
       if (filtered.length === 0) {
-        throw new Error('Hotspot has already been onboarded')
+        throw AlreadyOnboardedError
       }
 
       const error = onboardResponses?.find((or) => or?.errorMessage)
