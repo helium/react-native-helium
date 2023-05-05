@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from 'react'
 import { LogBox } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
@@ -23,6 +24,8 @@ import OraclePrice from './OraclePrice/OraclePrice'
 import { getAddressStr } from './Account/secureAccount'
 import HotspotList from './HotspotList/HotspotList'
 import Config from 'react-native-config'
+import HotspotDetails from './HotspotDetails/HotspotDetails'
+import { Cluster } from '@solana/web3.js'
 
 const Stack = createNativeStackNavigator()
 
@@ -37,9 +40,31 @@ export type RootStackParamList = {
   TransferHotspot: undefined
   OraclePrice: undefined
   HotspotList: undefined
+  HotspotDetails: undefined
 }
 
 export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>
+
+type Environment = {
+  cluster: Cluster
+  rpcEndpoint: string
+  onboardingBaseUrl: string
+}
+// @ts-ignore
+const MAINNET = {
+  cluster: 'mainnet-beta',
+  onboardingBaseUrl: 'https://onboarding.dewi.org/api',
+  rpcEndpoint: `https://rpc.helius.xyz?api-key=${Config.HELIUS_API_KEY}`,
+} as Environment
+
+// @ts-ignore
+const DEVNET = {
+  cluster: 'devnet',
+  onboardingBaseUrl: 'https://onboarding.web.test-helium.com/api',
+  rpcEndpoint: `https://rpc-devnet.helius.xyz?api-key=${Config.HELIUS_API_KEY}`,
+} as Environment
+
+const ENVIRONMENT = DEVNET
 
 export default function App() {
   const [address, setAddress] = useState('')
@@ -63,16 +88,11 @@ export default function App() {
 
   return (
     <SolanaProvider
-      cluster="devnet"
-      rpcEndpoint={`https://rpc-devnet.helius.xyz?api-key=${Config.HELIUS_API_KEY}`}
+      cluster={ENVIRONMENT.cluster}
+      rpcEndpoint={ENVIRONMENT.rpcEndpoint}
       heliumWallet={heliumWallet}
     >
-      <OnboardingProvider
-        baseUrl={
-          Config.ONBOARDING_BASE_URL ||
-          'https://onboarding.web.test-helium.com/api'
-        }
-      >
+      <OnboardingProvider baseUrl={ENVIRONMENT.onboardingBaseUrl}>
         <HotspotBleProvider>
           <NavigationContainer>
             <Stack.Navigator
@@ -97,6 +117,7 @@ export default function App() {
               />
               <Stack.Screen name="OraclePrice" component={OraclePrice} />
               <Stack.Screen name="HotspotList" component={HotspotList} />
+              <Stack.Screen name="HotspotDetails" component={HotspotDetails} />
             </Stack.Navigator>
           </NavigationContainer>
         </HotspotBleProvider>
