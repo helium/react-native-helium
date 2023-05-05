@@ -181,10 +181,17 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         transaction: signedTxn.toString(),
       })
 
+      const txns = createTxns.data?.solanaTransactions?.flatMap((t) => [
+        Buffer.from(t),
+      ])
+
+      if (!txns?.length) {
+        console.error(createTxns)
+        throw new Error('Failed to generate createHotspot txn(s)')
+      }
+
       return solana.submitAllSolana({
-        txns: (createTxns.data?.solanaTransactions || []).map((t) =>
-          Buffer.from(t)
-        ),
+        txns,
       })
     },
     [getKeyToAsset, onboardingClient, solana]
