@@ -36,3 +36,7 @@ export type AssertData = {
 export const CreateHotspotExistsError = new Error(
   'This hotspot has already been created'
 )
+
+export const AlreadyOnboardedError = new Error(
+  'Hotspot has already been onboarded'
+)
