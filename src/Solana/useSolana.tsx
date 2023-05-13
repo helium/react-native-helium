@@ -227,7 +227,6 @@ const useSolana = ({
         searchParams.collection = makerAcc.collection.toString()
       }
 
-      console.log(rpcEndpoint, searchParams)
       return searchAssets(rpcEndpoint, searchParams)
     },
     [hemProgram, wallet, rpcEndpoint]
