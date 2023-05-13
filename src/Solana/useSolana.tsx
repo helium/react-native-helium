@@ -208,6 +208,8 @@ const useSolana = ({
     ) => {
       if (!wallet) return
 
+      delete opts.makerName
+      delete opts.heliumAddress
       const searchParams = {
         ownerAddress: wallet.toString(),
         ...opts,
@@ -225,6 +227,7 @@ const useSolana = ({
         searchParams.collection = makerAcc.collection.toString()
       }
 
+      console.log(rpcEndpoint, searchParams)
       return searchAssets(rpcEndpoint, searchParams)
     },
     [hemProgram, wallet, rpcEndpoint]
