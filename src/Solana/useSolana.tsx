@@ -208,6 +208,8 @@ const useSolana = ({
     ) => {
       if (!wallet) return
 
+      delete opts.makerName
+      delete opts.heliumAddress
       const searchParams = {
         ownerAddress: wallet.toString(),
         ...opts,
