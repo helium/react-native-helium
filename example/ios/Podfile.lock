@@ -90,7 +90,7 @@ PODS:
     - FlipperKit/FlipperKitNetworkPlugin
   - fmt (6.2.1)
   - glog (0.3.5)
-  - helium-react-native-sdk (2.1.2):
+  - helium-react-native-sdk (2.1.3):
     - React-Core
   - hermes-engine (0.70.6)
   - libevent (2.1.12)
@@ -644,7 +644,7 @@ SPEC CHECKSUMS:
   FlipperKit: cbdee19bdd4e7f05472a66ce290f1b729ba3cb86
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 40a13f7840415b9a77023fbcae0f1e6f43192af3
-  helium-react-native-sdk: e3aabe0ed88980a4890754bf1d2e72b089b68582
+  helium-react-native-sdk: a5b54a8baa48cee7019c7dbae35cc2983f816376
   hermes-engine: 2af7b7a59128f250adfd86f15aa1d5a2ecd39995
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   MultiplatformBleAdapter: 5a6a897b006764392f9cef785e4360f54fb9477d

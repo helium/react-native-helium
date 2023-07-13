@@ -365,7 +365,7 @@ export const getAccountFees = async ({
   const lamportFee = lamportsBefore - lamportsAfter
   let dcFee = 0
 
-  if (dcAccount) {
+  if (dcAccount && dcAccount.lamports > 0) {
     const tokenAccount = AccountLayout.decode(
       Buffer.from(dcAccount.data[0], dcAccount.data[1] as BufferEncoding)
     )
