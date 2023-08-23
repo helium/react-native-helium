@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import Input from '../Input'
 import useCreateHotspot from './useCreateHotspot'
-import Clipboard from '@react-native-community/clipboard'
+import Clipboard from '@react-native-clipboard/clipboard'
 import Config from 'react-native-config'
 import { getAddressStr } from '../Account/secureAccount'
 import { AddGateway } from '@helium/react-native-sdk'

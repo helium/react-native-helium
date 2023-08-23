@@ -10,7 +10,7 @@ import {
 } from 'react-native'
 import { AddGateway, useOnboarding } from '@helium/react-native-sdk'
 import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
-import Clipboard from '@react-native-community/clipboard'
+import Clipboard from '@react-native-clipboard/clipboard'
 import { HotspotType } from '@helium/onboarding'
 import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
 import { Buffer } from 'buffer'
@@ -135,7 +135,7 @@ const AddGatewayTxn = () => {
         style={styles.wordInput}
         editable={!submitted}
         autoCapitalize="none"
-        autoCompleteType="off"
+        autoComplete="off"
         multiline
         autoCorrect={false}
       />

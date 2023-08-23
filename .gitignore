@@ -74,3 +74,8 @@ docs/
 yalc.lock
 example/.yalc
 example/yalc.lock
+
+# Temporary files created by Metro to check the health of the file watcher
+.metro-health-check*
+# testing
+/coverage

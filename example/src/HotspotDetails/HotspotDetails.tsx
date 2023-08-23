@@ -5,7 +5,7 @@ import animalName from 'angry-purple-tiger'
 import Address from '@helium/address'
 import { HotspotMeta, useOnboarding, useSolana } from '@helium/react-native-sdk'
 import { PublicKey } from '@solana/web3.js'
-import Clipboard from '@react-native-community/clipboard'
+import Clipboard from '@react-native-clipboard/clipboard'
 
 const HotspotDetails = () => {
   const [hotspotAddress, setHotspotAddress] = useState('')

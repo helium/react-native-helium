@@ -58,7 +58,7 @@ const Home = () => {
     []
   )
 
-  const keyExtractor = useCallback((item) => item.title, [])
+  const keyExtractor = useCallback((item: { title: string }) => item.title, [])
 
   return (
     <FlatList data={data} renderItem={renderItem} keyExtractor={keyExtractor} />
