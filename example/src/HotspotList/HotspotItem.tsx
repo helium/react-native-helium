@@ -1,4 +1,4 @@
-import Clipboard from '@react-native-community/clipboard'
+import Clipboard from '@react-native-clipboard/clipboard'
 import React, { memo } from 'react'
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native'
 import { useOnboarding, useSolana } from '@helium/react-native-sdk'

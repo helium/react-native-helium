@@ -60,7 +60,7 @@ const AccountImport = () => {
           placeholder={`Enter Word ${words.length + 1}`}
           style={styles.wordInput}
           autoCapitalize="none"
-          autoCompleteType="off"
+          autoComplete="off"
           autoCorrect={false}
           onSubmitEditing={handleSubmit}
           blurOnSubmit={false}

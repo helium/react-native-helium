@@ -46,6 +46,11 @@ import { DataCredits } from '@helium/idls/lib/types/data_credits'
 import { daoKey } from '@helium/helium-sub-daos-sdk'
 import { cellToLatLng } from 'h3-js'
 
+const HOTSPOT_PAGE_LIMIT = 100
+const HOTSPOT_CREATOR_ADDRESS = entityCreatorKey(
+  daoKey(HNT_MINT)[0]
+)[0].toString()
+
 type Account = AccountInfo<string[]>
 export type HotspotMeta = {
   isFullHotspot: boolean
@@ -210,14 +215,15 @@ const useSolana = ({
 
       delete opts.makerName
       delete opts.heliumAddress
-      const searchParams = {
-        ownerAddress: wallet.toString(),
-        ...opts,
-      } as SearchAssetsOpts
 
-      const hnt = new PublicKey(HNT_MINT)
-      const key = entityCreatorKey(daoKey(hnt)[0])[0].toString()
-      searchParams.creatorAddress = key.toString()
+      const page: number = (opts?.page as number) || 1
+      const searchParams = {
+        ...opts,
+        ownerAddress: wallet.toString(),
+        page: page,
+        limit: HOTSPOT_PAGE_LIMIT,
+        creatorAddress: HOTSPOT_CREATOR_ADDRESS,
+      } as SearchAssetsOpts
 
       if (opts.makerName && hemProgram) {
         const maker = makerKey(daoKey(HNT_MINT)[0], opts.makerName)[0]
