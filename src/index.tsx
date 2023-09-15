@@ -17,7 +17,7 @@ import HotspotBleProvider, {
 } from './HotspotBle/HotspotBleProvider'
 import OnboardingProvider, {
   OnboardingManager,
-  useOnboardingContext as useOnboarding,
+  useOnboarding,
 } from './Onboarding/OnboardingProvider'
 import SolanaProvider, {
   useSolanaContext as useSolana,

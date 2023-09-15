@@ -42,13 +42,15 @@ const AssertLocation = () => {
     const userAddress = await getAddressStr()
 
     const data = await getAssertData({
-      decimalGain: gain ? parseFloat(gain) : undefined,
-      elevation: elevation ? parseFloat(elevation) : undefined,
       gateway: gatewayAddress,
-      lat: parseFloat(lat),
-      lng: parseFloat(lng),
       owner: userAddress,
-      hotspotTypes,
+      networkDetails: hotspotTypes.map((hotspotType) => ({
+        hotspotType,
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        decimalGain: gain ? parseFloat(gain) : undefined,
+        elevation: elevation ? parseFloat(elevation) : undefined,
+      })),
     })
     setAssertData(data)
   }, [elevation, gain, gatewayAddress, getAssertData, hotspotTypes, lat, lng])

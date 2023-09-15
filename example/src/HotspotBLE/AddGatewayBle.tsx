@@ -55,7 +55,7 @@ const AddGatewayBle = () => {
 
     const { solanaTransactions } = await getOnboardTransactions({
       hotspotAddress: onboardAddress,
-      hotspotTypes,
+      networkDetails: hotspotTypes.map((hotspotType) => ({ hotspotType })),
     })
     let solanaSignedTransactions: string[] | undefined
 

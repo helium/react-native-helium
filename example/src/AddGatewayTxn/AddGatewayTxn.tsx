@@ -63,7 +63,7 @@ const AddGatewayTxn = () => {
 
     const { solanaTransactions } = await getOnboardTransactions({
       hotspotAddress,
-      hotspotTypes,
+      networkDetails: hotspotTypes.map((hotspotType) => ({ hotspotType })),
     })
 
     let solanaSignedTransactions: string[] | undefined
