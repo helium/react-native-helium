@@ -214,45 +214,46 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
   const getOnboardTransactions = useCallback(
     async ({
       hotspotAddress,
-      hotspotTypes,
-      lat,
-      lng,
-      decimalGain,
-      elevation,
+      networkDetails,
     }: {
       hotspotAddress: string
-      hotspotTypes: HotspotType[]
-      lat?: number
-      lng?: number
-      decimalGain?: number
-      elevation?: number
+      networkDetails: {
+        hotspotType: HotspotType
+        lat?: number
+        lng?: number
+        decimalGain?: number
+        elevation?: number
+      }[]
     }): Promise<{
       solanaTransactions?: string[]
     }> => {
-      const gain = decimalGain ? Math.round(decimalGain * 10.0) : undefined
-
-      let location: string | undefined
-      if (lat && lng && lat !== 0 && lng !== 0) {
-        location = new BN(getH3Location(lat, lng), 'hex').toString()
-      }
-
       const onboardResponses = await Promise.all(
-        hotspotTypes.map(async (type) => {
-          const details = await solana.getHotspotDetails({
-            address: hotspotAddress,
-            type,
-          })
-          if (details) return undefined
+        networkDetails.map(
+          async ({ hotspotType: type, lat, lng, decimalGain, elevation }) => {
+            const gain = decimalGain
+              ? Math.round(decimalGain * 10.0)
+              : undefined
 
-          const txn = await onboardingClient.onboard({
-            hotspotAddress,
-            type,
-            gain,
-            elevation,
-            location,
-          })
-          return txn
-        })
+            let location: string | undefined
+            if (lat && lng && lat !== 0 && lng !== 0) {
+              location = new BN(getH3Location(lat, lng), 'hex').toString()
+            }
+            const details = await solana.getHotspotDetails({
+              address: hotspotAddress,
+              type,
+            })
+            if (details) return undefined
+
+            const txn = await onboardingClient.onboard({
+              hotspotAddress,
+              type,
+              gain,
+              elevation,
+              location,
+            })
+            return txn
+          }
+        )
       )
 
       const filtered = without(onboardResponses, undefined)
@@ -353,24 +354,23 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
   const getSolanaAssertData = useCallback(
     async ({
-      balances,
-      elevation,
-      gain,
       gateway,
-      nextLocation,
+      balances,
       onboardingRecord,
       oraclePrice,
       owner,
-      hotspotTypes,
+      networkDetails,
     }: {
       gateway: string
       owner: string
-      gain: number
-      elevation: number
+      networkDetails: {
+        hotspotType: HotspotType
+        gain: number
+        elevation: number
+        nextLocation: string
+      }[]
       onboardingRecord: OnboardingRecord
       oraclePrice: Balance<USDollars>
-      nextLocation: string
-      hotspotTypes: HotspotType[]
       balances: {
         hnt: Balance<NetworkTokens | TestNetworkTokens> | undefined
         sol: Balance<SolTokens>
@@ -382,19 +382,19 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       const maker = onboardingRecord.maker
 
       const solanaAddress = heliumAddressToSolAddress(owner)
-      const location = new BN(nextLocation, 'hex').toString()
 
       const solResponses = await Promise.all(
-        hotspotTypes.map((type) =>
-          onboardingClient.updateMetadata({
-            type,
+        networkDetails.map(({ elevation, gain, nextLocation, hotspotType }) => {
+          const location = new BN(nextLocation, 'hex').toString()
+          return onboardingClient.updateMetadata({
+            type: hotspotType,
             solanaAddress,
             hotspotAddress: gateway,
             location,
             elevation,
             gain,
           })
-        )
+        })
       )
 
       solanaTransactions = solResponses
@@ -428,7 +428,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
           throw e
         }
         simulatedFees = await Promise.all(
-          hotspotTypes.map(async (type) => {
+          networkDetails.map(async ({ hotspotType: type, nextLocation }) => {
             const mint = type === 'IOT' ? IOT_MINT : MOBILE_MINT
             const subDao = subDaoKey(mint)[0]
 
@@ -593,20 +593,19 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     async ({
       gateway,
       owner,
-      lat,
-      lng,
-      decimalGain = 1.2,
-      elevation = 0,
-      hotspotTypes,
+      networkDetails,
       onboardingRecord: paramsOnboardRecord,
     }: {
       gateway: string
       owner: string
-      lat: number
-      lng: number
       decimalGain?: number
-      elevation?: number
-      hotspotTypes: HotspotType[]
+      networkDetails: {
+        hotspotType: HotspotType
+        decimalGain?: number
+        elevation?: number
+        lat: number
+        lng: number
+      }[]
       onboardingRecord?: OnboardingRecord | null
     }): Promise<AssertData> => {
       let record = paramsOnboardRecord || (await getOnboardingRecord(gateway))
@@ -617,23 +616,25 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       const onboardingRecord = record
 
-      const nextLocation = getH3Location(lat, lng)
-
       const balances = await getBalances()
       const oraclePrice = await getOraclePrice()
 
-      const gain = Math.round(decimalGain * 10.0)
+      const details = networkDetails.map(
+        ({ hotspotType, decimalGain, elevation, lat, lng }) => {
+          const nextLocation = getH3Location(lat, lng)
+          const gain = Math.round((decimalGain || 1.2) * 10.0)
+
+          return { hotspotType, nextLocation, gain, elevation: elevation || 0 }
+        }
+      )
 
       return getSolanaAssertData({
         balances,
-        elevation,
-        gain,
         gateway,
-        nextLocation,
         onboardingRecord,
         oraclePrice,
         owner,
-        hotspotTypes,
+        networkDetails: details,
       })
     },
     [getOnboardingRecord, getBalances, getOraclePrice, getSolanaAssertData]
