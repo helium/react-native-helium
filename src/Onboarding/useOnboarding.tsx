@@ -215,6 +215,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     async ({
       hotspotAddress,
       networkDetails,
+      payer,
     }: {
       hotspotAddress: string
       networkDetails: {
@@ -224,6 +225,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         decimalGain?: number
         elevation?: number
       }[]
+      payer?: string
     }): Promise<{
       solanaTransactions?: string[]
     }> => {
@@ -250,6 +252,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
               gain,
               elevation,
               location,
+              payer,
             })
             return txn
           }
@@ -360,7 +363,9 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       oraclePrice,
       owner,
       networkDetails,
+      payer,
     }: {
+      payer?: string
       gateway: string
       owner: string
       networkDetails: {
@@ -393,6 +398,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
             location,
             elevation,
             gain,
+            payer,
           })
         })
       )
