@@ -601,7 +601,9 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       owner,
       networkDetails,
       onboardingRecord: paramsOnboardRecord,
+      payer,
     }: {
+      payer?: string
       gateway: string
       owner: string
       decimalGain?: number
@@ -641,6 +643,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         oraclePrice,
         owner,
         networkDetails: details,
+        payer,
       })
     },
     [getOnboardingRecord, getBalances, getOraclePrice, getSolanaAssertData]
