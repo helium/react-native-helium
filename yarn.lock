@@ -1471,9 +1471,9 @@
     bs58 "^4.0.1"
 
 "@helium/onboarding@^4.10.0":
-  version "4.10.0"
-  resolved "https://registry.yarnpkg.com/@helium/onboarding/-/onboarding-4.10.0.tgz#ee61cca757303c057da7df6d648d454695063cd9"
-  integrity sha512-7IZa+53kRp2TbqKoBGD7/HKpIUzeU6cfFSEI+MWV2krM2wLEOI0lzhmgoMP8XSXGmryPHkVRnz6XWN3di2dEYA==
+  version "4.10.3"
+  resolved "https://registry.yarnpkg.com/@helium/onboarding/-/onboarding-4.10.3.tgz#88fa6ae127d1ea836c6af016939cd93b26acc85c"
+  integrity sha512-DbKwwMttuWHhtHo4VF5NkcLS7/KVOsIW1TlmVp5mmBZHk4rHoCvNRXr8LBtPNnO341jgNxgxQZuA9gH2W7ggSA==
   dependencies:
     axios "^0.24.0"
     axios-retry "^3.4.0"

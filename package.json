@@ -95,7 +95,7 @@
     "@helium/crypto-react-native": "^3.9.0",
     "@helium/currency": "^3.25.1",
     "@helium/http": "^3.43.0",
-    "@helium/onboarding": "^4.10.0",
+    "@helium/onboarding": "^4.10.3",
     "@helium/proto-ble": "^4.8.1",
     "@helium/transactions": "^3.38.0",
     "axios-retry": "^3.3.1",
