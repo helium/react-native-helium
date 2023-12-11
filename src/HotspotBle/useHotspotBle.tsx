@@ -70,7 +70,13 @@ const useHotspotBle = () => {
 
     return () => {
       console.log('destroy ble manager')
-      manager.destroy()
+      ;(async () => {
+        const state = await manager.state()
+        if (state === 'PoweredOn') {
+          manager.destroy()
+        }
+      })()
+
       instanceRef.current = null
     }
   }, [])
