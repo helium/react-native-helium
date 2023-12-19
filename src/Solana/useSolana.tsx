@@ -1,34 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Buffer } from 'buffer'
+import { AnchorProvider, BN, Program, Wallet } from '@coral-xyz/anchor'
 import Address from '@helium/address'
-import {
-  Connection,
-  PublicKey,
-  VersionedTransaction,
-  AccountInfo,
-  Cluster,
-} from '@solana/web3.js'
 import * as Currency from '@helium/currency-utils'
-import {
-  Asset,
-  heliumAddressToSolPublicKey,
-  HNT_MINT,
-  IOT_MINT,
-  MOBILE_MINT,
-  getAsset,
-  searchAssets,
-  SearchAssetsOpts,
-  sendAndConfirmWithRetry,
-  DC_MINT,
-} from '@helium/spl-utils'
-import * as Hotspot from '@helium/hotspot-utils'
-import { init as initHsd, subDaoKey } from '@helium/helium-sub-daos-sdk'
+import { getBalance } from '@helium/currency-utils'
 import { init as initDc } from '@helium/data-credits-sdk'
-import {
-  AccountLayout,
-  getAssociatedTokenAddress,
-  TOKEN_PROGRAM_ID,
-} from '@solana/spl-token'
 import {
   entityCreatorKey,
   init as initHem,
@@ -37,14 +11,39 @@ import {
   mobileInfoKey,
   rewardableEntityConfigKey,
 } from '@helium/helium-entity-manager-sdk'
-import { getBalance } from '@helium/currency-utils'
-import axios from 'axios'
-import { AnchorProvider, Wallet, Program, BN } from '@coral-xyz/anchor'
+import { daoKey, init as initHsd, subDaoKey } from '@helium/helium-sub-daos-sdk'
+import * as Hotspot from '@helium/hotspot-utils'
+import { DataCredits } from '@helium/idls/lib/types/data_credits'
 import { HeliumEntityManager } from '@helium/idls/lib/types/helium_entity_manager'
 import { HeliumSubDaos } from '@helium/idls/lib/types/helium_sub_daos'
-import { DataCredits } from '@helium/idls/lib/types/data_credits'
-import { daoKey } from '@helium/helium-sub-daos-sdk'
+import {
+  Asset,
+  DC_MINT,
+  HNT_MINT,
+  IOT_MINT,
+  MOBILE_MINT,
+  SearchAssetsOpts,
+  getAsset,
+  heliumAddressToSolPublicKey,
+  searchAssets,
+  sendAndConfirmWithRetry,
+} from '@helium/spl-utils'
+import {
+  AccountLayout,
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+} from '@solana/spl-token'
+import {
+  AccountInfo,
+  Cluster,
+  Connection,
+  PublicKey,
+  VersionedTransaction,
+} from '@solana/web3.js'
+import axios from 'axios'
+import { Buffer } from 'buffer'
 import { cellToLatLng } from 'h3-js'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 const HOTSPOT_PAGE_LIMIT = 100
 const HOTSPOT_CREATOR_ADDRESS = entityCreatorKey(
@@ -65,14 +64,24 @@ export type HotspotMeta = {
 
 const useSolana = ({
   heliumWallet,
-  rpcEndpoint,
+  rpcEndpoint: rpcEndpointIn,
   cluster: propsCluster = 'devnet',
+  connection: connectionIn,
 }: {
   cluster?: Cluster
   heliumWallet?: string
-  rpcEndpoint: string
+  rpcEndpoint?: string
+  connection?: Connection
 }) => {
-  const connection = useMemo(() => new Connection(rpcEndpoint), [rpcEndpoint])
+  const rpcEndpoint = useMemo(() => {
+    if (!connectionIn && !rpcEndpointIn) {
+      throw new Error('Must provide one of connection, rpcEndpoint')
+    }
+    return (rpcEndpointIn || connectionIn?.rpcEndpoint)!
+  }, [rpcEndpointIn, connectionIn])
+  const connection = useMemo(() => {
+    return connectionIn || new Connection(rpcEndpoint)
+  }, [rpcEndpoint, connectionIn])
   const [dcProgram, setDcProgram] = useState<Program<DataCredits>>()
   const [hemProgram, setHemProgram] = useState<Program<HeliumEntityManager>>()
   const [hsdProgram, setHsdProgram] = useState<Program<HeliumSubDaos>>()
@@ -199,7 +208,7 @@ const useSolana = ({
         owner: wallet,
         recipient,
         connection,
-        url: rpcEndpoint,
+        url: rpcEndpoint!,
       })
     },
     [connection, wallet, rpcEndpoint]
