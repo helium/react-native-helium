@@ -72,11 +72,13 @@ const SolanaProvider = ({
   heliumWallet,
   cluster,
   rpcEndpoint,
+  connection,
 }: {
   children: ReactNode
   cluster?: 'devnet' | 'testnet' | 'mainnet-beta'
   heliumWallet?: string
-  rpcEndpoint: string
+  rpcEndpoint?: string
+  connection?: web3.Connection
 }) => {
   return (
     <Provider
@@ -84,6 +86,7 @@ const SolanaProvider = ({
         cluster,
         heliumWallet,
         rpcEndpoint,
+        connection,
       })}
     >
       {children}
