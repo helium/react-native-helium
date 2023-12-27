@@ -238,7 +238,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
             let location: string | undefined
             if (lat && lng && lat !== 0 && lng !== 0) {
-              location = new BN(getH3Location(lat, lng), 'hex').toString()
+              location = getH3Location(lat, lng)
             }
             const details = await solana.getHotspotDetails({
               address: hotspotAddress,
@@ -390,18 +390,26 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
 
       const solResponses = await Promise.all(
         networkDetails.map(({ elevation, gain, nextLocation, hotspotType }) => {
-          const location = new BN(nextLocation, 'hex').toString()
           return onboardingClient.updateMetadata({
             type: hotspotType,
             solanaAddress,
             hotspotAddress: gateway,
-            location,
+            location: nextLocation,
             elevation,
             gain,
             payer,
           })
         })
       )
+
+      const fails = solResponses.filter((s) => !s.success)
+      if (fails.length > 0) {
+        throw new Error(
+          `Update metadata requests failed: ${fails
+            .map((f) => f.errorMessage)
+            .join(', ')}`
+        )
+      }
 
       solanaTransactions = solResponses
         .flatMap((r) => r.data?.solanaTransactions || [])
