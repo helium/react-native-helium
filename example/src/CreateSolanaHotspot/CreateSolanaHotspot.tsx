@@ -28,6 +28,9 @@ const CreateSolanaHotspot = () => {
   const [deepLinkScheme, setDeepLinkScheme] = useState('makerappscheme://')
   const [submitted, setSubmitted] = useState(false)
   const { txn, create } = useCreateHotspot()
+  const [deviceType, setDeviceType] = useState<
+    'Cbrs' | 'WifiIndoor' | 'WifiOutdoor' | 'IOT'
+  >('IOT')
 
   useEffect(() => {
     getAddressStr().then(setOwnerAddress)
@@ -44,15 +47,50 @@ const CreateSolanaHotspot = () => {
   const createHotspot = useCallback(async () => {
     setSubmitted(true)
     try {
-      await create({ makerAddress, authorization, ownerAddress })
+      await create({
+        makerAddress,
+        authorization,
+        ownerAddress,
+        deviceType,
+      })
     } catch (e) {
       console.error(e)
     }
     setSubmitted(false)
-  }, [authorization, create, makerAddress, ownerAddress])
+  }, [authorization, create, makerAddress, ownerAddress, deviceType])
+
+  const updateDeviceType = useCallback(
+    (nextType: 'Cbrs' | 'WifiIndoor' | 'WifiOutdoor' | 'IOT') => () => {
+      setDeviceType(nextType)
+    },
+    []
+  )
 
   return (
     <View style={styles.container}>
+      <Text>Device Type</Text>
+      <View style={styles.row}>
+        <Button
+          title="Cbrs"
+          color={deviceType === 'Cbrs' ? undefined : 'black'}
+          onPress={updateDeviceType('Cbrs')}
+        />
+        <Button
+          title="IOT"
+          color={deviceType === 'IOT' ? undefined : 'black'}
+          onPress={updateDeviceType('IOT')}
+        />
+        <Button
+          title="WifiIndoor"
+          color={deviceType === 'WifiIndoor' ? undefined : 'black'}
+          onPress={updateDeviceType('WifiIndoor')}
+        />
+        <Button
+          title="WifiOutdoor"
+          color={deviceType === 'WifiOutdoor' ? undefined : 'black'}
+          onPress={updateDeviceType('WifiOutdoor')}
+        />
+      </View>
       <Input
         title="Maker Address"
         style={styles.innnerContainer}
@@ -126,6 +164,7 @@ const CreateSolanaHotspot = () => {
 }
 
 const styles = StyleSheet.create({
+  row: { flexDirection: 'row' },
   container: {
     margin: 24,
   },
