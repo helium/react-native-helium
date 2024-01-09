@@ -19,10 +19,12 @@ const useCreateHotspot = () => {
     authorization,
     makerAddress,
     ownerAddress,
+    deviceType,
   }: {
     ownerAddress?: string
     makerAddress: string
     authorization: string
+    deviceType: 'Cbrs' | 'WifiIndoor' | 'WifiOutdoor' | 'IOT'
   }) => {
     const gateway = await Keypair.makeRandom()
     const maker = Address.fromB58(makerAddress)
@@ -45,6 +47,7 @@ const useCreateHotspot = () => {
         rpiSerial: random(10),
         heliumSerial: random(10),
         batch: 'example-batch',
+        deviceType: deviceType === 'IOT' ? null : deviceType,
       },
       {
         headers: {
