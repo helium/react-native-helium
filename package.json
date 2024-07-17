@@ -1,6 +1,6 @@
 {
   "name": "@helium/react-native-sdk",
-  "version": "3.0.5",
+  "version": "3.0.4",
   "description": "Helium React Native SDK",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
