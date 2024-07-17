@@ -1,8 +1,8 @@
 import React, { createContext, ReactNode, useContext } from 'react'
 import useSolana, { HotspotMeta } from './useSolana'
 import * as web3 from '@solana/web3.js'
-import { PriceData } from '@helium/currency-utils'
 import { Asset, SearchAssetsOpts } from '@helium/spl-utils'
+import * as Currency from '@helium/currency-utils'
 
 const initialState = {
   connection: undefined,
@@ -33,7 +33,9 @@ const initialState = {
     _opts: Omit<SearchAssetsOpts, 'ownerAddress' | 'creatorAddress'>
   ) => new Promise<Asset[]>((resolve) => resolve([])),
   getOraclePriceFromSolana: (_opts: { tokenType: 'HNT' }) =>
-    new Promise<PriceData | undefined>((resolve) => resolve(undefined)),
+    new Promise<ReturnType<typeof Currency.getOraclePrice> | undefined>(
+      (resolve) => resolve(undefined)
+    ),
   getSolBalance: () => new Promise<number>((resolve) => resolve(0)),
   estimateMetaTxnFees: (
     _buff: Buffer,
