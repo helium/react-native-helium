@@ -302,11 +302,15 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       tokenType: 'HNT',
     })
 
-    if (!hntPrice?.aggregate.price) {
+    if (!hntPrice?.priceMessage.price) {
       throw new Error('Failed to fetch oracle price')
     }
 
-    return Balance.fromFloat(hntPrice?.aggregate.price, CurrencyType.usd)
+    return Balance.fromFloat(
+      hntPrice?.priceMessage.price.toNumber() *
+        Math.pow(10, hntPrice.priceMessage.exponent),
+      CurrencyType.usd
+    )
   }, [solana])
 
   const getAtaAccountCreationFee = useCallback(

@@ -1,4 +1,10 @@
-import { AnchorProvider, BN, Program, Wallet } from '@coral-xyz/anchor'
+import {
+  AnchorProvider,
+  BN,
+  IdlAccounts,
+  Program,
+  Wallet,
+} from '@coral-xyz/anchor'
 import Address from '@helium/address'
 import * as Currency from '@helium/currency-utils'
 import { getBalance } from '@helium/currency-utils'
@@ -186,7 +192,7 @@ const useSolana = ({
       tokenType,
     }: {
       tokenType: 'HNT'
-    }): Promise<Currency.PriceData | undefined> =>
+    }): Promise<ReturnType<typeof Currency.getOraclePrice> | undefined> =>
       Currency.getOraclePrice({ tokenType, cluster: propsCluster, connection }),
     [propsCluster, connection]
   )
@@ -451,21 +457,17 @@ export const fetchSimulatedTxn = async ({
   return response.data.result.value.accounts
 }
 
+type IotInfoV0 = IdlAccounts<HeliumEntityManager>['iotHotspotInfoV0']
+type MobileInfoV0 = IdlAccounts<HeliumEntityManager>['mobileHotspotInfoV0']
 const hotspotInfoToDetails = (
-  value: {
-    asset: PublicKey
-    bumpSeed: number
-    isFullHotspot: boolean
-    location: BN | null
-    numLocationAsserts: number
-    elevation: number | null
-    gain: number | null
-  },
+  value: IotInfoV0 | MobileInfoV0,
   asset?: Asset
 ) => {
   const location = value.location?.toString('hex')
   const details = {
+    // @ts-ignore
     elevation: value.elevation || undefined,
+    // @ts-ignore
     gain: value.gain || undefined,
     location,
     isFullHotspot: value.isFullHotspot,
