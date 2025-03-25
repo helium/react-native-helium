@@ -1,8 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import OnboardingClient, {
-  OnboardingRecord,
-  HotspotType,
-} from '@helium/onboarding'
+import OnboardingClient, { OnboardingRecord } from '@helium/onboarding'
 import * as web3 from '@solana/web3.js'
 import {
   AlreadyOnboardedError,
@@ -45,6 +42,7 @@ import {
 } from '@solana/spl-token'
 import { AddGatewayV1 } from '@helium/transactions'
 import { without } from 'lodash'
+import { HotspotType } from 'example/src/AddGatewayTxn/AddGatewayTxn'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
@@ -143,7 +141,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
             DC_MINT
           ),
         ])
-        .accounts({
+        .accountsPartial({
           dcMint: DC_MINT,
           recipient: destinationWallet,
         })
