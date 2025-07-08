@@ -67,6 +67,7 @@ export const getMnemonic = async () => {
 }
 
 export const getSolanaPubKey = async (sk: string) => {
-  const kp = Keypair.fromSecretKey(Buffer.from(sk, 'base64'))
+  const secretKey = Uint8Array.from(Buffer.from(sk, 'base64'))
+  const kp = Keypair.fromSecretKey(secretKey)
   return kp.publicKey
 }

@@ -13,9 +13,9 @@ import { getPendingTxn } from '../../appDataClient'
 import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
 import Input from '../Input'
 import animalName from 'angry-purple-tiger'
-import { HotspotType } from '@helium/onboarding'
 import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
 import { Buffer } from 'buffer'
+import { HotspotType } from '../AddGatewayTxn/AddGatewayTxn'
 
 const AssertLocation = () => {
   const { getOnboardingRecord, submitTransactions, getAssertData } =

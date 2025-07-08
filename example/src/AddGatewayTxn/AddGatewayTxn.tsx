@@ -11,12 +11,13 @@ import {
 import { AddGateway, useOnboarding } from '@helium/react-native-sdk'
 import { getAddressStr, getKeypairRaw } from '../Account/secureAccount'
 import Clipboard from '@react-native-clipboard/clipboard'
-import { HotspotType } from '@helium/onboarding'
 import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
 import { Buffer } from 'buffer'
 import Input from '../Input'
 import Address from '@helium/address'
 import animalName from 'angry-purple-tiger'
+
+export type HotspotType = 'IOT' | 'MOBILE'
 
 const AddGatewayTxn = () => {
   const [txnStr, setTxnStr] = useState('')

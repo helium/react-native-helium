@@ -6,9 +6,9 @@ import {
   getSecureItem,
 } from '../Account/secureAccount'
 import { useHotspotBle, useOnboarding } from '@helium/react-native-sdk'
-import { HotspotType } from '@helium/onboarding'
 import { bufferToTransaction, getSolanaKeypair } from '@helium/spl-utils'
 import { Buffer } from 'buffer'
+import { HotspotType } from '../AddGatewayTxn/AddGatewayTxn'
 
 const AddGatewayBle = () => {
   const {
