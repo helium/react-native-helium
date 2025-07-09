@@ -9366,7 +9366,7 @@ react-native-screens@^3.21.0:
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
 
-react-native-sodium@0.4.0, react-native-sodium@^0.4.0:
+react-native-sodium@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/react-native-sodium/-/react-native-sodium-0.4.0.tgz#9f416aa5d24c020ae252fa4d6ce6b67251c47dc5"
   integrity sha512-u5ZQGRnoencCJV5PaUcEjJ7+svn8rqBBFgrmI+J5j6YGKebl/cOqapH8OuLCWB8SDOSKftx0KxFoeVZEz8O4lQ==
