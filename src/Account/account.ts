@@ -11,7 +11,7 @@ import { shuffle, uniq, take, sampleSize } from 'lodash'
 import * as web3 from '@solana/web3.js'
 
 /**
- * A libsodium keypair.
+ * A keypair with secret key (sk) and public key (pk) as base64 strings.
  */
 export interface SodiumKeyPair {
   sk: string
