@@ -79,7 +79,7 @@
     "@helium/currency": "^5.0.0-alpha.1",
     "@helium/http": "^5.0.0-alpha.1",
     "@helium/onboarding": "^5.0.0-alpha.1",
-    "@helium/proto-ble": "^^5.0.0-alpha.1",
+    "@helium/proto-ble": "^5.0.0-alpha.1",
     "@helium/transactions": "^5.0.0-alpha.1",
     "@react-native-community/eslint-config": "^2.0.0",
     "@release-it/conventional-changelog": "^2.0.0",
