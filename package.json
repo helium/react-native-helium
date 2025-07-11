@@ -1,7 +1,22 @@
 {
   "name": "@helium/react-native-sdk",
-  "version": "3.1.0",
+  "version": "4.0.0",
   "description": "Helium React Native SDK",
+  "keywords": [
+    "react-native",
+    "ios",
+    "android"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/helium/react-native-helium",
+  "bugs": {
+    "url": "https://github.com/helium/react-native-helium/issues"
+  },
+  "homepage": "https://github.com/helium/react-native-helium#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
   "types": "lib/typescript/src/index.d.ts",
@@ -23,40 +38,49 @@
   ],
   "scripts": {
     "preinstall": "rm -rf node_modules",
+    "prepare": "bob build",
     "test": "jest",
     "typescript": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
-    "prepare": "bob build",
+    "docs": "typedoc",
     "release": "release-it",
     "example": "yarn --cwd example",
     "pods": "cd example && pod-install --quiet",
-    "bootstrap": "yarn example && yarn && yarn pods",
-    "docs": "typedoc"
+    "bootstrap": "yarn example && yarn && yarn pods"
   },
-  "keywords": [
-    "react-native",
-    "ios",
-    "android"
-  ],
-  "repository": "https://github.com/helium/react-native-helium",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/helium/react-native-helium/issues"
-  },
-  "homepage": "https://github.com/helium/react-native-helium#readme",
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public"
+  "dependencies": {
+    "@azure/core-asynciterator-polyfill": "^1.0.2",
+    "@coral-xyz/anchor": "^0.31.0",
+    "@helium/currency-utils": "^0.10.3",
+    "@helium/data-credits-sdk": "^0.10.3",
+    "@helium/helium-entity-manager-sdk": "^0.10.3",
+    "@helium/helium-sub-daos-sdk": "^0.10.3",
+    "@helium/hotspot-utils": "^0.10.3",
+    "@helium/onboarding": "^5.0.0-alpha.1",
+    "@helium/proto-ble": "^5.0.0-alpha.1",
+    "@helium/spl-utils": "^0.10.3",
+    "@helium/voter-stake-registry-sdk": "^0.10.3",
+    "@solana/spl-token": "0.4.13",
+    "@solana/web3.js": "^1.91.1",
+    "assert": "^2.0.0",
+    "axios": "^1.3.0",
+    "axios-retry": "^3.3.1",
+    "bignumber.js": "^9.1.1",
+    "bn.js": "^5.2.1",
+    "bs58": "^5.0.0",
+    "react-native-crypto": "^2.2.0",
+    "text-encoding-polyfill": "^0.6.7",
+    "typescript-collections": "^1.3.3"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^11.0.0",
-    "@helium/address": "^4.12.0",
-    "@helium/crypto-react-native": "^4.12.0",
-    "@helium/currency": "^4.12.0",
-    "@helium/http": "^4.10.0",
-    "@helium/onboarding": "^4.14.0",
-    "@helium/proto-ble": "^4.11.1",
-    "@helium/transactions": "^4.12.0",
+    "@helium/address": "^5.0.0-alpha.1",
+    "@helium/crypto-react-native": "^5.0.0-alpha.1",
+    "@helium/currency": "^5.0.0-alpha.1",
+    "@helium/http": "^5.0.0-alpha.1",
+    "@helium/onboarding": "^5.0.0-alpha.1",
+    "@helium/proto-ble": "^5.0.0-alpha.1",
+    "@helium/transactions": "^5.0.0-alpha.1",
     "@react-native-community/eslint-config": "^2.0.0",
     "@release-it/conventional-changelog": "^2.0.0",
     "@types/base-64": "^0.1.3",
@@ -84,7 +108,6 @@
     "react-native-builder-bob": "^0.18.1",
     "react-native-crypto": "^2.2.0",
     "react-native-get-random-values": "^1.7.0",
-    "react-native-sodium": "^0.3.9",
     "readable-stream": "^3.6.0",
     "release-it": "^14.2.2",
     "stream": "^0.0.2",
@@ -92,12 +115,12 @@
     "typescript": "^5.2.2"
   },
   "peerDependencies": {
-    "@helium/crypto-react-native": "^4.12.0",
-    "@helium/currency": "^4.12.0",
-    "@helium/http": "^4.12.0",
-    "@helium/onboarding": "^4.14.0",
-    "@helium/proto-ble": "^4.11.1",
-    "@helium/transactions": "^4.12.0",
+    "@helium/crypto-react-native": "^5.0.0-alpha.1",
+    "@helium/currency": "^5.0.0-alpha.1",
+    "@helium/http": "^5.0.0-alpha.1",
+    "@helium/onboarding": "^5.0.0-alpha.1",
+    "@helium/proto-ble": "^5.0.0-alpha.1",
+    "@helium/transactions": "^5.0.0-alpha.1",
     "axios-retry": "^3.3.1",
     "buffer": "^6.0.3",
     "compare-versions": "^3.6.0",
@@ -111,9 +134,11 @@
     "react-native-ble-plx": "^2.0.2",
     "react-native-crypto": "^2.2.0",
     "react-native-get-random-values": "^1.7.0",
-    "react-native-sodium": "^0.3.9",
     "readable-stream": "^3.6.0",
     "stream": "^0.0.2"
+  },
+  "resolutions": {
+    "@solana/spl-token": "0.3.6"
   },
   "jest": {
     "preset": "react-native",
@@ -191,32 +216,5 @@
       "module",
       "typescript"
     ]
-  },
-  "dependencies": {
-    "@azure/core-asynciterator-polyfill": "^1.0.2",
-    "@coral-xyz/anchor": "^0.31.0",
-    "@helium/currency-utils": "^0.10.3",
-    "@helium/data-credits-sdk": "^0.10.3",
-    "@helium/helium-entity-manager-sdk": "^0.10.3",
-    "@helium/helium-sub-daos-sdk": "^0.10.3",
-    "@helium/hotspot-utils": "^0.10.3",
-    "@helium/onboarding": "^4.14.0",
-    "@helium/proto-ble": "^4.11.1",
-    "@helium/spl-utils": "^0.10.3",
-    "@helium/voter-stake-registry-sdk": "^0.10.3",
-    "@solana/spl-token": "0.4.13",
-    "@solana/web3.js": "^1.91.1",
-    "assert": "^2.0.0",
-    "axios": "^1.3.0",
-    "axios-retry": "^3.3.1",
-    "bignumber.js": "^9.1.1",
-    "bn.js": "^5.2.1",
-    "bs58": "^5.0.0",
-    "react-native-crypto": "^2.2.0",
-    "text-encoding-polyfill": "^0.6.7",
-    "typescript-collections": "^1.3.3"
-  },
-  "resolutions": {
-    "@solana/spl-token": "0.3.6"
   }
 }

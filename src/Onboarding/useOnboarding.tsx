@@ -43,6 +43,7 @@ import {
 import { AddGatewayV1 } from '@helium/transactions'
 import { without } from 'lodash'
 import { HotspotType } from 'example/src/AddGatewayTxn/AddGatewayTxn'
+import { OnboardingResponse } from '@helium/onboarding/build/OnboardingClient'
 
 export const TXN_FEE_IN_LAMPORTS = 5000
 export const TXN_FEE_IN_SOL = TXN_FEE_IN_LAMPORTS / web3.LAMPORTS_PER_SOL
@@ -244,14 +245,39 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
             })
             if (details) return undefined
 
-            const txn = await onboardingClient.onboard({
-              hotspotAddress,
-              type,
-              gain,
-              elevation,
-              location,
-              payer,
-            })
+            let txn:
+              | OnboardingResponse<{
+                  solanaTransactions: number[][]
+                }>
+              | undefined
+
+            if (type === 'IOT') {
+              txn = await onboardingClient.onboardIot({
+                hotspotAddress,
+                gain,
+                elevation,
+                location,
+                payer,
+              })
+            }
+
+            if (type === 'MOBILE') {
+              txn = await onboardingClient.onboardMobile({
+                hotspotAddress,
+                location,
+                deploymentInfo: {
+                  wifiInfoV0: {
+                    elevation: elevation || 0,
+                    antenna: 0,
+                    azimuth: 0,
+                    mechanicalDownTilt: 0,
+                    electricalDownTilt: 0,
+                  },
+                },
+                payer,
+              })
+            }
+
             return txn
           }
         )
@@ -391,17 +417,40 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       const solanaAddress = heliumAddressToSolAddress(owner)
 
       const solResponses = await Promise.all(
-        networkDetails.map(({ elevation, gain, nextLocation, hotspotType }) => {
-          return onboardingClient.updateMetadata({
-            type: hotspotType,
-            solanaAddress,
-            hotspotAddress: gateway,
-            location: nextLocation,
-            elevation,
-            gain,
-            payer,
-          })
-        })
+        networkDetails.map(
+          async ({ elevation, gain, nextLocation, hotspotType }) => {
+            if (hotspotType === 'IOT') {
+              return await onboardingClient.updateIotMetadata({
+                hotspotAddress: gateway,
+                solanaAddress,
+                payer,
+                location: nextLocation,
+                elevation,
+                gain,
+              })
+            }
+
+            if (hotspotType === 'MOBILE') {
+              return await onboardingClient.updateMobileMetadata({
+                hotspotAddress: gateway,
+                solanaAddress,
+                payer,
+                location: nextLocation,
+                deploymentInfo: {
+                  wifiInfoV0: {
+                    elevation,
+                    antenna: 0,
+                    azimuth: 0,
+                    mechanicalDownTilt: 0,
+                    electricalDownTilt: 0,
+                  },
+                },
+              })
+            }
+
+            throw new Error(`Unsupported hotspot type: ${hotspotType}`)
+          }
+        )
       )
 
       const fails = solResponses.filter((s) => !s.success)
