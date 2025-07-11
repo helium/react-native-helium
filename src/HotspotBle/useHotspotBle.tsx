@@ -22,7 +22,7 @@ import {
 } from './bleTypes'
 import { signGatewayTxn, calculateAddGatewayFee } from '../utils/addGateway'
 import { decode } from 'base-64'
-import type { SodiumKeyPair } from '../Account/account'
+import type { KeypairRaw } from '../Account/account'
 import { AddGatewayV1 } from '@helium/transactions'
 
 export enum HotspotErrorCode {
@@ -352,7 +352,7 @@ const useHotspotBle = () => {
     }: {
       ownerAddress: string
       payerAddress: string
-      ownerKeypairRaw: SodiumKeyPair
+      ownerKeypairRaw: KeypairRaw
     }): Promise<AddGatewayV1 | undefined> => {
       const value = await createGatewayTxn({ ownerAddress, payerAddress })
       return signGatewayTxn(value, ownerKeypairRaw)

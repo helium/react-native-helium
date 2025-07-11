@@ -6,7 +6,7 @@
 
 import Address from '@helium/address'
 import { AssertLocationV2 } from '@helium/transactions'
-import { getKeypair, SodiumKeyPair } from '../Account/account'
+import { getKeypair, KeypairRaw } from '../Account/account'
 import { latLngToCell } from 'h3-js'
 import { Hotspot } from '@helium/http'
 import { isSolHotspot } from './isSolHotspot'
@@ -65,7 +65,7 @@ export const createLocationTxn = async ({
   dataOnly?: boolean
   updatingLocation: boolean
   nextLocation: string
-  ownerKeypairRaw?: SodiumKeyPair
+  ownerKeypairRaw?: KeypairRaw
 }) => {
   const isSol = hotspot && isSolHotspot(hotspot)
 
@@ -104,7 +104,7 @@ export const signAssert = async ({
   owner,
   assertLocationTxn,
 }: {
-  ownerKeypairRaw: SodiumKeyPair
+  ownerKeypairRaw: KeypairRaw
   payer: string
   owner: string
   assertLocationTxn: AssertLocationV2
@@ -125,7 +125,7 @@ export const signAssertTxn = async ({
   assertLocationTxn,
   ...opts
 }: {
-  ownerKeypairRaw: SodiumKeyPair
+  ownerKeypairRaw: KeypairRaw
   payer: string
   owner: string
   assertLocationTxn: string

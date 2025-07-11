@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js'
 /**
  * A keypair with secret key (sk) and public key (pk) as base64 strings.
  */
-export interface SodiumKeyPair {
+export interface KeypairRaw {
   sk: string
   pk: string
 }
@@ -39,7 +39,7 @@ export const createKeypair = async (
     mnemonic = new Mnemonic(givenMnemonic)
   }
   const { keypair, address } = await Keypair.fromMnemonic(mnemonic, netType)
-  const keypairRaw = keypair as SodiumKeyPair
+  const keypairRaw = keypair as KeypairRaw
   return { keypairRaw, address, mnemonic }
 }
 
@@ -57,10 +57,10 @@ export const getAddress = async (addressB58: string): Promise<Address> =>
 export const getMnemonic = async (words: string[]) => new Mnemonic(words)
 
 /**
- * Get a {@link Keypair} from a {@link SodiumKeyPair}
+ * Get a {@link Keypair} from a {@link KeypairRaw}
  * @param keypairRaw
  */
-export const getKeypair = (keypairRaw: SodiumKeyPair): Keypair =>
+export const getKeypair = (keypairRaw: KeypairRaw): Keypair =>
   new Keypair(keypairRaw)
 
 /**

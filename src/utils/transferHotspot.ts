@@ -5,7 +5,7 @@
  */
 
 import { TransferHotspotV2 } from '@helium/transactions'
-import { getKeypair, SodiumKeyPair } from '../Account/account'
+import { getKeypair, KeypairRaw } from '../Account/account'
 import Address from '@helium/address'
 import Client, { PocReceiptsV2 } from '@helium/http'
 import { first } from 'lodash'
@@ -43,13 +43,13 @@ export const txnFromString = (txnStr: string): TransferHotspotV2 =>
   TransferHotspotV2.fromString(txnStr)
 
 /**
- * Sign a {@link TransferHotspotV2} transaction with the provided owner {@link SodiumKeyPair}
+ * Sign a {@link TransferHotspotV2} transaction with the provided owner {@link KeypairRaw}
  * @param txnStr the encoded blockchain transaction as a String
  * @param ownerKeypairRaw
  */
 export const signTransferV2Txn = async (
   txnStr: string,
-  ownerKeypairRaw: SodiumKeyPair
+  ownerKeypairRaw: KeypairRaw
 ): Promise<TransferHotspotV2> => {
   const ownerKeypair = getKeypair(ownerKeypairRaw)
   const transferHotspotV2 = txnFromString(txnStr)
@@ -95,7 +95,7 @@ export const createTransferTransaction = async ({
   userAddress: string
   newOwnerAddress: string
   client: Client
-  ownerKeypairRaw?: SodiumKeyPair
+  ownerKeypairRaw?: KeypairRaw
 }) => {
   const hotspot = await client.hotspots.get(hotspotAddress)
   if (!hotspot) {

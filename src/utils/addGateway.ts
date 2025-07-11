@@ -5,7 +5,7 @@
  */
 
 import { AddGatewayV1 } from '@helium/transactions'
-import { getKeypair, SodiumKeyPair } from '../Account/account'
+import { getKeypair, KeypairRaw } from '../Account/account'
 import Address from '@helium/address'
 import { emptyB58Address } from './txnHelper'
 
@@ -35,13 +35,13 @@ export const txnFromString = (txnStr: string): AddGatewayV1 =>
   AddGatewayV1.fromString(txnStr)
 
 /**
- * Sign an {@link AddGatewayV1} transaction with the provided owner {@link SodiumKeyPair}
+ * Sign an {@link AddGatewayV1} transaction with the provided owner {@link KeypairRaw}
  * @param txnStr the encoded blockchain transaction as a String
  * @param ownerKeypairRaw
  */
 export const signGatewayTxn = async (
   txnStr: string,
-  ownerKeypairRaw: SodiumKeyPair
+  ownerKeypairRaw: KeypairRaw
 ) => {
   const addGatewayTxn = txnFromString(txnStr)
   return signGateway(addGatewayTxn, ownerKeypairRaw)
@@ -49,7 +49,7 @@ export const signGatewayTxn = async (
 
 export const signGateway = async (
   addGatewayTxn: AddGatewayV1,
-  ownerKeypairRaw: SodiumKeyPair
+  ownerKeypairRaw: KeypairRaw
 ) => {
   const ownerKeypair = getKeypair(ownerKeypairRaw)
   const txnOwnerSigned = await addGatewayTxn.sign({
