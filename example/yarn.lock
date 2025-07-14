@@ -1685,10 +1685,10 @@
     js-sha256 "^0.9.0"
     multiformats "^9.6.4"
 
-"@helium/address@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@helium/address/-/address-5.0.0.tgz#c4329ab3341f37874df0493a900886368e28cc89"
-  integrity sha512-TVIm5eUcJSBF/odjyT4Mozl8hQeBW1FQVCiOdG5FyzNSSmFa6ObSBcRvvkZ8SlnhjqXrsY7RvMT59VIY7MvgBg==
+"@helium/address@^5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@helium/address/-/address-5.0.1.tgz#aab143289fcc5ff19342a02ecb22a8ca676e2c10"
+  integrity sha512-4Im5Oe0H/MpZb/gH14/wS7dcPABqyU2xH/8e8FpeuUzg/YP0f7y4VgoJzKRsfYwpSxn7HAEq5GbfkM6HNRgVjg==
   dependencies:
     "@noble/hashes" "^1.8.0"
     bs58 "^6.0.0"
@@ -1741,22 +1741,22 @@
     bn.js "^5.2.0"
     bs58 "^4.0.1"
 
-"@helium/crypto-react-native@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@helium/crypto-react-native/-/crypto-react-native-5.0.0.tgz#bd6028b8e79b9601320adcabf3382b4f54c31717"
-  integrity sha512-ulbYiTvKQ5pHXSLzsCo5W5+qC3xaGNv0Blz3kwZGUoCXMegg4+F1vH82NR8bH+A3qbKRmk1RweVz4fFvzqcrcg==
+"@helium/crypto-react-native@^5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@helium/crypto-react-native/-/crypto-react-native-5.0.1.tgz#15f46d8198de9bace5b22c29f520451b0a6dfc6b"
+  integrity sha512-0XjnS0tLaPaI6AHket5I2ajOKKl0SroFi8m+WgOIM7fmS070OmdzHkj4baebCeqAXuUk2M6JqQSjcid2OkEoxg==
   dependencies:
-    "@helium/address" "^5.0.0"
+    "@helium/address" "^5.0.1"
     "@noble/curves" "^1.9.2"
     "@noble/hashes" "^1.8.0"
     safe-buffer "^5.2.1"
 
-"@helium/crypto@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@helium/crypto/-/crypto-5.0.0.tgz#01faa90224cfde4d5e4774ed321ada9f73ace8dc"
-  integrity sha512-eoDDyBECanyu4Yo/IcpBlqpmFYqWOAaak4Hao3egF0BEWGHjs5tHVvrSt2qYhOTm+rX3WUvyB5qMeW9u6vfgaQ==
+"@helium/crypto@^5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@helium/crypto/-/crypto-5.0.1.tgz#bf7d255697d712724d4a4c9e3675d86d47f2a9db"
+  integrity sha512-DVPwZ+h6ZOekjwawgGdsi19+InMC3J06Ps4gfsqahYcWVoqJlmI9UaALFJJkOeKBLCgoxvqCOlQSXzds9veVKQ==
   dependencies:
-    "@helium/address" "^5.0.0"
+    "@helium/address" "^5.0.1"
     "@noble/curves" "^1.9.2"
     "@noble/hashes" "^1.8.0"
 
@@ -1776,10 +1776,10 @@
     "@solana/spl-token" "^0.3.8"
     "@solana/web3.js" "^1.78.8"
 
-"@helium/currency@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@helium/currency/-/currency-5.0.0.tgz#063917ced341de9eb6929aadf0322592aff55e1a"
-  integrity sha512-85ooHFM4cIR66kFdGr9CbLRSiUC0aq+RDLLDXq/tLPLb8wEWu8M5rPFeP6RRAjI5G3wwvUcuTIQNNnQSM9Rn8Q==
+"@helium/currency@^5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@helium/currency/-/currency-5.0.1.tgz#69eb85308a731b89fb656c12c3ddfc859b4ab38c"
+  integrity sha512-qC7mYqfxYWebfdCILO48EHtPGtCM8fKDGyuRCWhCehT32bDBFjP662898YjErotpOOdjDvyvo5FKmx6g8PQBnA==
   dependencies:
     bignumber.js "^9.0.0"
 
@@ -1886,13 +1886,13 @@
     "@solana/web3.js" "^1.78.8"
     bs58 "^4.0.1"
 
-"@helium/http@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@helium/http/-/http-5.0.0.tgz#2d0d236f575dc5a25ec1fa6a3a1f76368f0daa21"
-  integrity sha512-+dnslbZ/6f7Cu1KgeeumJ7D70B0fBDBIQOCzRXnT79hg5P6SUNnU0fzXRNudb3lpHoOuvGuuWSsFovyQ9ztKZQ==
+"@helium/http@^5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@helium/http/-/http-5.0.1.tgz#c182d71e8cb0702eace221e476ee33e8ff48a2fe"
+  integrity sha512-pQpXyNkL19Zh/pDOBo5DICNGwoBke+LO+E/SQryfasc3yX1gDUyBrPwQwe1Iwl+731QlqP7EG3qYBCHXwG7Hfw==
   dependencies:
-    "@helium/address" "^5.0.0"
-    "@helium/currency" "^5.0.0"
+    "@helium/address" "^5.0.1"
+    "@helium/currency" "^5.0.1"
     axios "^0.21.1"
     camelcase-keys "^6.2.2"
     qs "^6.9.3"
@@ -1973,20 +1973,20 @@
     bn.js "^5.2.0"
     bs58 "^4.0.1"
 
-"@helium/onboarding@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@helium/onboarding/-/onboarding-5.0.0.tgz#86e115ea73a0c05f6fee67ffcde6dfabe7c2203c"
-  integrity sha512-QTzRB4kthGXv4J8dsUifU2sCwjtbqrXTbDicFTnOfwZfYBSPZOLOGnMcnZF3hRayCMCbvecf0wsf/rzZq+8u2w==
+"@helium/onboarding@^5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@helium/onboarding/-/onboarding-5.0.1.tgz#728e3ee52ff20b338890103d658cc339c2402080"
+  integrity sha512-jb9bTYr7TBV2/UDnQIHDrGkHDmvLx1WdrM2iZ4g2AZI+dqZYSA4xoUTsfv37I50m3DqLYlEpGHdpzkvUFxL2Hg==
   dependencies:
     "@coral-xyz/anchor" "^0.31.0"
-    "@helium/address" "^5.0.0"
-    "@helium/crypto" "^5.0.0"
+    "@helium/address" "^5.0.1"
+    "@helium/crypto" "^5.0.1"
     "@helium/currency-utils" "^0.10.2"
     "@helium/data-credits-sdk" "^0.10.2"
     "@helium/helium-entity-manager-sdk" "^0.10.2"
     "@helium/hotspot-utils" "^0.10.2"
     "@helium/spl-utils" "^0.10.2"
-    "@helium/transactions" "^5.0.0"
+    "@helium/transactions" "^5.0.1"
     "@metaplex-foundation/mpl-bubblegum" "^0.7.0"
     "@solana/web3.js" "^1.91.1"
     axios "^1.5.0"
@@ -2003,10 +2003,10 @@
     ts-protoc-gen "^0.15.0"
     uuid "^9.0.0"
 
-"@helium/proto-ble@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@helium/proto-ble/-/proto-ble-5.0.0.tgz#f36ae92df3d0d132a432e0a2aba43352b0e45189"
-  integrity sha512-U+3HiiqNXHoUE2Mb8h7otd54uO00tSPfDTNlp8QJ+GByqAw64d8kNf6p2XrhjFas+BTTHcZ1lOh7eHEMe9vlzA==
+"@helium/proto-ble@^5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@helium/proto-ble/-/proto-ble-5.0.1.tgz#ed9382c3e2ea80d9cea3eaa35854ab7feff40f88"
+  integrity sha512-7TbRaUL/E4BeXv3b/Hrd9Bf7ISNZJdDvijjTEdD0UNpDGnQjlkz/6pcaJnUN5sR/QQiRCydeSFZV7PeCxda+Ww==
   dependencies:
     protobufjs "^6.8.9"
 
@@ -2053,12 +2053,12 @@
     borsh "^0.7.0"
     bs58 "^4.0.1"
 
-"@helium/transactions@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@helium/transactions/-/transactions-5.0.0.tgz#28d8dcf980c16e7436b50a1e5eedd1471c971be7"
-  integrity sha512-ExUZk85YU3XhDdb7/zEONhEY916vzozd4r1o2GGK3bYmG4iqDVUeertNXhtUjtg4+nwv8Hw2I4xUx+Ss/4wnOw==
+"@helium/transactions@^5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@helium/transactions/-/transactions-5.0.1.tgz#2737e8ee5c2508708816ca0aaf799b9f93bc0e80"
+  integrity sha512-MYf98igr1EALQLZrMxve8F88RjmK5UyG1p63HzWkavArk91rwPlQTsQIgeZpjobQvOti0pHQGlqQwWOn+ZouIA==
   dependencies:
-    "@helium/address" "^5.0.0"
+    "@helium/address" "^5.0.1"
     "@helium/proto" "^2.2.0"
     long "^4.0.0"
     path "^0.12.7"
