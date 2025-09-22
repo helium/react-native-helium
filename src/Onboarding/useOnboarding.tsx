@@ -526,7 +526,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
                       electricalDownTilt ??
                       existingInfo?.electricalDownTilt ??
                       0,
-                    serial,
+                    serial: serial ?? existingInfo?.serial ?? undefined,
                   },
                 },
               })
