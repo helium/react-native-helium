@@ -223,6 +223,11 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         lng?: number
         decimalGain?: number
         elevation?: number
+        antenna?: number
+        azimuth?: number
+        mechanicalDownTilt?: number
+        electricalDownTilt?: number
+        serial?: string
       }[]
       payer?: string
     }): Promise<{
@@ -230,7 +235,18 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     }> => {
       const onboardResponses = await Promise.all(
         networkDetails.map(
-          async ({ hotspotType: type, lat, lng, decimalGain, elevation }) => {
+          async ({
+            hotspotType: type,
+            lat,
+            lng,
+            decimalGain,
+            elevation,
+            antenna,
+            azimuth,
+            mechanicalDownTilt,
+            electricalDownTilt,
+            serial,
+          }) => {
             const gain = decimalGain
               ? Math.round(decimalGain * 10.0)
               : undefined
@@ -268,10 +284,11 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
                 deploymentInfo: {
                   wifiInfoV0: {
                     elevation: elevation || 0,
-                    antenna: 0,
-                    azimuth: 0,
-                    mechanicalDownTilt: 0,
-                    electricalDownTilt: 0,
+                    antenna: antenna || 0,
+                    azimuth: azimuth || 0,
+                    mechanicalDownTilt: mechanicalDownTilt || 0,
+                    electricalDownTilt: electricalDownTilt || 0,
+                    serial,
                   },
                 },
                 payer,
@@ -383,54 +400,114 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
     [solana.hemProgram]
   )
 
-  const getSolanaAssertData = useCallback(
-    async ({
-      gateway,
-      balances,
-      onboardingRecord,
-      oraclePrice,
-      owner,
-      networkDetails,
-      payer,
-    }: {
-      payer?: string
-      gateway: string
-      owner: string
+  const fetchExistingHotspotInfo = useCallback(
+    async (
+      gateway: string,
       networkDetails: {
         hotspotType: HotspotType
         gain: number
         elevation: number
         nextLocation: string
+        antenna?: number
+        azimuth?: number
+        mechanicalDownTilt?: number
+        electricalDownTilt?: number
+        serial?: string
       }[]
-      onboardingRecord: OnboardingRecord
-      oraclePrice: Balance<USDollars>
-      balances: {
-        hnt: Balance<NetworkTokens | TestNetworkTokens> | undefined
-        sol: Balance<SolTokens>
-        dc: Balance<DataCredits> | undefined
+    ): Promise<{
+      existingMobileInfo: Record<string, any>
+      existingIotInfo: Record<string, any>
+    }> => {
+      const existingMobileInfo: Record<string, any> = {}
+      const existingIotInfo: Record<string, any> = {}
+
+      for (const { hotspotType } of networkDetails) {
+        if (hotspotType === 'MOBILE') {
+          try {
+            const mint = MOBILE_MINT
+            const subDao = subDaoKey(mint)[0]
+            const configKey = rewardableEntityConfigKey(subDao, 'MOBILE')
+            const [info] = mobileInfoKey(configKey[0], gateway)
+            const mobile =
+              await solana.hemProgram?.account.mobileHotspotInfoV0.fetch(info)
+            if (mobile?.deploymentInfo?.wifiInfoV0) {
+              existingMobileInfo[gateway] = mobile.deploymentInfo.wifiInfoV0
+            }
+          } catch (e) {
+            console.error('Failed to fetch existing mobile deployment info:', e)
+          }
+        } else if (hotspotType === 'IOT') {
+          try {
+            const mint = IOT_MINT
+            const subDao = subDaoKey(mint)[0]
+            const configKey = rewardableEntityConfigKey(subDao, 'IOT')
+            const [info] = iotInfoKey(configKey[0], gateway)
+            const iot = await solana.hemProgram?.account.iotHotspotInfoV0.fetch(
+              info
+            )
+            if (iot) {
+              existingIotInfo[gateway] = {
+                elevation: iot.elevation,
+                gain: iot.gain,
+              }
+            }
+          } catch (e) {
+            console.error('Failed to fetch existing IOT info:', e)
+          }
+        }
       }
-    }): Promise<AssertData> => {
-      let solanaTransactions: Buffer[] | undefined
 
-      const maker = onboardingRecord.maker
+      return { existingMobileInfo, existingIotInfo }
+    },
+    [solana.hemProgram]
+  )
 
-      const solanaAddress = heliumAddressToSolAddress(owner)
-
+  const generateUpdateMetadataResponses = useCallback(
+    async (
+      gateway: string,
+      solanaAddress: string,
+      networkDetails: {
+        hotspotType: HotspotType
+        gain: number
+        elevation: number
+        nextLocation: string
+        antenna?: number
+        azimuth?: number
+        mechanicalDownTilt?: number
+        electricalDownTilt?: number
+        serial?: string
+      }[],
+      existingMobileInfo: Record<string, any>,
+      existingIotInfo: Record<string, any>,
+      payer?: string
+    ) => {
       const solResponses = await Promise.all(
         networkDetails.map(
-          async ({ elevation, gain, nextLocation, hotspotType }) => {
+          async ({
+            elevation,
+            gain,
+            nextLocation,
+            hotspotType,
+            antenna,
+            azimuth,
+            mechanicalDownTilt,
+            electricalDownTilt,
+            serial,
+          }) => {
             if (hotspotType === 'IOT') {
+              const existingInfo = existingIotInfo[gateway]
               return await onboardingClient.updateIotMetadata({
                 hotspotAddress: gateway,
                 solanaAddress,
                 payer,
                 location: nextLocation,
-                elevation,
-                gain,
+                elevation: elevation ?? existingInfo?.elevation ?? 0,
+                gain: gain ?? existingInfo?.gain ?? 10,
               })
             }
 
             if (hotspotType === 'MOBILE') {
+              const existingInfo = existingMobileInfo[gateway]
               return await onboardingClient.updateMobileMetadata({
                 hotspotAddress: gateway,
                 solanaAddress,
@@ -439,10 +516,17 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
                 deploymentInfo: {
                   wifiInfoV0: {
                     elevation,
-                    antenna: 0,
-                    azimuth: 0,
-                    mechanicalDownTilt: 0,
-                    electricalDownTilt: 0,
+                    antenna: antenna ?? existingInfo?.antenna ?? 0,
+                    azimuth: azimuth ?? existingInfo?.azimuth ?? 0,
+                    mechanicalDownTilt:
+                      mechanicalDownTilt ??
+                      existingInfo?.mechanicalDownTilt ??
+                      0,
+                    electricalDownTilt:
+                      electricalDownTilt ??
+                      existingInfo?.electricalDownTilt ??
+                      0,
+                    serial,
                   },
                 },
               })
@@ -462,26 +546,69 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         )
       }
 
-      solanaTransactions = solResponses
+      return solResponses
         .flatMap((r) => r.data?.solanaTransactions || [])
-        .map((txn) => Buffer.from(txn))
+        .map((txn) => Buffer.from(txn) as Buffer)
+    },
+    [onboardingClient]
+  )
+
+  const getSolanaAssertData = useCallback(
+    async ({
+      gateway,
+      balances,
+      onboardingRecord,
+      oraclePrice,
+      owner,
+      networkDetails,
+      payer,
+    }: {
+      payer?: string
+      gateway: string
+      owner: string
+      networkDetails: {
+        hotspotType: HotspotType
+        gain: number
+        elevation: number
+        nextLocation: string
+        antenna?: number
+        azimuth?: number
+        mechanicalDownTilt?: number
+        electricalDownTilt?: number
+        serial?: string
+      }[]
+      onboardingRecord: OnboardingRecord
+      oraclePrice: Balance<USDollars>
+      balances: {
+        hnt: Balance<NetworkTokens | TestNetworkTokens> | undefined
+        sol: Balance<SolTokens>
+        dc: Balance<DataCredits> | undefined
+      }
+    }): Promise<AssertData> => {
+      const maker = onboardingRecord.maker
+      const solanaAddress = heliumAddressToSolAddress(owner)
+      const { existingMobileInfo, existingIotInfo } =
+        await fetchExistingHotspotInfo(gateway, networkDetails)
+
+      let solanaTransactions = await generateUpdateMetadataResponses(
+        gateway,
+        solanaAddress,
+        networkDetails,
+        existingMobileInfo,
+        existingIotInfo,
+        payer
+      )
 
       const makerKey = heliumAddressToSolPublicKey(maker.address)
-
       let simulatedFees: (
         | {
-            makerFees: {
-              lamports: number
-              dc: number
-            }
-            ownerFees: {
-              lamports: number
-              dc: number
-            }
+            makerFees: { lamports: number; dc: number }
+            ownerFees: { lamports: number; dc: number }
             isFree: boolean
           }
         | undefined
       )[]
+
       try {
         simulatedFees = await Promise.all(
           solanaTransactions.map((t) =>
@@ -496,7 +623,6 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
           networkDetails.map(async ({ hotspotType: type, nextLocation }) => {
             const mint = type === 'IOT' ? IOT_MINT : MOBILE_MINT
             const subDao = subDaoKey(mint)[0]
-
             const configKey = rewardableEntityConfigKey(
               subDao,
               type.toUpperCase()
@@ -515,11 +641,10 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
               prevLocation = mobile?.location
             }
 
-            let locationChanged = true
-
-            if (nextLocation && prevLocation) {
-              locationChanged = !prevLocation.eq(new BN(nextLocation, 'hex'))
-            }
+            const locationChanged =
+              !nextLocation ||
+              !prevLocation ||
+              !prevLocation.eq(new BN(nextLocation, 'hex'))
 
             let dcFee = 0
             if (locationChanged) {
@@ -527,21 +652,15 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
             }
 
             return {
-              makerFees: {
-                lamports: 0,
-                dc: 0,
-              },
-              ownerFees: {
-                lamports: TXN_FEE_IN_LAMPORTS,
-                dc: dcFee,
-              },
+              makerFees: { lamports: 0, dc: 0 },
+              ownerFees: { lamports: TXN_FEE_IN_LAMPORTS, dc: dcFee },
               isFree: false,
             }
           })
         )
       }
 
-      const fees = simulatedFees.reduce(
+      const totalFees = simulatedFees.reduce(
         (acc, current) => {
           if (!current) return acc
 
@@ -585,24 +704,28 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
           },
         }
       )
+
       const isFree =
-        fees.ownerFees.dc.integerBalance <= 0 &&
-        fees.ownerFees.sol.integerBalance <= 0
+        totalFees.ownerFees.dc.integerBalance <= 0 &&
+        totalFees.ownerFees.sol.integerBalance <= 0
 
       if (!isFree) {
         const ataFee = await getAtaAccountCreationFee(solanaAddress)
-        fees.ownerFees.sol = fees.ownerFees.sol.plus(ataFee)
+        totalFees.ownerFees.sol = totalFees.ownerFees.sol.plus(ataFee)
       }
 
-      let hasSufficientSol =
-        balances.sol.integerBalance >= fees.ownerFees.sol.integerBalance
+      const hasSufficientSol =
+        balances.sol.integerBalance >= totalFees.ownerFees.sol.integerBalance
       const hasSufficientDc =
-        (balances.dc?.integerBalance || 0) >= fees.ownerFees.dc.integerBalance
+        (balances.dc?.integerBalance || 0) >=
+        totalFees.ownerFees.dc.integerBalance
 
       let dcNeeded: Balance<DataCredits> | undefined
       let hasSufficientHnt = true
+      let additionalTransactions: Buffer[] = []
+
       if (!hasSufficientDc) {
-        const dcFee = fees.ownerFees.dc
+        const dcFee = totalFees.ownerFees.dc
         const dcBalance = balances.dc || new Balance(0, CurrencyType.dataCredit)
         dcNeeded = dcFee.minus(dcBalance)
         const hntNeeded = dcNeeded.toNetworkTokens(oraclePrice)
@@ -612,21 +735,23 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         if (hasSufficientHnt) {
           const txn = await burnHNTForDataCredits(dcNeeded.integerBalance)
           if (txn) {
-            solanaTransactions = [
+            additionalTransactions = [
               txn.serialize({ verifySignatures: false }),
               ...solanaTransactions,
             ]
-            fees.ownerFees.sol = fees.ownerFees.sol.plus(
+            totalFees.ownerFees.sol = totalFees.ownerFees.sol.plus(
               Balance.fromIntAndTicker(TXN_FEE_IN_LAMPORTS, 'SOL')
             )
-
-            hasSufficientSol =
-              balances.sol.integerBalance >= fees.ownerFees.sol.integerBalance
           }
         }
       }
+
       const hasSufficientBalance =
         (hasSufficientDc || hasSufficientHnt) && hasSufficientSol
+
+      if (additionalTransactions.length > 0) {
+        solanaTransactions = additionalTransactions
+      }
 
       return {
         balances,
@@ -635,7 +760,7 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
         hasSufficientDc,
         hasSufficientHnt,
         dcNeeded,
-        ...fees,
+        ...totalFees,
         isFree,
         maker,
         payer: isFree ? maker.address : owner,
@@ -646,11 +771,12 @@ const useOnboarding = ({ baseUrl }: { baseUrl: string }) => {
       } as AssertData
     },
     [
+      fetchExistingHotspotInfo,
+      generateUpdateMetadataResponses,
+      getStakingFeeForType,
+      solana,
       burnHNTForDataCredits,
       getAtaAccountCreationFee,
-      getStakingFeeForType,
-      onboardingClient,
-      solana,
     ]
   )
 
